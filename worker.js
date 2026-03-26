@@ -340,7 +340,52 @@ export default {
 async fetch(request, env) {
 const url  = new URL(request.url);
 const path = url.pathname;
+async fetch(request, env) {
+const url  = new URL(request.url);
+const path = url.pathname;
 
+// ===== PORTFOLIO ENDPOINT =====
+if (path === '/api/portfolio') {
+
+  const BOT_META = {
+    16801943:{capital:350,direction:'long'},
+    16801248:{capital:250,direction:'short'},
+    16801317:{capital:100,direction:'long'},
+    16801290:{capital:100,direction:'long'},
+    194116:{capital:100,direction:'long'},
+    194115:{capital:100,direction:'long'},
+
+    'eth-grid-trades':{capital:400,direction:'long'},
+    'btc-dca-trades':{capital:300,direction:'long'},
+    'bnb-grid-trades':{capital:300,direction:'long'},
+    'sol-grid-trades':{capital:220,direction:'long'},
+    'xrp-grid-trades':{capital:249,direction:'long'},
+    'ethusdt-perp-trades':{capital:700,direction:'long'}
+  };
+
+  const bots = Object.values(BOT_META);
+
+  const total = bots.reduce((s,b)=>s+b.capital,0);
+  const long  = bots.filter(b=>b.direction==='long').reduce((s,b)=>s+b.capital,0);
+  const short = bots.filter(b=>b.direction==='short').reduce((s,b)=>s+b.capital,0);
+
+  return new Response(JSON.stringify({
+    total,
+    long,
+    short,
+    longPct: Math.round((long/total)*100),
+    shortPct: Math.round((short/total)*100)
+  }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
+}
+
+if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+
+try {
 if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
 try {
