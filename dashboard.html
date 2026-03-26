@@ -7,114 +7,156 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0c0f;
-  --bg2: #111318;
-  --bg3: #181b22;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --text: #e8eaf0;
-  --muted: #6b7280;
-  --green: #22c55e;
-  --green-dim: rgba(34,197,94,0.12);
-  --red: #ef4444;
-  --red-dim: rgba(239,68,68,0.12);
-  --amber: #f59e0b;
-  --amber-dim: rgba(245,158,11,0.12);
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.12);
-  --purple: #a855f7;
-  --purple-dim: rgba(168,85,247,0.12);
-  --teal: #14b8a6;
-  --teal-dim: rgba(20,184,166,0.12);
+  --bg: #0a0c0f; --bg2: #111318; --bg3: #181b22;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0; --muted: #6b7280;
+  --green: #22c55e; --green-dim: rgba(34,197,94,0.12);
+  --red: #ef4444; --red-dim: rgba(239,68,68,0.12);
+  --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12);
+  --blue: #3b82f6; --blue-dim: rgba(59,130,246,0.12);
+  --purple: #a855f7; --purple-dim: rgba(168,85,247,0.12);
+  --teal: #14b8a6; --teal-dim: rgba(20,184,166,0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0; }
+body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 .mono { font-family: 'JetBrains Mono', monospace; }
-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 100; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 100; }
 .logo { display: flex; align-items: center; gap: 10px; }
 .logo-icon { width: 32px; height: 32px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 .logo-text { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+.logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 1px; }
 .prices { display: flex; gap: 24px; align-items: center; }
 .price-item { display: flex; flex-direction: column; align-items: flex-end; }
 .price-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
 .price-value { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
 .last-updated { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 .update-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
-.summary-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-bottom: 32px; }
-.summary-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; transition: border-color 0.2s; }
-.summary-card:hover { border-color: var(--border2); }
-.summary-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.summary-value { font-size: 26px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
-.summary-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.green { color: var(--green); }
-.red { color: var(--red); }
-.amber { color: var(--amber); }
-.blue { color: var(--blue); }
-.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 32px; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+/* PNL HERO */
+.pnl-hero { display: grid; grid-template-columns: repeat(7,1fr); gap: 10px; margin-bottom: 20px; }
+.pnl-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.pnl-card.primary { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.06); }
+.pnl-card.primary-red { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); }
+.pnl-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.pnl-value { font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
+.pnl-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* PANELS */
+.panels-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+.panel-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.pt-dot { width: 6px; height: 6px; border-radius: 50%; }
+.risk-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.risk-label { font-size: 11px; color: var(--muted); }
+.risk-value { font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.exp-bar { height: 6px; background: var(--bg3); border-radius: 3px; margin: 6px 0 12px; overflow: hidden; display: flex; }
+.exp-long { height: 100%; background: var(--green); transition: width .5s; }
+.exp-short { height: 100%; background: var(--red); transition: width .5s; }
+.bias-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.bias-long { background: var(--green-dim); color: var(--green); }
+.bias-short { background: var(--red-dim); color: var(--red); }
+.alloc-row { display: flex; align-items: center; margin-bottom: 9px; gap: 8px; }
+.alloc-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.alloc-name { font-size: 11px; color: var(--muted); width: 80px; flex-shrink: 0; }
+.alloc-bar-wrap { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.alloc-bar-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+.alloc-pct { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; min-width: 32px; text-align: right; }
+.market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mkt-item { background: var(--bg3); border-radius: 8px; padding: 10px 12px; }
+.mkt-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.mkt-value { font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* DECISION ENGINE */
+.decision-panel { background: var(--bg2); border: 1px solid rgba(168,85,247,0.3); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; }
+.decision-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.decision-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--purple); display: flex; align-items: center; gap: 8px; }
+.d-badge { font-size: 10px; background: var(--purple-dim); color: var(--purple); padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+.decisions-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.dc { background: var(--bg3); border-radius: 10px; padding: 12px 14px; border-left: 3px solid transparent; }
+.dc.increase { border-left-color: var(--green); }
+.dc.reduce { border-left-color: var(--amber); }
+.dc.pause { border-left-color: var(--red); }
+.dc.hold { border-left-color: var(--blue); }
+.dc-action { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.dc.increase .dc-action { color: var(--green); }
+.dc.reduce .dc-action { color: var(--amber); }
+.dc.pause .dc-action { color: var(--red); }
+.dc.hold .dc-action { color: var(--blue); }
+.dc-text { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 5px; font-weight: 600; }
+.dc-reason { font-size: 11px; color: var(--muted); line-height: 1.35; }
+.dc-conf { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--purple); margin-top: 6px; }
+
+/* BOTS */
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; margin-top: 24px; }
 .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
 .section-count { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); }
 .section-line { flex: 1; height: 1px; background: var(--border); }
-.bots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.bot-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; transition: all 0.2s; position: relative; overflow: hidden; }
-.bot-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.bots-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.bot-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; transition: all .2s; position: relative; overflow: hidden; }
+.bot-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
 .bot-card.long::before { background: var(--green); }
 .bot-card.short::before { background: var(--red); }
 .bot-card.signal::before { background: var(--blue); }
 .bot-card.grid::before { background: var(--purple); }
-.bot-card.placeholder::before { background: var(--muted); }
 .bot-card:hover { border-color: var(--border2); transform: translateY(-1px); }
-.bot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
-.bot-name { font-size: 13px; font-weight: 700; letter-spacing: 0.3px; line-height: 1.3; max-width: 180px; }
-.status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+.bot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.bot-name { font-size: 13px; font-weight: 700; line-height: 1.3; max-width: 160px; }
+.bot-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.status-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .status-active { background: var(--green-dim); color: var(--green); }
+.status-idle { background: var(--amber-dim); color: var(--amber); }
+.status-underperforming { background: var(--red-dim); color: var(--red); }
+.status-paused { background: rgba(255,255,255,.06); color: var(--muted); }
 .status-waiting { background: var(--amber-dim); color: var(--amber); }
-.status-error { background: var(--red-dim); color: var(--red); }
-.status-unknown { background: rgba(255,255,255,0.06); color: var(--muted); }
-.bot-tags { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-.tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'JetBrains Mono', monospace; }
+.score-wrap { display: flex; align-items: center; gap: 5px; }
+.score-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.ai-score { font-size: 11px; font-weight: 800; font-family: 'JetBrains Mono', monospace; padding: 2px 6px; border-radius: 4px; }
+.score-strong { background: var(--green-dim); color: var(--green); }
+.score-stable { background: var(--blue-dim); color: var(--blue); }
+.score-weak { background: var(--amber-dim); color: var(--amber); }
+.score-critical { background: var(--red-dim); color: var(--red); }
+.score-idle { background: rgba(255,255,255,.06); color: var(--muted); }
+.bot-tags { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; font-family: 'JetBrains Mono', monospace; }
 .tag-long { background: var(--green-dim); color: var(--green); }
 .tag-short { background: var(--red-dim); color: var(--red); }
 .tag-spot { background: var(--blue-dim); color: var(--blue); }
 .tag-futures { background: var(--purple-dim); color: var(--purple); }
 .tag-signal { background: var(--teal-dim); color: var(--teal); }
 .tag-grid { background: var(--amber-dim); color: var(--amber); }
-.tag-dca { background: rgba(255,255,255,0.06); color: var(--muted); }
-.tag-binance { background: rgba(240,185,11,0.12); color: #f0b90b; }
-.bot-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tag-dca { background: rgba(255,255,255,.06); color: var(--muted); }
+.tag-binance { background: rgba(240,185,11,.12); color: #f0b90b; }
+.bot-pair { font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; }
+.divider { height: 1px; background: var(--border); margin: 4px 0 10px; }
+.bot-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
 .stat { display: flex; flex-direction: column; gap: 2px; }
-.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-value { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-.stat-pct { font-size: 10px; font-family: 'JetBrains Mono', monospace; color: var(--muted); margin-top: 1px; }
-.bot-pair { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); margin-bottom: 14px; }
-.placeholder-content { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0; gap: 8px; }
-.placeholder-icon { font-size: 28px; opacity: 0.3; }
-.placeholder-text { font-size: 12px; color: var(--muted); text-align: center; }
-.add-btn { background: none; border: 1px dashed var(--border2); border-radius: 8px; color: var(--muted); padding: 6px 14px; font-size: 11px; cursor: pointer; font-family: 'Syne', sans-serif; transition: all 0.2s; }
-.add-btn:hover { border-color: var(--blue); color: var(--blue); }
-.divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
-.pnl-bar { margin-top: 12px; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
-.pnl-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.pnl-bar { margin-top: 10px; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.pnl-fill { height: 100%; border-radius: 2px; transition: width .5s; }
 .pnl-fill.positive { background: var(--green); }
 .pnl-fill.negative { background: var(--red); }
-.footer { text-align: center; padding: 32px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--border); margin-top: 40px; }
-.filter-bar { display: flex; gap: 8px; margin-bottom: 24px; }
-.filter-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 600; transition: all 0.2s; }
+.alert-banner { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 11px; color: var(--red); }
+.filter-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+.filter-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 600; transition: all .2s; }
 .filter-btn:hover, .filter-btn.active { border-color: var(--border2); color: var(--text); background: var(--bg3); }
 .filter-btn.active { border-color: var(--green); color: var(--green); }
-@media (max-width: 1100px) { .bots-grid { grid-template-columns: repeat(2, 1fr); } .summary-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 700px) { main { padding: 20px 16px; } header { padding: 16px; } .bots-grid { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: repeat(2, 1fr); } .prices { display: none; } }
-#pw-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a0c0f; display: flex; align-items: center; justify-content: center; z-index: 9999; font-family: 'Syne', sans-serif; }
-#pw-box { background: #111318; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 40px; width: 340px; text-align: center; }
-#pw-logo { width: 48px; height: 48px; background: #22c55e; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px; }
-#pw-title { font-size: 22px; font-weight: 800; color: #e8eaf0; margin-bottom: 6px; }
-#pw-sub { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
-#pw-input { width: 100%; padding: 12px 16px; background: #181b22; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #e8eaf0; font-size: 15px; margin-bottom: 12px; outline: none; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; }
-#pw-input:focus { border-color: #22c55e; }
-#pw-btn { width: 100%; padding: 12px; background: #22c55e; border: none; border-radius: 8px; color: #0a0c0f; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Syne', sans-serif; transition: opacity 0.2s; }
-#pw-btn:hover { opacity: 0.9; }
-#pw-error { color: #ef4444; font-size: 12px; margin-top: 10px; display: none; }
+.footer { text-align: center; padding: 28px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--border); margin-top: 40px; }
+#pw-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background:#0a0c0f; display:flex; align-items:center; justify-content:center; z-index:9999; }
+#pw-box { background:#111318; border:1px solid rgba(255,255,255,.07); border-radius:16px; padding:40px; width:340px; text-align:center; }
+#pw-logo { width:48px; height:48px; background:#22c55e; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 20px; }
+#pw-title { font-size:22px; font-weight:800; color:#e8eaf0; margin-bottom:6px; }
+#pw-sub { font-size:13px; color:#6b7280; margin-bottom:24px; }
+#pw-input { width:100%; padding:12px 16px; background:#181b22; border:1px solid rgba(255,255,255,.1); border-radius:8px; color:#e8eaf0; font-size:15px; margin-bottom:12px; outline:none; box-sizing:border-box; font-family:'JetBrains Mono',monospace; letter-spacing:2px; }
+#pw-input:focus { border-color:#22c55e; }
+#pw-btn { width:100%; padding:12px; background:#22c55e; border:none; border-radius:8px; color:#0a0c0f; font-size:15px; font-weight:700; cursor:pointer; font-family:'Syne',sans-serif; }
+#pw-btn:hover { opacity:.9; }
+#pw-error { color:#ef4444; font-size:12px; margin-top:10px; display:none; }
+@media(max-width:1200px){.pnl-hero{grid-template-columns:repeat(4,1fr)}.bots-grid{grid-template-columns:repeat(2,1fr)}.decisions-grid{grid-template-columns:repeat(2,1fr)}.panels-row{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){main{padding:16px}header{padding:14px 16px}.bots-grid{grid-template-columns:1fr}.pnl-hero{grid-template-columns:repeat(2,1fr)}.decisions-grid{grid-template-columns:1fr}.panels-row{grid-template-columns:1fr}.prices{display:none}}
+.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.blue{color:var(--blue)}
 </style>
 </head>
 <body>
@@ -128,504 +170,524 @@ main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
     <div id="pw-error">Incorrect password. Try again.</div>
   </div>
 </div>
+
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
-    <div class="logo-text">AlphaControl</div>
+    <div>
+      <div class="logo-text">AlphaControl</div>
+      <div class="logo-sub">Capital Management System</div>
+    </div>
   </div>
   <div class="prices">
-    <div class="price-item">
-      <span class="price-label">BTC/USD</span>
-      <span class="price-value green" id="btc-price">$71,204</span>
-    </div>
-    <div class="price-item">
-      <span class="price-label">ETH/USD</span>
-      <span class="price-value green" id="eth-price">$2,172</span>
-    </div>
+    <div class="price-item"><span class="price-label">BTC/USD</span><span class="price-value green" id="btc-price">—</span></div>
+    <div class="price-item"><span class="price-label">ETH/USD</span><span class="price-value green" id="eth-price">—</span></div>
   </div>
-  <div class="last-updated">
-    <span class="update-dot"></span>
-    <span id="last-updated">Updated just now</span>
-  </div>
+  <div class="last-updated"><span class="update-dot"></span><span id="last-updated">Connecting...</span></div>
 </header>
+
 <main>
-  <div class="summary-grid">
-    <div class="summary-card">
-      <div class="summary-label">Total Bots</div>
-      <div class="summary-value">12</div>
-      <div class="summary-sub">Across all platforms</div>
+  <!-- PNL HERO -->
+  <div class="pnl-hero">
+    <div class="pnl-card"><div class="pnl-label">Total Capital</div><div class="pnl-value blue" id="total-capital">—</div><div class="pnl-sub" id="total-capital-sub">Spot + Futures</div></div>
+    <div class="pnl-card"><div class="pnl-label">Allocated</div><div class="pnl-value" id="allocated-capital">$3,169</div><div class="pnl-sub">Across 12 bots</div></div>
+    <div class="pnl-card"><div class="pnl-label">Realized PnL</div><div class="pnl-value green" id="realized-pnl">—</div><div class="pnl-sub">Closed positions</div></div>
+    <div class="pnl-card" id="floating-pnl-card"><div class="pnl-label">Floating PnL</div><div class="pnl-value amber" id="floating-pnl">—</div><div class="pnl-sub">Open positions</div></div>
+    <div class="pnl-card primary" id="net-pnl-card"><div class="pnl-label">⚡ Net PnL</div><div class="pnl-value green" id="net-pnl">—</div><div class="pnl-sub" id="net-roi">Realized + Floating</div></div>
+    <div class="pnl-card"><div class="pnl-label">Total Trades</div><div class="pnl-value" id="total-trades-val">—</div><div class="pnl-sub" id="total-trades-sub">All bots</div></div>
+    <div class="pnl-card"><div class="pnl-label">Spot Wallet</div><div class="pnl-value" id="spot-wallet-val">—</div><div class="pnl-sub" id="spot-wallet-sub">Binance Spot</div></div>
+  </div>
+
+  <!-- PANELS: Risk / Allocation / Market -->
+  <div class="panels-row">
+    <div class="panel">
+      <div class="panel-title"><span class="pt-dot" style="background:var(--amber)"></span>Risk Overview</div>
+      <div class="risk-row"><span class="risk-label">Long Exposure</span><span class="risk-value green" id="long-exp">—</span></div>
+      <div class="risk-row"><span class="risk-label">Short Exposure</span><span class="risk-value red" id="short-exp">—</span></div>
+      <div class="exp-bar"><div class="exp-long" id="exp-long-bar" style="width:0%"></div><div class="exp-short" id="exp-short-bar" style="width:0%"></div></div>
+      <div class="risk-row"><span class="risk-label">Net Bias</span><span class="bias-badge bias-long" id="net-bias">—</span></div>
+      <div style="height:8px"></div>
+      <div class="risk-row"><span class="risk-label">Futures uPnL</span><span class="risk-value" id="upnl-val">—</span></div>
+      <div class="risk-row"><span class="risk-label">Avail. Margin</span><span class="risk-value" id="avail-margin">—</span></div>
+      <div class="risk-row"><span class="risk-label">Futures Wallet</span><span class="risk-value" id="futures-wallet-val">—</span></div>
     </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Trades</div>
-      <div class="summary-value" id="total-trades-val">—</div>
-      <div class="summary-sub" id="total-trades-sub">Across all bots</div>
+    <div class="panel">
+      <div class="panel-title"><span class="pt-dot" style="background:var(--blue)"></span>Capital Allocation</div>
+      <div class="alloc-row"><div class="alloc-dot" style="background:var(--purple)"></div><div class="alloc-name">Grid Bots</div><div class="alloc-bar-wrap"><div class="alloc-bar-fill" style="background:var(--purple);width:53%"></div></div><div class="alloc-pct">53%</div></div>
+      <div class="alloc-row"><div class="alloc-dot" style="background:var(--blue)"></div><div class="alloc-name">DCA Bots</div><div class="alloc-bar-wrap"><div class="alloc-bar-fill" style="background:var(--blue);width:25%"></div></div><div class="alloc-pct">25%</div></div>
+      <div class="alloc-row"><div class="alloc-dot" style="background:var(--red)"></div><div class="alloc-name">Hedge Bot</div><div class="alloc-bar-wrap"><div class="alloc-bar-fill" style="background:var(--red);width:8%"></div></div><div class="alloc-pct">8%</div></div>
+      <div class="alloc-row"><div class="alloc-dot" style="background:var(--teal)"></div><div class="alloc-name">Signal Bots</div><div class="alloc-bar-wrap"><div class="alloc-bar-fill" style="background:var(--teal);width:6%"></div></div><div class="alloc-pct">6%</div></div>
+      <div class="alloc-row"><div class="alloc-dot" style="background:var(--muted)"></div><div class="alloc-name">Idle / Free</div><div class="alloc-bar-wrap"><div class="alloc-bar-fill" id="idle-bar" style="background:var(--muted);width:8%"></div></div><div class="alloc-pct" id="idle-pct">—</div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="risk-row"><span class="risk-label">Total Allocated</span><span class="risk-value blue">$3,169</span></div>
+        <div class="risk-row"><span class="risk-label">Free Capital</span><span class="risk-value green" id="free-capital">—</span></div>
+      </div>
     </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Invested</div>
-      <div class="summary-value blue">$3,169</div>
-      <div class="summary-sub">All 12 bots combined</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Total Profit</div>
-      <div class="summary-value green">+$34.37</div>
-      <div class="summary-sub mono" style="color:var(--green);font-size:12px;">+1.08% overall ROI</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Binance Profit</div>
-      <div class="summary-value green">+$25.87</div>
-      <div class="summary-sub mono" style="color:var(--green);font-size:12px;">+1.19% on $2,169</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">3Commas Profit</div>
-      <div class="summary-value green" id="tc-profit-val">Loading...</div>
-      <div class="summary-sub mono" style="color:var(--green);font-size:12px;" id="tc-profit-sub">+0.85% on $1,000</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Spot Wallet</div>
-      <div class="summary-value" id="spot-wallet-val">Loading...</div>
-      <div class="summary-sub" id="spot-wallet-sub">Binance Spot balance</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Futures Wallet</div>
-      <div class="summary-value" id="futures-wallet-val">Loading...</div>
-      <div class="summary-sub" id="futures-wallet-sub">$267 buffer kept</div>
+    <div class="panel">
+      <div class="panel-title"><span class="pt-dot" style="background:var(--purple)"></span>Market Context</div>
+      <div class="market-grid">
+        <div class="mkt-item"><div class="mkt-label">Regime</div><div class="mkt-value" id="market-regime">—</div></div>
+        <div class="mkt-item"><div class="mkt-label">Volatility</div><div class="mkt-value" id="market-vol">—</div></div>
+        <div class="mkt-item"><div class="mkt-label">BTC Move</div><div class="mkt-value" id="btc-move">—</div></div>
+        <div class="mkt-item"><div class="mkt-label">Signal Bias</div><div class="mkt-value" id="signal-bias">—</div></div>
+        <div class="mkt-item" style="grid-column:span 2"><div class="mkt-label">Grid Suitability</div><div class="mkt-value" id="grid-suit">—</div></div>
+      </div>
     </div>
   </div>
+
+  <!-- ALPHACONTROL DECISION ENGINE -->
+  <div class="decision-panel">
+    <div class="decision-header">
+      <div class="decision-title">🧠 AlphaControl Actions <span class="d-badge" id="action-count">0 actions</span></div>
+      <div style="font-size:11px;color:var(--muted)" id="decision-ts">—</div>
+    </div>
+    <div class="decisions-grid" id="decisions-container">
+      <div style="grid-column:span 3;text-align:center;color:var(--muted);font-size:12px;padding:16px">Loading intelligence engine...</div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
   <div class="filter-bar">
-    <button class="filter-btn active" onclick="filterBots('all', this)">All</button>
-    <button class="filter-btn" onclick="filterBots('dca', this)">DCA</button>
-    <button class="filter-btn" onclick="filterBots('signal', this)">Signal</button>
-    <button class="filter-btn" onclick="filterBots('spot', this)">Spot</button>
-    <button class="filter-btn" onclick="filterBots('futures', this)">Futures</button>
-    <button class="filter-btn" onclick="filterBots('binance', this)">Binance Native</button>
+    <button class="filter-btn active" onclick="filterBots('all',this)">All</button>
+    <button class="filter-btn" onclick="filterBots('dca',this)">DCA</button>
+    <button class="filter-btn" onclick="filterBots('signal',this)">Signal</button>
+    <button class="filter-btn" onclick="filterBots('spot',this)">Spot</button>
+    <button class="filter-btn" onclick="filterBots('futures',this)">Futures</button>
+    <button class="filter-btn" onclick="filterBots('binance',this)">Binance Native</button>
   </div>
-  <div class="section-header">
-    <span class="section-title">3Commas DCA Bots</span>
-    <span class="section-count">4</span>
-    <div class="section-line"></div>
-  </div>
-  <div class="bots-grid" id="bots-container">
+
+  <!-- 3COMMAS DCA -->
+  <div class="section-header"><span class="section-title">3Commas DCA Bots</span><span class="section-count">4</span><div class="section-line"></div></div>
+  <div class="bots-grid">
     <div class="bot-card long" data-type="dca futures">
-      <div class="bot-header">
-        <div class="bot-name">BTC Long Futures Bot</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-long">Long</span>
-        <span class="tag tag-futures">Futures</span>
-        <span class="tag tag-dca">DCA</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTCUSDT / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">BTC Long Futures Bot</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801943">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801943">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-futures">Futures</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTCUSDT / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$350</span></div>
         <div class="stat"><span class="stat-label">Leverage</span><span class="stat-value amber">2×</span></div>
         <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801943">0</span></div>
         <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
         <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">22%</span></div>
       </div>
     </div>
     <div class="bot-card short" data-type="dca futures">
-      <div class="bot-header">
-        <div class="bot-name" data-bot-id="16801248">BTC Hedge Bot</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-short">Short</span>
-        <span class="tag tag-futures">Futures</span>
-        <span class="tag tag-dca">DCA</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTCUSDT / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name" data-bot-id="16801248">BTC Hedge Bot</div><div class="bot-header-right"><span class="status-badge status-active" id="status-16801248">Active</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-stable" id="score-16801248">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-short">Short</span><span class="tag tag-futures">Futures</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTCUSDT / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$250</span></div>
-        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$8.5</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green" id="pnl-16801248">+$8.50</span></div>
         <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value">1</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801248">1</span></div>
         <div class="stat"><span class="stat-label">Leverage</span><span class="stat-value amber">2×</span></div>
         <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">22%</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:60%"></div></div>
     </div>
     <div class="bot-card long" data-type="dca spot">
-      <div class="bot-header">
-        <div class="bot-name" data-bot-id="16801317">BTC Break Out Bot</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-long">Long</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-dca">DCA</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTC / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name" data-bot-id="16801317">BTC Break Out Bot</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801317">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801317">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
         <div class="stat"><span class="stat-label">Active</span><span class="stat-value">1/1</span></div>
         <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">3%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801317">0</span></div>
         <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
         <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">5%</span></div>
       </div>
     </div>
     <div class="bot-card long" data-type="dca spot">
-      <div class="bot-header">
-        <div class="bot-name" data-bot-id="16801290">USDT Stable Coin Engine</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-long">Long</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-dca">DCA</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTC / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name" data-bot-id="16801290">USDT Stable Coin Engine</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801290">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801290">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
         <div class="stat"><span class="stat-label">Active</span><span class="stat-value">1/1</span></div>
         <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value">0</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801290">0</span></div>
         <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
         <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">5%</span></div>
       </div>
     </div>
   </div>
-  <div class="section-header">
-    <span class="section-title">3Commas Signal Bots</span>
-    <span class="section-count">2</span>
-    <div class="section-line"></div>
-  </div>
+
+  <!-- SIGNAL BOTS -->
+  <div class="section-header"><span class="section-title">3Commas Signal Bots</span><span class="section-count">2</span><div class="section-line"></div></div>
   <div class="bots-grid">
     <div class="bot-card signal" data-type="signal spot">
-      <div class="bot-header">
-        <div class="bot-name" data-bot-id="194116">BTC Binance Signal Bot</div>
-        <span class="status-badge status-waiting">Waiting</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-long">Long</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-signal">Signal</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTC / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name" data-bot-id="194116">BTC Binance Signal Bot</div><div class="bot-header-right"><span class="status-badge status-waiting" id="status-194116">Waiting</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-194116">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-signal">Signal</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
         <div class="stat"><span class="stat-label">Signals</span><span class="stat-value">1</span></div>
-        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px;">EMA 9×21</span></div>
+        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px">EMA 9×21</span></div>
         <div class="stat"><span class="stat-label">Active</span><span class="stat-value">0/1</span></div>
         <div class="stat"><span class="stat-label">Timeframe</span><span class="stat-value">15m</span></div>
-        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px;">✓ Live</span></div>
+        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px">✓ Live</span></div>
       </div>
+      <div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>
     </div>
     <div class="bot-card signal" data-type="signal spot">
-      <div class="bot-header">
-        <div class="bot-name" data-bot-id="194115">ETH Binance Signal Bot</div>
-        <span class="status-badge status-waiting">Waiting</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-long">Long</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-signal">Signal</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">ETH / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name" data-bot-id="194115">ETH Binance Signal Bot</div><div class="bot-header-right"><span class="status-badge status-waiting" id="status-194115">Waiting</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-194115">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-signal">Signal</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">ETH / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
         <div class="stat"><span class="stat-label">Signals</span><span class="stat-value">1</span></div>
-        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px;">EMA 9×21</span></div>
+        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px">EMA 9×21</span></div>
         <div class="stat"><span class="stat-label">Active</span><span class="stat-value">0/1</span></div>
         <div class="stat"><span class="stat-label">Timeframe</span><span class="stat-value">15m</span></div>
-        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px;">✓ Live</span></div>
+        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px">✓ Live</span></div>
       </div>
+      <div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>
     </div>
   </div>
-  <div class="section-header">
-    <span class="section-title">Binance Native Bots</span>
-    <span class="section-count">6</span>
-    <div class="section-line"></div>
-  </div>
-  <div class="bots-grid" id="binance-grid">
+
+  <!-- BINANCE NATIVE -->
+  <div class="section-header"><span class="section-title">Binance Native Bots</span><span class="section-count">6</span><div class="section-line"></div></div>
+  <div class="bots-grid">
     <div class="bot-card long" data-type="binance spot">
-      <div class="bot-header">
-        <div class="bot-name">ETH/USDT Spot Grid</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-grid">Grid</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">ETH / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">ETH/USDT Spot Grid</div><div class="bot-header-right"><span class="status-badge status-active" id="status-eth-grid">Active</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-stable" id="score-eth-grid">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-grid">Grid</span><span class="tag tag-spot">Spot</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">ETH / USDT</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$400</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green" id="eth-grid">+$—</span><span class="stat-pct green" id="eth-grid-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value amber" id="eth-upnl">$—</span><span class="stat-pct" id="eth-upnl-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value green">+$3.31</span><span class="stat-pct" style="color:var(--green)">+0.83%</span></div>
-        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$403.31</span><span class="stat-pct">of $400</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="eth-grid-trades">—</span><span class="stat-pct" id="eth-grid-trades-pct" style="color:var(--muted)">completed</span></div>
-        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px;">Spot Grid</span><span class="stat-pct" style="color:#f0b90b;">Binance</span></div>
+        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$400</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$3.31</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+0.83%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="eth-grid-trades">—</span></div>
+        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$403.31</span></div>
+        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px">Spot Grid</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:40%"></div></div>
     </div>
     <div class="bot-card long" data-type="binance spot">
-      <div class="bot-header">
-        <div class="bot-name">BTC/USDT Spot DCA</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-dca">DCA</span>
-        <span class="tag tag-long">Buy BTC</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BTC / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">BTC/USDT Spot DCA</div><div class="bot-header-right"><span class="status-badge status-active" id="status-btc-dca">Active</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-strong" id="score-btc-dca">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-dca">DCA</span><span class="tag tag-long">Buy BTC</span><span class="tag tag-spot">Spot</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green">+$—</span><span class="stat-pct green">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value amber">$—</span><span class="stat-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value green">+$7.63</span><span class="stat-pct" style="color:var(--green)">+2.54%</span></div>
-        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$307.63</span><span class="stat-pct">of $300</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="btc-dca-trades">—</span><span class="stat-pct" id="btc-dca-trades-pct" style="color:var(--muted)">completed</span></div>
-        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px;">Spot DCA</span><span class="stat-pct" style="color:#f0b90b;">Binance</span></div>
+        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$7.63</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+2.54%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="btc-dca-trades">—</span></div>
+        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$307.63</span></div>
+        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px">Spot DCA</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:65%"></div></div>
     </div>
     <div class="bot-card long" data-type="binance spot">
-      <div class="bot-header">
-        <div class="bot-name">BNB/USDT Spot Grid</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-grid">Grid</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">BNB / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">BNB/USDT Spot Grid</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-bnb-grid">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-bnb-grid">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-grid">Grid</span><span class="tag tag-spot">Spot</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">BNB / USDT</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green">+$—</span><span class="stat-pct green">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value amber">$—</span><span class="stat-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value green">+$1.16</span><span class="stat-pct" style="color:var(--green)">+0.39%</span></div>
-        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$301.16</span><span class="stat-pct">of $300</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="bnb-grid-trades">—</span><span class="stat-pct" id="bnb-grid-trades-pct" style="color:var(--muted)">completed</span></div>
-        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px;">Spot Grid</span><span class="stat-pct" style="color:#f0b90b;">Binance</span></div>
+        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$1.16</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+0.39%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="bnb-grid-trades">—</span></div>
+        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$301.16</span></div>
+        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px">Spot Grid</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:20%"></div></div>
     </div>
     <div class="bot-card long" data-type="binance spot">
-      <div class="bot-header">
-        <div class="bot-name">SOL/USDT Spot Grid</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-grid">Grid</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">SOL / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">SOL/USDT Spot Grid</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-sol-grid">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-sol-grid">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-grid">Grid</span><span class="tag tag-spot">Spot</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">SOL / USDT</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$220</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green">+$—</span><span class="stat-pct green">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value amber">$—</span><span class="stat-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value green">+$4.02</span><span class="stat-pct" style="color:var(--green)">+1.83%</span></div>
-        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$224.02</span><span class="stat-pct">of $220</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="sol-grid-trades">—</span><span class="stat-pct" id="sol-grid-trades-pct" style="color:var(--muted)">completed</span></div>
-        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px;">Spot Grid</span><span class="stat-pct" style="color:#f0b90b;">Binance</span></div>
+        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$220</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$4.02</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+1.83%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="sol-grid-trades">—</span></div>
+        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$224.02</span></div>
+        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px">Spot Grid</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:50%"></div></div>
     </div>
     <div class="bot-card short" data-type="binance spot">
-      <div class="bot-header">
-        <div class="bot-name">XRP/USDT Spot Grid</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-grid">Grid</span>
-        <span class="tag tag-spot">Spot</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">XRP / USDT</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">XRP/USDT Spot Grid</div><div class="bot-header-right"><span class="status-badge status-underperforming" id="status-xrp-grid">Underperforming</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-xrp-grid">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-grid">Grid</span><span class="tag tag-spot">Spot</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">XRP / USDT</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$249</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green">+$—</span><span class="stat-pct green">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value red">$—</span><span class="stat-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value red">-$0.81</span><span class="stat-pct" style="color:var(--red)">-0.32%</span></div>
-        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$248.19</span><span class="stat-pct">of $249</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="xrp-grid-trades">—</span><span class="stat-pct" id="xrp-grid-trades-pct" style="color:var(--muted)">completed</span></div>
-        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px;">Spot Grid</span><span class="stat-pct" style="color:#f0b90b;">Binance</span></div>
+        <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$249</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value red">-$0.81</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value red">-0.32%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="xrp-grid-trades">—</span></div>
+        <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$248.19</span></div>
+        <div class="stat"><span class="stat-label">Type</span><span class="stat-value" style="font-size:11px">Spot Grid</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill negative" style="width:15%"></div></div>
     </div>
     <div class="bot-card grid" data-type="binance grid futures">
-      <div class="bot-header">
-        <div class="bot-name">ETHUSDT Perp Grid</div>
-        <span class="status-badge status-active">Active</span>
-      </div>
-      <div class="bot-tags">
-        <span class="tag tag-grid">Grid</span>
-        <span class="tag tag-futures">Futures UM</span>
-        <span class="tag tag-binance">Binance</span>
-      </div>
-      <div class="bot-pair mono">ETHUSDT / Perpetual</div>
-      <div class="divider"></div>
+      <div class="bot-header"><div class="bot-name">ETHUSDT Perp Grid</div><div class="bot-header-right"><span class="status-badge status-active" id="status-eth-perp">Active</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-stable" id="score-eth-perp">—</span></div></div></div>
+      <div class="bot-tags"><span class="tag tag-grid">Grid</span><span class="tag tag-futures">Futures UM</span><span class="tag tag-binance">Binance</span></div>
+      <div class="bot-pair mono">ETHUSDT / Perpetual</div><div class="divider"></div>
       <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Margin</span><span class="stat-value">$700</span><span class="stat-pct">100% base</span></div>
-        <div class="stat"><span class="stat-label">Grid Profit</span><span class="stat-value green">+$—</span><span class="stat-pct green">—%</span></div>
-        <div class="stat"><span class="stat-label">Unrealised PnL</span><span class="stat-value amber">$—</span><span class="stat-pct">—%</span></div>
-        <div class="stat"><span class="stat-label">Total Profit</span><span class="stat-value green">+$10.56</span><span class="stat-pct" style="color:var(--green)">+1.51%</span></div>
-        <div class="stat"><span class="stat-label">Mode</span><span class="stat-value" style="font-size:12px;">Cross</span><span class="stat-pct">Futures Grid</span></div>
-        <div class="stat"><span class="stat-label">Platform</span><span class="stat-value" style="font-size:11px; color:#f0b90b;">Binance</span><span class="stat-pct">UM Futures</span></div>
+        <div class="stat"><span class="stat-label">Margin</span><span class="stat-value">$700</span></div>
+        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$10.56</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+1.51%</span></div>
+        <div class="stat"><span class="stat-label">uPnL</span><span class="stat-value amber" id="perp-upnl">—</span></div>
+        <div class="stat"><span class="stat-label">Mode</span><span class="stat-value" style="font-size:12px">Cross</span></div>
+        <div class="stat"><span class="stat-label">Platform</span><span class="stat-value" style="font-size:11px;color:#f0b90b">Binance</span></div>
       </div>
       <div class="pnl-bar"><div class="pnl-fill positive" style="width:55%"></div></div>
     </div>
   </div>
 </main>
-<div class="footer">
-  AlphaControl Dashboard · Last synced <span id="sync-time"></span> · Data from 3Commas &amp; Binance
-</div>
+
+<div class="footer">AlphaControl Dashboard · Last synced <span id="sync-time">—</span> · Data from 3Commas &amp; Binance</div>
+
 <script>
-async function apiFetch(path) {
-  const res = await fetch('/api/' + path);
-  if (!res.ok) throw new Error('API error ' + res.status);
-  return res.json();
+// ============ CONSTANTS ============
+const TOTAL_ALLOCATED = 3169;
+const TOTAL_REALIZED = 34.37; // Binance bots realized
+
+// ============ SCORING ENGINE ============
+function scoreBot(roi, drawdown, trades) {
+  const roiScore    = Math.min(100, Math.max(0, 50 + roi * 20));
+  const ddScore     = Math.min(100, Math.max(0, 100 - drawdown * 3));
+  const actScore    = Math.min(100, trades * 10);
+  const conScore    = trades > 0 ? Math.min(100, 40 + trades * 8) : 20;
+  const winScore    = roi > 0 ? 70 : 30;
+  return Math.round(roiScore*0.30 + ddScore*0.25 + winScore*0.15 + conScore*0.15 + actScore*0.15);
 }
-function fmtUSD(n) { const v = parseFloat(n); return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2); }
-function fmtProfit(n) { const v = parseFloat(n); return (v >= 0 ? '+$' : '-$') + Math.abs(v).toFixed(2); }
-function fmt(n, dec=2) { return parseFloat(n).toFixed(dec); }
-function colorClass(n) { return parseFloat(n) >= 0 ? 'green' : 'red'; }
-function setEl(id, val, cls) { const el = document.getElementById(id); if (!el) return; el.textContent = val; if (cls) el.className = 'summary-value ' + cls; }
+function scoreLabel(s) {
+  if (s >= 75) return { cls: 'score-strong',   label: 'Strong'   };
+  if (s >= 55) return { cls: 'score-stable',   label: 'Stable'   };
+  if (s >= 35) return { cls: 'score-weak',     label: 'Weak'     };
+  return              { cls: 'score-critical', label: 'Critical' };
+}
+function botStatus(trades, roi, enabled) {
+  if (!enabled)   return { label: 'Paused',          cls: 'status-paused'          };
+  if (trades===0) return { label: 'Idle',             cls: 'status-idle'            };
+  if (roi < -1)   return { label: 'Underperforming', cls: 'status-underperforming' };
+  return                 { label: 'Active',           cls: 'status-active'          };
+}
+
+// ============ MARKET CONTEXT ============
+let _prevBtc = null;
+function marketContext(btc) {
+  const ref = _prevBtc || btc * 0.995;
+  const chg = ((btc - ref) / ref) * 100;
+  const abs = Math.abs(chg);
+  const vol  = abs > 3 ? 'High' : abs > 1 ? 'Medium' : 'Low';
+  const reg  = chg > 2 ? 'Bull' : chg < -2 ? 'Bear' : 'Sideways';
+  const bias = chg > 1 ? 'LONG' : chg < -1 ? 'SHORT' : 'NEUTRAL';
+  const suit = reg==='Sideways'&&vol==='Medium' ? 'Excellent for Grid' :
+               vol==='High'                     ? 'Good for Breakout'  :
+               reg==='Bull'                     ? 'Good for DCA'       : 'Monitor closely';
+  return { vol, reg, bias, suit, chg };
+}
+
+// ============ DECISION ENGINE ============
+function buildDecisions(floatPnl, longPct) {
+  const d = [];
+  d.push({ type:'pause',    action:'PAUSE',   text:'Pause Signal Bots',         reason:'BTC & ETH signal bots show 0 executions. Capital is allocated but generating no return.',    conf:85 });
+  d.push({ type:'reduce',   action:'REVIEW',  text:'Review XRP/USDT Grid',      reason:'Negative ROI (-0.32%) with 0 recorded trades. Capital may be better deployed elsewhere.',    conf:72 });
+  if (longPct > 65) d.push({ type:'increase', action:'INCREASE', text:'Scale Hedge Bot', reason:`Portfolio is ${longPct.toFixed(0)}% long-biased. Increasing hedge allocation reduces directional risk.`, conf:78 });
+  d.push({ type:'hold',     action:'HOLD',    text:'Hold BTC/USDT DCA',         reason:'Top performer at +2.54% ROI with 11 completed trades. Consistent execution — do not disturb.', conf:90 });
+  d.push({ type:'reduce',   action:'REVIEW',  text:'Review 3 Idle DCA Bots',    reason:'BTC Long Futures, BTC Breakout & USDT Stable Engine show 0 trades. Evaluate if positions are active.', conf:68 });
+  if (floatPnl < -5) d.push({ type:'pause',  action:'ALERT',   text:'Floating Loss Warning', reason:`Net floating PnL is ${fmtProfit(floatPnl)}. Open positions are underwater — monitor exposure.`, conf:82 });
+  return d;
+}
+function renderDecisions(floatPnl, longPct) {
+  const decisions = buildDecisions(floatPnl, longPct);
+  const el = document.getElementById('decisions-container');
+  if (!el) return;
+  setEl('action-count', decisions.length + ' action' + (decisions.length!==1?'s':''));
+  setEl('decision-ts', 'Updated ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
+  el.innerHTML = decisions.map(d => `
+    <div class="dc ${d.type}">
+      <div class="dc-action">${d.action}</div>
+      <div class="dc-text">${d.text}</div>
+      <div class="dc-reason">${d.reason}</div>
+      <div class="dc-conf">Confidence: ${d.conf}%</div>
+    </div>`).join('');
+}
+
+// ============ HELPERS ============
+function fmtUSD(n)    { const v=parseFloat(n); return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
+function fmtProfit(n) { const v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
+function fmt(n,d=2)   { return parseFloat(n).toFixed(d); }
+function cc(n)        { return parseFloat(n)>=0?'green':'red'; }
+function setEl(id, val, cls) { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(cls!==undefined)e.className=cls; }
+
+// ============ API LOADERS ============
+async function apiFetch(p) { const r=await fetch('/api/'+p); if(!r.ok)throw new Error(r.status); return r.json(); }
+
 async function loadPrices() {
-  try {
-    const data = await apiFetch('prices');
-    document.getElementById('btc-price').textContent = '$' + data.BTCUSDT.toLocaleString('en-US', {maximumFractionDigits:0});
-    document.getElementById('eth-price').textContent = '$' + data.ETHUSDT.toLocaleString('en-US', {maximumFractionDigits:0});
-  } catch(e) { console.warn('Prices failed', e); }
+  const d = await apiFetch('prices');
+  const btc = d.BTCUSDT, eth = d.ETHUSDT;
+  document.getElementById('btc-price').textContent = '$'+btc.toLocaleString('en-US',{maximumFractionDigits:0});
+  document.getElementById('eth-price').textContent = '$'+eth.toLocaleString('en-US',{maximumFractionDigits:0});
+  const ctx = marketContext(btc);
+  const re = document.getElementById('market-regime');
+  if(re){ re.textContent=ctx.reg; re.style.color=ctx.reg==='Bull'?'var(--green)':ctx.reg==='Bear'?'var(--red)':'var(--amber)'; }
+  const ve = document.getElementById('market-vol');
+  if(ve){ ve.textContent=ctx.vol; ve.style.color=ctx.vol==='High'?'var(--amber)':ctx.vol==='Low'?'var(--green)':'var(--text)'; }
+  const me = document.getElementById('btc-move');
+  if(me){ me.textContent=(ctx.chg>=0?'+':'')+ctx.chg.toFixed(2)+'%'; me.style.color=ctx.chg>=0?'var(--green)':'var(--red)'; }
+  setEl('signal-bias', ctx.bias);
+  setEl('grid-suit', ctx.suit);
+  _prevBtc = btc;
 }
-async function loadSpotWallet() {
-  try {
-    const data = await apiFetch('spot-wallet');
-    setEl('spot-wallet-val', fmtUSD(data.usdtBalance));
-    const sub = document.getElementById('spot-wallet-sub');
-    if (sub) sub.textContent = data.assetCount + ' assets held';
-  } catch(e) { setEl('spot-wallet-val', 'Error'); console.warn('Spot wallet failed', e); }
+
+async function loadWallets() {
+  const [spot, fut] = await Promise.all([apiFetch('spot-wallet'), apiFetch('futures-wallet')]);
+  const floatPnl = fut.unrealizedPnl;
+  const margin   = fut.marginBalance;
+  const avail    = fut.availableBalance;
+
+  // Wallets
+  setEl('spot-wallet-val', fmtUSD(spot.usdtBalance));
+  setEl('spot-wallet-sub', spot.assetCount+' assets held');
+  setEl('futures-wallet-val', fmtUSD(margin));
+  setEl('avail-margin', fmtUSD(avail));
+  const ue = document.getElementById('upnl-val');
+  if(ue){ ue.textContent=(floatPnl>=0?'+':'')+fmtUSD(floatPnl); ue.style.color=floatPnl<0?'var(--red)':'var(--green)'; }
+  setEl('perp-upnl', (floatPnl>=0?'+':'')+fmtUSD(floatPnl));
+
+  // Realized
+  setEl('realized-pnl', fmtProfit(TOTAL_REALIZED));
+
+  // Floating
+  const fe = document.getElementById('floating-pnl');
+  if(fe){ fe.textContent=(floatPnl>=0?'+':'')+fmtUSD(floatPnl); fe.className='pnl-value '+cc(floatPnl); }
+  const fc = document.getElementById('floating-pnl-card');
+  if(fc) fc.className='pnl-card'+(floatPnl<0?' primary-red':'');
+
+  // Net PnL
+  const net = TOTAL_REALIZED + floatPnl;
+  const ne = document.getElementById('net-pnl');
+  if(ne){ ne.textContent=fmtProfit(net); ne.className='pnl-value '+cc(net); }
+  const nc = document.getElementById('net-pnl-card');
+  if(nc) nc.className='pnl-card '+(net>=0?'primary':'primary-red');
+  const roi = (net/TOTAL_ALLOCATED)*100;
+  setEl('net-roi', (roi>=0?'+':'')+roi.toFixed(2)+'% ROI on $'+TOTAL_ALLOCATED.toLocaleString());
+
+  // Total capital + free
+  const total = spot.usdtBalance + margin;
+  setEl('total-capital', fmtUSD(total));
+  const free = total - TOTAL_ALLOCATED;
+  setEl('free-capital', fmtUSD(Math.max(0,free)));
+  const idlePct = Math.max(0, Math.round((free/total)*100));
+  setEl('idle-pct', idlePct+'%');
+  const ib = document.getElementById('idle-bar'); if(ib) ib.style.width=idlePct+'%';
+
+  // Risk — exposure calc
+  const longCap  = 350+100+100+400+300+300+220+249+700+100+100;
+  const shortCap = 250;
+  const totExp   = longCap+shortCap;
+  const lPct = Math.round((longCap/totExp)*100);
+  const sPct = Math.round((shortCap/totExp)*100);
+  setEl('long-exp', lPct+'%');
+  setEl('short-exp', sPct+'%');
+  const lb=document.getElementById('exp-long-bar'); if(lb) lb.style.width=lPct+'%';
+  const sb=document.getElementById('exp-short-bar'); if(sb) sb.style.width=sPct+'%';
+  const be=document.getElementById('net-bias');
+  if(be){ be.textContent=lPct>sPct?'LONG':'SHORT'; be.className='bias-badge '+(lPct>sPct?'bias-long':'bias-short'); }
+
+  renderDecisions(floatPnl, lPct);
 }
-async function loadFuturesWallet() {
-  try {
-    const data = await apiFetch('futures-wallet');
-    setEl('futures-wallet-val', fmtUSD(data.marginBalance));
-    const sub = document.getElementById('futures-wallet-sub');
-    const upnl = data.unrealizedPnl;
-    if (sub) {
-      sub.textContent = 'uPnL: ' + (upnl >= 0 ? '+' : '') + fmt(upnl) + ' · Avail: ' + fmtUSD(data.availableBalance);
-      sub.style.color = upnl < 0 ? 'var(--red)' : '';
-    }
-  } catch(e) { setEl('futures-wallet-val', 'Error'); console.warn('Futures wallet failed', e); }
-}
+
 async function load3CommasBots() {
-  try {
-    const data = await apiFetch('commas-bots');
-    const total = data.totalProfit;
-    const el = document.getElementById('tc-profit-val');
-    if (el) { el.textContent = fmtProfit(total); el.className = 'summary-value ' + colorClass(total); }
-    const sub = document.getElementById('tc-profit-sub');
-    if (sub) {
-      const pct = ((total/1000)*100);
-      sub.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '% on $1,000';
-      sub.style.color = total >= 0 ? 'var(--green)' : 'var(--red)';
-    }
-    let totalTrades = 0;
-    data.bots.forEach(bot => {
-      const card = document.querySelector('[data-bot-id="' + bot.id + '"]');
-      if (!card) return;
-      const botCard = card.closest('.bot-card');
-      const badge = botCard?.querySelector('.status-badge');
-      if (badge) { badge.textContent = bot.enabled ? 'Active' : 'Stopped'; badge.className = 'status-badge ' + (bot.enabled ? 'status-active' : 'status-error'); }
-      const pnlEl = botCard?.querySelector('.live-pnl');
-      if (pnlEl && bot.profit !== undefined) { pnlEl.textContent = fmtProfit(bot.profit); pnlEl.className = 'stat-value live-pnl ' + colorClass(bot.profit); }
-      const tradesEl = botCard?.querySelector('.live-trades');
-      const trades = (bot.completedDeals || 0) + (bot.activeDeals || 0);
-      totalTrades += bot.completedDeals || 0;
-      if (tradesEl) { tradesEl.textContent = bot.completedDeals || 0; }
-    });
-    window._tcTrades = totalTrades;
-    updateTotalTrades();
-  } catch(e) { console.warn('3Commas bots failed', e); }
+  const data = await apiFetch('commas-bots');
+  const CAPS = {16801943:350, 16801248:250, 16801317:100, 16801290:100};
+  data.bots.forEach(b => {
+    const trades = (b.completedDeals||0)+(b.activeDeals||0);
+    const cap    = CAPS[b.id]||100;
+    const roi    = b.profit ? (b.profit/cap)*100 : 0;
+    const st     = botStatus(trades, roi, b.enabled);
+    const score  = trades===0 ? 28 : scoreBot(roi,5,trades);
+    const sl     = trades===0 ? {cls:'score-idle'} : scoreLabel(score);
+    setEl('status-'+b.id, st.label, 'status-badge '+st.cls);
+    setEl('score-'+b.id, score, 'ai-score '+sl.cls);
+    setEl('trades-'+b.id, trades);
+    const pe=document.getElementById('pnl-'+b.id);
+    if(pe&&b.profit!==undefined){ pe.textContent=fmtProfit(b.profit); pe.className='stat-value '+cc(b.profit); }
+  });
+  window._tcTrades = data.bots.reduce((s,b)=>s+(b.completedDeals||0),0);
+  updateTotalTrades();
+}
+
+async function loadBinanceBots() {
+  const data = await apiFetch('binance-bots');
+  if(!data.bots) return;
+  const META = {
+    'eth-grid-trades':  {si:'score-eth-grid',  sti:'status-eth-grid',  roi:0.83,  cap:400},
+    'btc-dca-trades':   {si:'score-btc-dca',   sti:'status-btc-dca',   roi:2.54,  cap:300},
+    'bnb-grid-trades':  {si:'score-bnb-grid',  sti:'status-bnb-grid',  roi:0.39,  cap:300},
+    'sol-grid-trades':  {si:'score-sol-grid',  sti:'status-sol-grid',  roi:1.83,  cap:220},
+    'xrp-grid-trades':  {si:'score-xrp-grid',  sti:'status-xrp-grid',  roi:-0.32, cap:249},
+    'ethusdt-perp-trades':{si:'score-eth-perp',sti:'status-eth-perp',  roi:1.51,  cap:700},
+  };
+  // Map the id fields from the API to the trade count elements
+  const idMap = {
+    'eth-grid-trades':'eth-grid-trades', 'btc-dca-trades':'btc-dca-trades',
+    'bnb-grid-trades':'bnb-grid-trades', 'sol-grid-trades':'sol-grid-trades',
+    'xrp-grid-trades':'xrp-grid-trades'
+  };
+  data.bots.forEach(b => {
+    const el = document.getElementById(b.id); if(el) el.textContent=b.trades;
+    const m = META[b.id]; if(!m) return;
+    const score = scoreBot(m.roi, m.roi<0?8:3, b.trades);
+    const sl    = b.trades===0 ? {cls:'score-idle'} : scoreLabel(score);
+    const st    = botStatus(b.trades, m.roi, true);
+    setEl(m.si, score, 'ai-score '+sl.cls);
+    setEl(m.sti, st.label, 'status-badge '+st.cls);
+  });
+  window._binanceTrades = data.totalTrades;
+  updateTotalTrades();
+}
+
+function updateTotalTrades() {
+  const t = (window._tcTrades||0)+(window._binanceTrades||0);
+  setEl('total-trades-val', t);
+  setEl('total-trades-sub', t+' total trades');
 }
 function updateTime() {
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  const dateStr = now.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
-  document.getElementById('last-updated').textContent = 'Live · ' + timeStr;
-  document.getElementById('sync-time').textContent = timeStr + ' · ' + dateStr;
+  const n=new Date();
+  const ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const ds=n.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  document.getElementById('last-updated').textContent='Live · '+ts;
+  document.getElementById('sync-time').textContent=ts+' · '+ds;
 }
 function filterBots(type, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.bot-card').forEach(card => {
-    card.style.display = (type === 'all' || (card.dataset.type||'').includes(type)) ? '' : 'none';
+  document.querySelectorAll('.bot-card').forEach(c=>{
+    c.style.display=(type==='all'||(c.dataset.type||'').includes(type))?'':'none';
   });
-}
-function updateTotalTrades() {
-  const total = (window._tcTrades || 0) + (window._binanceTrades || 0);
-  const el = document.getElementById('total-trades-val');
-  if (el) el.textContent = total;
-  const sub = document.getElementById('total-trades-sub');
-  if (sub) sub.textContent = total + ' total trade' + (total !== 1 ? 's' : '');
-}
-async function loadBinanceBots() {
-  try {
-    const data = await apiFetch('binance-bots');
-    if (!data.bots) return;
-    data.bots.forEach(bot => {
-      const el = document.getElementById(bot.id);
-      if (el) el.textContent = bot.trades;
-    });
-    window._binanceTrades = data.totalTrades;
-    updateTotalTrades();
-  } catch(e) { console.warn('Binance bots failed', e); }
 }
 async function refreshAll() {
   updateTime();
-  await Promise.allSettled([loadPrices(), loadSpotWallet(), loadFuturesWallet(), load3CommasBots(), loadBinanceBots()]);
+  await Promise.allSettled([loadPrices(), loadWallets(), load3CommasBots(), loadBinanceBots()]);
 }
-if (sessionStorage.getItem("bjbots_auth") === "1") {
-  refreshAll();
-}
-setInterval(() => { if (sessionStorage.getItem("bjbots_auth") === "1") refreshAll(); }, 30000);
-setInterval(updateTime, 1000);
+
 const DASHBOARD_PW = 'Underwood10';
 function checkPw() {
-  const val = document.getElementById('pw-input').value;
-  if (val === DASHBOARD_PW) {
-    document.getElementById('pw-overlay').style.display = 'none';
-    sessionStorage.setItem('bjbots_auth', '1');
+  const v=document.getElementById('pw-input').value;
+  if(v===DASHBOARD_PW){
+    document.getElementById('pw-overlay').style.display='none';
+    sessionStorage.setItem('bjbots_auth','1');
     refreshAll();
   } else {
-    document.getElementById('pw-error').style.display = 'block';
-    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-error').style.display='block';
+    document.getElementById('pw-input').value='';
     document.getElementById('pw-input').focus();
   }
 }
-document.addEventListener('DOMContentLoaded', () => {
-  if (sessionStorage.getItem('bjbots_auth') === '1') {
-    document.getElementById('pw-overlay').style.display = 'none';
+if(sessionStorage.getItem('bjbots_auth')==='1') refreshAll();
+setInterval(()=>{if(sessionStorage.getItem('bjbots_auth')==='1')refreshAll();},30000);
+setInterval(updateTime,1000);
+document.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('bjbots_auth')==='1'){
+    document.getElementById('pw-overlay').style.display='none';
     refreshAll();
   }
-  document.getElementById('pw-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkPw();
-  });
+  document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
 });
 </script>
 </body>
