@@ -585,7 +585,29 @@ async function loadDecisions() {
     const decisions = data.decisions || [];
     const scores    = data.scores    || {};
     const market    = data.marketSnapshot || {};
+const longBiasMatch = decisions.find(d => d.text === 'Scale Hedge Allocation');
+if (longBiasMatch) {
+  const match = longBiasMatch.reason.match(/Portfolio is (\d+)% long-biased/);
+  if (match) {
+    const longPct = parseInt(match[1], 10);
+    const shortPct = 100 - longPct;
 
+    setEl('long-exp', longPct + '%');
+    setEl('short-exp', shortPct + '%');
+
+    const lb = document.getElementById('exp-long-bar');
+    if (lb) lb.style.width = longPct + '%';
+
+    const sb = document.getElementById('exp-short-bar');
+    if (sb) sb.style.width = shortPct + '%';
+
+    const be = document.getElementById('net-bias');
+    if (be) {
+      be.textContent = 'LONG';
+      be.className = 'bias-badge bias-long';
+    }
+  }
+}
     // Apply scores to bot cards
     Object.entries(scores).forEach(([id, score]) => {
       const scEl = document.getElementById('score-' + id);
