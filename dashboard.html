@@ -687,13 +687,32 @@ async function loadWallets() {
   setEl('idle-pct', idlePct+'%');
   const ib = document.getElementById('idle-bar'); if(ib) ib.style.width=idlePct+'%';
 
-  const longCap=350+100+100+400+300+300+220+249+700+100+100, shortCap=250, totExp=longCap+shortCap;
-  const lPct=Math.round((longCap/totExp)*100), sPct=Math.round((shortCap/totExp)*100);
-  setEl('long-exp', lPct+'%'); setEl('short-exp', sPct+'%');
-  const lb=document.getElementById('exp-long-bar'); if(lb) lb.style.width=lPct+'%';
-  const sb=document.getElementById('exp-short-bar'); if(sb) sb.style.width=sPct+'%';
-  const be=document.getElementById('net-bias');
-  if(be){ be.textContent=lPct>sPct?'LONG':'SHORT'; be.className='bias-badge '+(lPct>sPct?'bias-long':'bias-short'); }
+  // ===== LIVE PORTFOLIO (from worker) =====
+try {
+  const p = await apiFetch('portfolio');
+
+  setEl('long-exp', p.longPct + '%');
+  setEl('short-exp', p.shortPct + '%');
+
+  const lb = document.getElementById('exp-long-bar');
+  if (lb) lb.style.width = p.longPct + '%';
+
+  const sb = document.getElementById('exp-short-bar');
+  if (sb) sb.style.width = p.shortPct + '%';
+
+  const be = document.getElementById('net-bias');
+  if (be) {
+    if (p.longPct >= p.shortPct) {
+      be.textContent = 'LONG';
+      be.className = 'bias-badge bias-long';
+    } else {
+      be.textContent = 'SHORT';
+      be.className = 'bias-badge bias-short';
+    }
+  }
+
+} catch (e) {
+  console.warn('Portfolio fetch failed', e);
 }
 
 async function load3CommasBots() {
