@@ -96,7 +96,7 @@ async function getBinanceBots(env) {
 
     // Get 24h price changes for volatility analysis
     async function get24hChange() {
-      const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","SOLUSDT","BNBUSDT","ETHUSDT"]');
+      const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","SOLUSDT","BNBUSDT"]');
       const d = await r.json();
       const changes = {};
       d.forEach(t => { changes[t.symbol] = { change: parseFloat(t.priceChangePercent), volume: parseFloat(t.quoteVolume), high: parseFloat(t.highPrice), low: parseFloat(t.lowPrice) }; });
@@ -263,12 +263,25 @@ function decisionEngine({ bots, tcBots, floatingPnl, longPct, market }) {
   return { decisions, generatedAt: now, marketSnapshot: market };
 }
 
+async function getBinanceBotsData(env) {
+  // Internal version that returns raw data (not a Response object)
+  const res  = await getBinanceBots(env);
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
+async function getFuturesWalletData(env) {
+  const res  = await getFuturesWallet(env);
+  const text = await res.text();
+  return JSON.parse(text);
+}
+
 async function getDecisions(env) {
   try {
     const [tcData, bnData, futData] = await Promise.all([
       fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r => r.json()),
-      getBinanceBots(env).then(r => r.json()),
-      getFuturesWallet(env).then(r => r.json())
+      getBinanceBotsData(env),
+      getFuturesWalletData(env)
     ]);
 
     const longCap  = 350+100+100+400+300+300+220+249+700+100+100;
