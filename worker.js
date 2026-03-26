@@ -68,16 +68,24 @@ function executionAllowed(env) {
 // ============================================================
 // SCORING ENGINE
 // ============================================================
-function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
-  const roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
-  const ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
-  const actScore  = Math.min(100, trades * 8);
-  const conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
-  const absChange = Math.abs(change24h);
-  const marketFit = (type==='spot-grid'||type==='futures-grid')
+function scoreBot({ roi, trades, drawdownPct, change24h, type, capital }) {
+  const roiScore      = Math.min(100, Math.max(0, 50 + roi * 15));
+  const ddScore       = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
+  const actScore      = Math.min(100, trades * 8);
+  const conScore      = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
+  const absChange     = Math.abs(change24h);
+  const marketFit     = (type==='spot-grid'||type==='futures-grid')
     ? (absChange < 2 ? 80 : absChange < 4 ? 55 : 35)
     : (absChange > 1 ? 75 : 45);
-  return Math.round(roiScore*0.30 + ddScore*0.25 + actScore*0.15 + conScore*0.15 + marketFit*0.15);
+  // Capital efficiency: return per dollar allocated (higher = better use of capital)
+  const capEfficiency = capital && capital > 0 ? Math.min(100, Math.max(0, 50 + (roi / 100) * capital * 0.1)) : 50;
+  return Math.round(roiScore*0.25 + ddScore*0.25 + actScore*0.15 + conScore*0.15 + marketFit*0.10 + capEfficiency*0.10);
+}
+
+// Capital efficiency: actual return per $ allocated
+function capitalEfficiency(roi, capital) {
+  if (!capital || capital === 0) return 0;
+  return parseFloat(((roi / 100) * capital).toFixed(2)); // $ return on capital
 }
 
 // ============================================================
@@ -135,13 +143,27 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market }) {
       confidence:90, executable:false });
   }
 
-  // 6. Idle 3Commas DCA bots
+  // 6. Idle 3Commas DCA bots + stale bot detection
   const idleTcBots = tcBots.filter(b => !signalBotIds.includes(b.id) && b.id!==16801248 && b.completedDeals===0 && b.activeDeals<=1);
   if (idleTcBots.length > 0) {
     decisions.push({ action:'REVIEW', type:'reduce', severity:'low',
       text:`Review ${idleTcBots.length} Idle DCA Bot(s)`,
-      reason:`${idleTcBots.map(b=>b.name).join(', ')}: 0 completed deals. Verify active in 3Commas.`,
+      reason:`${idleTcBots.map(b=>b.name).join(', ')}: 0 completed deals. Capital allocated but not working.`,
       confidence:65, executable:false });
+  }
+
+  // Stale bot detection — bots with very low trades relative to capital
+  const staleBots = bots.filter(b => {
+    const meta = BOT_META[b.id];
+    if (!meta) return false;
+    const capitalEffRatio = meta.capital / Math.max(b.trades, 0.01);
+    return b.trades < 2 && meta.capital >= 200; // High capital, barely trading
+  });
+  if (staleBots.length > 0) {
+    decisions.push({ action:'REVIEW', type:'reduce', severity:'low',
+      text:`${staleBots.length} Stale Bot(s) Detected`,
+      reason:`${staleBots.map(b=>BOT_META[b.id]?.name||b.id).join(', ')}: high capital allocation with very few trades. Consider rebalancing.`,
+      confidence:60, executable:false });
   }
 
   // 7. Floating loss
@@ -298,7 +320,15 @@ async function getDecisions(env) {
       const meta=getBotMeta(b.id); if(!meta) return;
       scores[b.id]=scoreBot({ roi:meta.roi||0, trades:b.trades, drawdownPct:meta.roi<0?Math.abs(meta.roi||0):0, change24h:b.change24h||0, type:meta.scoreType||'spot-grid' });
     });
-    return json({ ...result, scores });
+    // Capital efficiency per bot
+    const efficiency = {};
+    Object.entries(BOT_META).forEach(([id, meta]) => {
+      if (meta.roi !== undefined) {
+        efficiency[id] = capitalEfficiency(meta.roi, meta.capital);
+      }
+    });
+
+    return json({ ...result, scores, efficiency });
   } catch(e) { return json({ error:e.message, decisions:[], scores:{} }, 500); }
 }
 
