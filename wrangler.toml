@@ -2,3 +2,10 @@ name = "bjbots-dashboard"
 main = "worker-bundle.js"
 compatibility_date = "2024-01-01"
 workers_dev = true
+
+[vars]
+EXECUTION_ENABLED = "true"
+
+[[kv_namespaces]]
+binding = "ALPHA_LOGS"
+id = "812a80488b55448f8775e8c78c588c33"
