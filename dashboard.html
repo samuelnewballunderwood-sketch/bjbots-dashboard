@@ -8,21 +8,28 @@
 <style>
 /* ── DESIGN TOKENS ─────────────────────────────────────── */
 :root {
-  --bg:#080a0e; --bg2:#0f1117; --bg3:#161922; --bg4:#1e2230;
-  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.11);
-  --text:#e8eaf0; --muted:#5a6070; --muted2:#8892a0;
-  --green:#22c55e;  --green-dim:rgba(34,197,94,0.10);   --green-glow:rgba(34,197,94,0.15);
-  --red:#ef4444;    --red-dim:rgba(239,68,68,0.10);      --red-glow:rgba(239,68,68,0.15);
-  --amber:#f59e0b;  --amber-dim:rgba(245,158,11,0.10);
-  --blue:#3b82f6;   --blue-dim:rgba(59,130,246,0.10);
-  --purple:#a855f7; --purple-dim:rgba(168,85,247,0.10);
-  --teal:#14b8a6;   --teal-dim:rgba(20,184,166,0.10);
+  /* Softer dark backgrounds — warmer, less harsh */
+  --bg:#0d0f14; --bg2:#13161e; --bg3:#191c26; --bg4:#1f2330;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --text:#dde1ec; --muted:#636b7d; --muted2:#919aaa;
+
+  /* Softer, desaturated pastels — easier on the eyes */
+  --green:#4ade80;   --green-dim:rgba(74,222,128,0.10);   --green-glow:rgba(74,222,128,0.12);
+  --red:#f87171;     --red-dim:rgba(248,113,113,0.10);    --red-glow:rgba(248,113,113,0.12);
+  --amber:#fbbf24;   --amber-dim:rgba(251,191,36,0.10);
+  --blue:#60a5fa;    --blue-dim:rgba(96,165,250,0.10);
+  --purple:#c084fc;  --purple-dim:rgba(192,132,252,0.10);
+  --teal:#2dd4bf;    --teal-dim:rgba(45,212,191,0.10);
+  --pink:#f472b6;    --pink-dim:rgba(244,114,182,0.10);
+
   --radius:12px; --radius-lg:16px; --radius-sm:8px;
 }
 
 /* ── RESET ─────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+/* Subtle noise texture adds depth and warmth */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
 .mono{font-family:'JetBrains Mono',monospace}
 
 /* ── TOOLTIP SYSTEM ────────────────────────────────────── */
@@ -63,7 +70,7 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
 .risk-hero.BALANCED{background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.2)}
 .risk-hero.OVEREXPOSED{background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.3)}
 .risk-hero.HIGH_RISK{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.4);animation:risk-pulse 3s infinite}
-@keyframes risk-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 30px 2px rgba(239,68,68,0.08)}}
+@keyframes risk-pulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}50%{box-shadow:0 0 30px 2px rgba(248,113,113,0.06)}}
 .risk-hero-left{display:flex;flex-direction:column;gap:6px}
 .risk-hero-state{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1}
 .risk-hero-state.SAFE{color:var(--green)}
@@ -369,7 +376,7 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
 .decision-card:hover{border-color:var(--border2)}
 .decision-card.suggested-card{opacity:.78;border-left-style:dashed}
 .decision-card.suggested-card:hover{opacity:1}
-.decision-card.critical-card{border-left-width:4px!important;background:rgba(239,68,68,0.04);animation:card-pulse 3s infinite}
+.decision-card.critical-card{border-left-width:4px!important;background:rgba(248,113,113,0.04);animation:card-pulse 3s infinite}
 .decisions-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:10px 0 6px;display:flex;align-items:center;gap:8px}
 .decisions-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .decisions-section-label.required{color:var(--red)}
@@ -2917,32 +2924,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // ── UX UPGRADES — presentation only, zero logic changes ──
 
-// Show hero + KPI zones after load
-const _origHide = window.checkPw;
-// Override zone visibility after login
-const _origRefreshAll = refreshAll;
-async function refreshAll() {
-  await _origRefreshAll();
-  // Reveal zones after data loads
-  setTimeout(() => {
-    const hero = document.getElementById('hero-zone');
-    const kpi  = document.getElementById('kpi-strip');
-    const intel = document.getElementById('intel-zone');
-    if (hero) hero.style.display = 'block';
-    if (kpi)  kpi.style.display = 'grid';
-    if (intel) intel.style.display = 'grid';
-  }, 500);
-}
-
-// Sync risk state hero with decision engine output
-const _origLoadDec = loadDecisions;
-async function loadDecisions() {
-  await _origLoadDec();
-}
-
-// Override the risk state update to also update the new hero
-const _origRiskUpdate = window._updateRiskState;
-
 // Hook into the decisions update to sync new hero elements
 function _syncHero(data) {
   if (!data || !data.riskState) return;
@@ -3006,16 +2987,14 @@ function _syncHero(data) {
   if (health) health.style.display = 'flex';
 }
 
-// Patch loadDecisions to call _syncHero
-const __origLoad = loadDecisions;
-loadDecisions = async function() {
-  const data = await apiFetch('decisions');
-  if (data && !data.error) {
-    _syncHero(data);
+// Hook into apiFetch to intercept decisions data and sync hero
+const __origApiFetch = apiFetch;
+apiFetch = async function(endpoint) {
+  const data = await __origApiFetch(endpoint);
+  if (endpoint === 'decisions' && data && !data.error) {
+    try { _syncHero(data); } catch(e) {}
   }
-  // Now run the original (which also processes data)
-  // Since apiFetch caches responses via fetch, this is fine
-  return __origLoad();
+  return data;
 };
 
 // Fix history UNDEFINED bug — patch renderHistory

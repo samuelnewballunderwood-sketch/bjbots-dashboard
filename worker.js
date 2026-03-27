@@ -291,10 +291,16 @@ function consolidateActions(actions) {
 
     consolidated.push(makeDecision({
       actionType:    lead.actionType,
-      text:          (lead.actionType === 'reduce'
-        ? 'Reduce ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameList
-        : 'Increase ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameList),
-      reason:        group.map(a => a.reason).join(' | '),
+      text:          (function() {
+        const shortNames = botNames.length > 3
+          ? botNames.slice(0,3).join(', ') + ' + ' + (botNames.length-3) + ' more'
+          : botNames.join(', ');
+        const nameShort = shortNames.length > 0 ? ' — ' + shortNames : '';
+        return (lead.actionType === 'reduce'
+          ? 'Reduce ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameShort
+          : 'Increase ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameShort);
+      })(),
+      reason:        (group[0].reason||'').split('.')[0] + '.' + (group.length > 1 ? ' (' + group.length + ' bots consolidated)' : ''),
       amount:        totalAmt,
       amountPct:     Math.round(group.reduce((s,a)=>s+(a.amountPct||0),0)/group.length),
       targetBotIds:  allBotIds,
