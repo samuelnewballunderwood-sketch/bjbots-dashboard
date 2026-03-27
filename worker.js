@@ -225,7 +225,7 @@ function computeRiskState({ longPct, floatingPnl, totalAllocated, volatility, by
 // ============================================================
 function makeDecision({ actionType, text, reason, amount, amountPct, targetBotIds, fromBotId, toBotId,
                         urgency, timeframe, expectedImpact, costOfInaction, category, confidence,
-                        executable, objective, targetDimension }) {
+                        executable, objective, targetDimension, portfolio, targets }) {
   return {
     actionType:      actionType     || 'reduce',
     text:            text           || '',
@@ -246,6 +246,123 @@ function makeDecision({ actionType, text, reason, amount, amountPct, targetBotId
     executable:      executable     || false,
     generatedAt:     new Date().toISOString(),
   };
+}
+
+// ── PROJECTED STATE — what the portfolio looks like AFTER this action ─────
+// Called after all decisions are generated, enriches each with post-action estimates
+function enrichWithProjectedState(decisions, portfolio, targets) {
+  const { totalAllocated, longCapital, shortCapital } = portfolio;
+  if (!totalAllocated) return decisions;
+
+  return decisions.map(d => {
+    const amount = d.amount || 0;
+    if (amount === 0 || d.actionType === 'hold') return d;
+
+    let projLong  = longCapital;
+    let projShort = shortCapital;
+
+    // Estimate portfolio change from this action
+    if (d.objective === 'long_exposure' && d.actionType === 'reduce') {
+      projLong = Math.max(0, longCapital - amount);
+    } else if (d.objective === 'hedge_exposure' && d.actionType === 'increase') {
+      projShort = shortCapital + amount;
+    } else if (d.objective === 'idle_capital' || d.objective === 'bot_efficiency') {
+      projLong = Math.max(0, longCapital - amount); // freeing from long-side bots
+    } else if (d.actionType === 'reallocate') {
+      // Neutral reallocation — same total, same exposure split
+    }
+
+    const projLongPct  = Math.round((projLong  / totalAllocated) * 100);
+    const projShortPct = Math.round((projShort / totalAllocated) * 100);
+
+    // Estimate projected risk score (simplified)
+    const longTarget  = targets ? targets.longPct  : 65;
+    const shortTarget = targets ? targets.shortPct : 20;
+    const longGapAfter  = Math.abs(projLongPct  - longTarget);
+    const shortGapAfter = Math.abs(projShortPct - shortTarget);
+    const projRiskScore = Math.max(0, Math.min(100,
+      (longGapAfter  > 20 ? 40 : longGapAfter  > 10 ? 20 : 5) +
+      (shortGapAfter > 10 ? 20 : shortGapAfter > 5  ? 10 : 0)
+    ));
+    const projRiskState = projRiskScore >= 60 ? 'HIGH_RISK'
+      : projRiskScore >= 35 ? 'OVEREXPOSED'
+      : projRiskScore >= 15 ? 'BALANCED' : 'SAFE';
+
+    // Gap closed as % of original gap
+    const origGap = Math.abs(portfolio.longPct - longTarget);
+    const newGap  = Math.abs(projLongPct - longTarget);
+    const gapClosed = origGap > 0 ? Math.round(((origGap - newGap) / origGap) * 100) : 0;
+
+    return {
+      ...d,
+      projectedState: {
+        longPct:   projLongPct,
+        shortPct:  projShortPct,
+        riskScore: projRiskScore,
+        riskState: projRiskState,
+        gapClosed: Math.max(0, gapClosed),
+        summary:   buildProjectionSummary(d, projLongPct, projRiskState, gapClosed, portfolio.riskState || 'BALANCED'),
+      }
+    };
+  });
+}
+
+function buildProjectionSummary(d, projLongPct, projRiskState, gapClosed, currentRiskState) {
+  const parts = [];
+  if (d.objective === 'long_exposure' && d.actionType === 'reduce') {
+    parts.push('Long exposure drops to ~' + projLongPct + '%');
+  }
+  if (d.objective === 'hedge_exposure' && d.actionType === 'increase') {
+    parts.push('Hedge allocation increases — downside protection improves');
+  }
+  if (d.objective === 'idle_capital') {
+    parts.push('$' + d.amount + ' recovered from non-performing capital');
+  }
+  if (d.objective === 'bot_efficiency') {
+    parts.push('Capital efficiency improves — freed to stronger strategies');
+  }
+  if (gapClosed > 0) {
+    parts.push('Closes ' + gapClosed + '% of current portfolio imbalance');
+  }
+  if (projRiskState !== currentRiskState && projRiskState === 'SAFE') {
+    parts.push('Portfolio moves to SAFE state after this action');
+  } else if (projRiskState !== currentRiskState) {
+    parts.push('Risk state: ' + currentRiskState + ' → ' + projRiskState);
+  }
+  return parts.join(' · ') || 'Moves portfolio toward target state';
+}
+
+// ── CONFIDENCE ANCHOR — explains WHY system is confident ─────────────────
+function buildConfidenceAnchor(riskState, riskFactors, market, targetAdjustments) {
+  const parts = [];
+
+  // Regime alignment
+  if (market.regime === 'Bear' && riskFactors.some(f => f.includes('long bias'))) {
+    parts.push('Long bias in bear regime = elevated risk — action strongly supported');
+  } else if (market.regime === 'Bull' && riskState === 'SAFE') {
+    parts.push('Bull regime with balanced portfolio — hold is well supported');
+  } else if (market.regime === 'Sideways') {
+    parts.push('Sideways regime — gradual rebalancing is low-risk');
+  }
+
+  // Volatility context
+  if (market.volatility === 'High') {
+    parts.push('High volatility increases urgency of defensive positioning');
+  }
+
+  // Risk factor alignment
+  if (riskFactors.length >= 2) {
+    parts.push('Multiple risk factors align — confidence in this direction is high');
+  } else if (riskFactors.length === 1) {
+    parts.push('Single elevated risk factor — targeted action is appropriate');
+  }
+
+  // Adjustment count
+  if (targetAdjustments && targetAdjustments.length > 1) {
+    parts.push('Target state adjusted for current regime and risk level');
+  }
+
+  return parts.slice(0, 2).join('. ') + (parts.length > 0 ? '.' : '');
 }
 
 // Cost of inaction — proportional to exposed capital, not just action size
@@ -745,10 +862,12 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     : null;
 
   return {
-    decisions:         [...required, ...suggested],   // flat + CRITICAL always first
-    requiredActions:   required,
-    suggestedActions:  suggested,
+    decisions:         enrichWithProjectedState([...required,...suggested],portfolio,targets),
+    requiredActions:   enrichWithProjectedState(required,portfolio,targets),
+    suggestedActions:  enrichWithProjectedState(suggested,portfolio,targets),
     primaryObjective,
+    confidenceAnchor:  buildConfidenceAnchor(riskState,factors,market,adjustments),
+    riskSubLabel:      riskSubLabel||null,
     riskState,
     riskScore,
     riskFactors:       factors,

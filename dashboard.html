@@ -105,22 +105,35 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 .decision-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:8px;border-left:3px solid;transition:border-color .15s}
 .decision-card:hover{border-color:var(--border2)}
 
-/* ── REQUIRED — full intensity by urgency ── */
+/* ── REQUIRED — CRITICAL vs HIGH clearly separated ── */
+/* CRITICAL: stop everything. Full interrupt. */
 .decision-card.urgency-critical,
 .decision-card.critical-card{
-  border-left:5px solid var(--red-hot)!important;
-  background:rgba(220,38,38,0.07)!important;
-  animation:req-pulse 1.8s ease-in-out infinite;
-  box-shadow:inset 4px 0 12px rgba(220,38,38,0.08);
+  border-left:6px solid #dc2626!important;
+  background:rgba(220,38,38,0.09)!important;
+  animation:critical-interrupt 1.6s ease-in-out infinite;
+  position:relative;
 }
-@keyframes req-pulse{
-  0%,100%{box-shadow:inset 4px 0 12px rgba(220,38,38,0.06),0 0 0 1px rgba(220,38,38,0.12)}
-  50%{box-shadow:inset 4px 0 20px rgba(220,38,38,0.14),0 0 16px rgba(220,38,38,0.1),0 0 0 1px rgba(220,38,38,0.25)}
+.decision-card.urgency-critical::before,
+.decision-card.critical-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  border-radius:var(--radius);
+  box-shadow:0 0 0 1px rgba(220,38,38,0.3);
+  pointer-events:none;animation:critical-ring 1.6s ease-in-out infinite;
 }
+@keyframes critical-interrupt{
+  0%,100%{background:rgba(220,38,38,0.07)}
+  50%{background:rgba(220,38,38,0.12)}
+}
+@keyframes critical-ring{
+  0%,100%{box-shadow:0 0 0 1px rgba(220,38,38,0.2),0 0 8px rgba(220,38,38,0.05)}
+  50%{box-shadow:0 0 0 2px rgba(220,38,38,0.4),0 0 20px rgba(220,38,38,0.15)}
+}
+/* HIGH: serious and clear, but stable — no animation */
 .decision-card.urgency-high{
-  border-left:4px solid var(--amber-hot)!important;
+  border-left:4px solid #d97706!important;
   background:rgba(217,119,6,0.05)!important;
-  box-shadow:inset 3px 0 8px rgba(217,119,6,0.07);
+  box-shadow:inset 4px 0 10px rgba(217,119,6,0.08);
 }
 .decision-card.urgency-medium{border-left-color:#60a5fa}
 .decision-card.urgency-low{border-left-color:var(--border2)}
@@ -441,6 +454,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
   </div>
   <div class="ctrl-objective" id="risk-hero-objective" style="display:none"></div>
   <div class="ctrl-factors" id="risk-factors" style="display:none"></div>
+  <div id="confidence-anchor" style="display:none;font-size:11px;color:var(--teal);margin-top:6px;padding:6px 10px;background:rgba(45,212,191,0.06);border-radius:6px;border-left:2px solid var(--teal)"></div>
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -908,6 +922,24 @@ function handleExecClick(btn) {
   confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
 }
 
+function buildProjectedBlock(d) {
+  if (!d.projectedState || !d.projectedState.summary) return '';
+  const p = d.projectedState;
+  const isImproving = p.riskState === 'SAFE' || p.riskState === 'BALANCED';
+  const color = isImproving ? 'var(--green)' : 'var(--amber)';
+  const bg    = isImproving ? 'rgba(74,222,128,0.06)' : 'rgba(251,191,36,0.06)';
+  const bord  = isImproving ? 'rgba(74,222,128,0.2)'  : 'rgba(251,191,36,0.2)';
+  let html = '<div style="margin-top:8px;padding:6px 10px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:6px;font-size:10px">';
+  html += '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:' + color + ';margin-bottom:2px">After this action</div>';
+  html += '<div style="color:var(--muted2);line-height:1.5">' + p.summary + '</div>';
+  if (p.gapClosed > 0) {
+    html += '<div style="margin-top:4px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,p.gapClosed) + '%;background:' + color + ';border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:' + color + ';margin-top:2px">' + p.gapClosed + '% of imbalance resolved</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 function renderDecisionCard(d, i) {
   const UC = { critical:'var(--red)', high:'var(--amber)', medium:'#63b3ed', low:'var(--muted)' };
   const AC = { reduce:'var(--red)', increase:'var(--green)', reallocate:'var(--purple)', pause:'var(--amber)', hold:'var(--muted)' };
@@ -1054,19 +1086,23 @@ async function loadDecisions() {
       const gaps = data.portfolioGaps || [];
 
       function makeTargetCard(key, label, current, target, isPrimary) {
-        const gap      = gaps.find(g => g.objective === key);
-        const cur      = current !== null ? current : (gap ? gap.current : '—');
-        const delta    = gap ? gap.delta : 0;
-        const gapClass = Math.abs(delta) < 5 ? 'ok' : delta > 0 ? 'over' : 'under';
-        const gapText  = Math.abs(delta) < 5 ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
-        const curColor = Math.abs(delta)>10 ? 'var(--amber)' : Math.abs(delta)>5 ? '#63b3ed' : 'var(--text)';
-        const size     = isPrimary ? 'font-size:18px' : 'font-size:14px';
-        return '<div class="target-item" style="' + (isPrimary?'border:1px solid var(--border2)':'opacity:.75') + '">' +
-          '<div class="target-dim">' + label + (isPrimary?' <span style="color:var(--purple);font-size:8px">PRIMARY</span>':'') + '</div>' +
+        const gap     = gaps.find(g => g.objective === key);
+        const cur     = current !== null ? current : (gap ? gap.current : '—');
+        const delta   = gap ? gap.delta : 0;
+        const hasGap  = Math.abs(delta) >= 5;
+        // Only highlight problematic dimensions — dim on-target ones
+        const opacity  = hasGap ? '1' : '0.4';
+        const gapClass = !hasGap ? 'ok' : delta > 0 ? 'over' : 'under';
+        const gapText  = !hasGap ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
+        const curColor = delta>10 ? '#f87171' : delta>5 ? 'var(--amber)' : !hasGap ? 'var(--green)' : 'var(--text)';
+        const bdr      = hasGap && isPrimary ? 'border:1px solid rgba(248,113,113,0.3)' : '';
+        const sz       = isPrimary ? 'font-size:16px' : 'font-size:13px';
+        return '<div class="target-item" style="opacity:' + opacity + ';' + bdr + '">' +
+          '<div class="target-dim">' + label + (hasGap && isPrimary ? ' ⚠' : '') + '</div>' +
           '<div style="display:flex;align-items:center;gap:4px">' +
-          '<span class="target-current" style="color:' + curColor + ';' + size + '">' + cur + '%</span>' +
-          '<span class="target-arrow">→</span>' +
-          '<span class="target-goal" style="' + size + '">' + target + '%</span>' +
+          '<span style="' + sz + ';font-weight:900;font-family:\'JetBrains Mono\',monospace;color:' + curColor + '">' + cur + '%</span>' +
+          '<span style="font-size:10px;color:var(--muted);margin:0 2px">→</span>' +
+          '<span style="' + sz + ';font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">' + target + '%</span>' +
           '</div>' +
           '<div class="target-gap ' + gapClass + '">' + gapText + '</div>' +
           '</div>';
@@ -1887,6 +1923,24 @@ function handleExecClick(btn) {
   confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
 }
 
+function buildProjectedBlock(d) {
+  if (!d.projectedState || !d.projectedState.summary) return '';
+  const p = d.projectedState;
+  const isImproving = p.riskState === 'SAFE' || p.riskState === 'BALANCED';
+  const color = isImproving ? 'var(--green)' : 'var(--amber)';
+  const bg    = isImproving ? 'rgba(74,222,128,0.06)' : 'rgba(251,191,36,0.06)';
+  const bord  = isImproving ? 'rgba(74,222,128,0.2)'  : 'rgba(251,191,36,0.2)';
+  let html = '<div style="margin-top:8px;padding:6px 10px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:6px;font-size:10px">';
+  html += '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:' + color + ';margin-bottom:2px">After this action</div>';
+  html += '<div style="color:var(--muted2);line-height:1.5">' + p.summary + '</div>';
+  if (p.gapClosed > 0) {
+    html += '<div style="margin-top:4px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,p.gapClosed) + '%;background:' + color + ';border-radius:2px"></div></div>';
+    html += '<div style="font-size:9px;color:' + color + ';margin-top:2px">' + p.gapClosed + '% of imbalance resolved</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 function renderDecisionCard(d, i) {
   const UC = { critical:'var(--red)', high:'var(--amber)', medium:'#63b3ed', low:'var(--muted)' };
   const AC = { reduce:'var(--red)', increase:'var(--green)', reallocate:'var(--purple)', pause:'var(--amber)', hold:'var(--muted)' };
@@ -2033,19 +2087,23 @@ async function loadDecisions() {
       const gaps = data.portfolioGaps || [];
 
       function makeTargetCard(key, label, current, target, isPrimary) {
-        const gap      = gaps.find(g => g.objective === key);
-        const cur      = current !== null ? current : (gap ? gap.current : '—');
-        const delta    = gap ? gap.delta : 0;
-        const gapClass = Math.abs(delta) < 5 ? 'ok' : delta > 0 ? 'over' : 'under';
-        const gapText  = Math.abs(delta) < 5 ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
-        const curColor = Math.abs(delta)>10 ? 'var(--amber)' : Math.abs(delta)>5 ? '#63b3ed' : 'var(--text)';
-        const size     = isPrimary ? 'font-size:18px' : 'font-size:14px';
-        return '<div class="target-item" style="' + (isPrimary?'border:1px solid var(--border2)':'opacity:.75') + '">' +
-          '<div class="target-dim">' + label + (isPrimary?' <span style="color:var(--purple);font-size:8px">PRIMARY</span>':'') + '</div>' +
+        const gap     = gaps.find(g => g.objective === key);
+        const cur     = current !== null ? current : (gap ? gap.current : '—');
+        const delta   = gap ? gap.delta : 0;
+        const hasGap  = Math.abs(delta) >= 5;
+        // Only highlight problematic dimensions — dim on-target ones
+        const opacity  = hasGap ? '1' : '0.4';
+        const gapClass = !hasGap ? 'ok' : delta > 0 ? 'over' : 'under';
+        const gapText  = !hasGap ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
+        const curColor = delta>10 ? '#f87171' : delta>5 ? 'var(--amber)' : !hasGap ? 'var(--green)' : 'var(--text)';
+        const bdr      = hasGap && isPrimary ? 'border:1px solid rgba(248,113,113,0.3)' : '';
+        const sz       = isPrimary ? 'font-size:16px' : 'font-size:13px';
+        return '<div class="target-item" style="opacity:' + opacity + ';' + bdr + '">' +
+          '<div class="target-dim">' + label + (hasGap && isPrimary ? ' ⚠' : '') + '</div>' +
           '<div style="display:flex;align-items:center;gap:4px">' +
-          '<span class="target-current" style="color:' + curColor + ';' + size + '">' + cur + '%</span>' +
-          '<span class="target-arrow">→</span>' +
-          '<span class="target-goal" style="' + size + '">' + target + '%</span>' +
+          '<span style="' + sz + ';font-weight:900;font-family:\'JetBrains Mono\',monospace;color:' + curColor + '">' + cur + '%</span>' +
+          '<span style="font-size:10px;color:var(--muted);margin:0 2px">→</span>' +
+          '<span style="' + sz + ';font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">' + target + '%</span>' +
           '</div>' +
           '<div class="target-gap ' + gapClass + '">' + gapText + '</div>' +
           '</div>';
@@ -2783,6 +2841,13 @@ function _syncHero(data) {
 
   const fac = document.getElementById('risk-factors');
   if (fac && data.riskFactors && data.riskFactors.length) { fac.textContent = data.riskFactors.join(' · '); fac.style.display = 'block'; }
+
+  // Confidence anchor
+  const anchor = document.getElementById('confidence-anchor');
+  if (anchor && data.confidenceAnchor) {
+    anchor.textContent = '↳ ' + data.confidenceAnchor;
+    anchor.style.display = 'block';
+  }
 
   // Show supporting zones
   ['kpi-strip','intel-zone','health-panel'].forEach(function(id) {
