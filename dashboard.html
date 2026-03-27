@@ -445,7 +445,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
   <div class="ctrl-top">
     <div>
       <div class="ctrl-state BALANCED" id="risk-state-label">BALANCED</div>
-      <div class="ctrl-sublabel" id="risk-hero-sublabel">Loading portfolio analysis...</div>
+      <div class="ctrl-sublabel" id="risk-hero-sublabel" style="min-height:16px"></div>
     </div>
     <div class="ctrl-score">
       <div class="ctrl-score-num BALANCED" id="risk-score-num">—</div>
@@ -472,7 +472,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 
   <!-- Actions rendered here -->
   <div id="decisions-container">
-    <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">Loading portfolio analysis...</div>
+    <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">⏳ Running engine cycle...</div>
   </div>
 </div>
 
@@ -2867,21 +2867,18 @@ function _syncHero(data) {
   }).catch(function(){});
 }
 
-// Intercept apiFetch to sync hero on decisions
-const __origApiFetch = apiFetch;
-apiFetch = async function(endpoint) {
-  const data = await __origApiFetch(endpoint);
-  if (endpoint === 'decisions' && data && !data.error) {
-    try { _syncHero(data); } catch(e) {}
-  }
-  return data;
+// Sync hero after decisions load — patched directly onto loadDecisions
+const __origLoadDecisions = loadDecisions;
+loadDecisions = async function() {
+  await __origLoadDecisions();
+  // After original runs, fetch decisions data and sync hero
+  try {
+    const data = await fetch('/api/decisions').then(r=>r.json());
+    if (data && !data.error) _syncHero(data);
+  } catch(e) {}
 };
 
-// Updated target state renderer — only highlight gaps >5%
-const __origLoadDec = loadDecisions;
-loadDecisions = async function() {
-  return __origLoadDec();
-};
+// loadDecisions patched below
 
 // History fix
 const __origHistory = renderHistory;
