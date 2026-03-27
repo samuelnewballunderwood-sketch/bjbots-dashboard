@@ -211,14 +211,17 @@ function makeDecision({ actionType, text, reason, amount, amountPct, targetBotId
   };
 }
 
-// Simple cost of inaction — rough and directional, not precise
-function inactionCost(amount, urgency) {
+// Cost of inaction — proportional to exposed capital, not just action size
+// Uses 5x multiplier to reflect that the EXPOSED position is larger than the move itself
+function inactionCost(amount, urgency, exposedCapital) {
   if (!amount || amount <= 0 || !['critical','high'].includes(urgency)) return null;
+  // Use exposed capital if provided, else approximate as 3x the recommended move
+  const exposure = exposedCapital || amount * 3;
   const scenarios = urgency === 'critical'
     ? [['3%', 0.03], ['5%', 0.05]]
     : [['2%', 0.02], ['3%', 0.03]];
   return scenarios.map(([label, rate]) =>
-    'If market drops ' + label + ': estimated -$' + Math.round(amount * rate) + ' downside'
+    'If market drops ' + label + ': estimated -$' + Math.round(exposure * rate) + ' downside'
   ).join(' · ');
 }
 
@@ -302,16 +305,19 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
   portfolioGaps.forEach(gap => {
     if (gap.usd < RC.minimumMoveUsd) return;
     if (gap.delta > RC.gapThresholdPct) {
-      // Over target — reduce this dimension
-      const urg  = gap.delta > 20 ? 'high' : gap.delta > 10 ? 'medium' : 'low';
-      const cost = inactionCost(gap.usd, urg);
+      // Over target — cap at 40% of gap per cycle to avoid over-adjustment
+      const cycleMove = Math.round(gap.usd * 0.40);
+      const moveAmt   = Math.max(RC.minimumMoveUsd, cycleMove);
+      const newPct    = gap.current - Math.round((moveAmt / totalAllocated) * 100);
+      const urg       = gap.delta > 20 ? 'high' : gap.delta > 10 ? 'medium' : 'low';
+      const cost      = inactionCost(moveAmt, urg, gap.usd);  // full gap = exposed capital
       moves.push(makeDecision({
         actionType:'reduce', category:'required',
-        text:'Reduce ' + gap.objective.replace(/_/g,' ') + ' by $' + gap.usd + ' (' + gap.current + '% → ' + gap.target + '% target)',
-        reason:'Current ' + gap.dimension.replace(/_/g,' ') + ' is ' + gap.current + '%, target is ' + gap.target + '%. Gap of ' + gap.delta + 'pp requires $' + gap.usd + ' adjustment to align portfolio.',
-        amount:gap.usd, amountPct:Math.abs(gap.delta), targetBotIds:[],
+        text:'Reduce ' + gap.objective.replace(/_/g,' ') + ' by $' + moveAmt + ' (' + gap.current + '% → ' + newPct + '% this cycle, target ' + gap.target + '%)',
+        reason:'Current ' + gap.dimension.replace(/_/g,' ') + ' is ' + gap.current + '%, target is ' + gap.target + '%. Moving $' + moveAmt + ' this cycle (40% of gap). Reassess next cycle.',
+        amount:moveAmt, amountPct:Math.round((moveAmt/totalAllocated)*100), targetBotIds:[],
         urgency:urg, timeframe:gap.delta>20?'2h':'24h',
-        expectedImpact:'Moves ' + gap.dimension.replace(/_/g,' ') + ' to target ' + gap.target + '%',
+        expectedImpact:'Moves ' + gap.dimension.replace(/_/g,' ') + ' from ' + gap.current + '% toward ' + gap.target + '% target',
         costOfInaction:cost, objective:gap.objective, confidence:75,
       }));
     } else if (gap.delta < -RC.gapThresholdPct) {
@@ -356,14 +362,16 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
     .forEach(bot => {
       const amt = Math.round(bot.capital * 0.50);
       if (amt < RC.minimumMoveUsd) return;
+      const idlePct = portfolio.totalAllocated > 0
+        ? Math.round((bot.capital / portfolio.totalAllocated) * 100) : 0;
       moves.push(makeDecision({
         actionType:'reduce', category:'required',
-        text:'Remove $' + amt + ' from idle bot: ' + bot.name,
-        reason:'Zero trades recorded. $' + bot.capital + ' allocated with no activity or return.',
+        text:'Remove $' + amt + ' from idle bot: ' + bot.name + ' (' + idlePct + '% → target <1% idle)',
+        reason:'Zero trades recorded. $' + bot.capital + ' allocated with no activity or return. Target: idle capital below 5% of portfolio.',
         amount:amt, amountPct:50, targetBotIds:[bot.id],
         urgency:'high', timeframe:'1h',
-        expectedImpact:'Recovers $' + amt + ' of idle capital',
-        costOfInaction:inactionCost(amt,'high'),
+        expectedImpact:'Recovers $' + amt + ' of idle capital — redeploy to active strategies',
+        costOfInaction:inactionCost(amt,'high', bot.capital),
         objective:'idle_capital', confidence:80,
       }));
     });
@@ -463,7 +471,7 @@ function capitalEfficiency(roi, capital) {
 // HIGH_RISK: only defensive. No optimisation.
 // CRITICAL always position [0] in output array.
 // ============================================================
-function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores }) {
+function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, dataReliable=true, dataIntegrity={} }) {
   const { longPct, bySymbol, totalAllocated, byStrategy } = portfolio;
   const now = new Date().toISOString();
 
@@ -607,7 +615,17 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
   required.sort((a,b)  => (urgOrd[a.urgency]||3)-(urgOrd[b.urgency]||3));
   suggested.sort((a,b) => (urgOrd[a.urgency]||3)-(urgOrd[b.urgency]||3));
 
-  // ── HARD CAP: max 3 required actions — overflow becomes suggested ──
+  // ── CRITICAL must always be required — never suggested ──
+  // Move any CRITICAL actions from suggested back to required first
+  const criticalInSuggested = suggested.filter(a => a.urgency === 'critical');
+  criticalInSuggested.forEach(a => {
+    a.category = 'required';
+    suggested.splice(suggested.indexOf(a), 1);
+    required.push(a);
+  });
+  required.sort((a,b) => (urgOrd[a.urgency]||3)-(urgOrd[b.urgency]||3));
+
+  // ── HARD CAP: max 3 required — overflow becomes suggested (never CRITICAL) ──
   const MAX_REQUIRED = 3;
   if (required.length > MAX_REQUIRED) {
     const overflow = required.splice(MAX_REQUIRED);
@@ -672,6 +690,11 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     : adjustments.length <= 1 ? 'High — stable regime, strong signal alignment'
     : 'Medium — multiple regime adjustments applied';
 
+  // Data integrity warning — prepended when inputs are unreliable
+  const dataWarning = !dataReliable
+    ? 'Data incomplete (' + Object.entries(dataIntegrity).filter(([,v])=>!v).map(([k])=>k).join(', ') + ') — confirm allocations before executing large actions'
+    : null;
+
   return {
     decisions:         [...required, ...suggested],   // flat + CRITICAL always first
     requiredActions:   required,
@@ -690,6 +713,8 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     generatedAt:       now,
     marketSnapshot:    market,
     portfolio,
+    dataWarning,
+    dataIntegrity,
   };
 }
 
@@ -845,8 +870,8 @@ async function getDecisions(env){
     Object.entries(BOT_META).forEach(([id,meta])=>{
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
-    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores});
-    return json({...result,scores:botScores,efficiency:botEff});
+    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }

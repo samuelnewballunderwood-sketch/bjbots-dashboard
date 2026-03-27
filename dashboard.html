@@ -990,6 +990,17 @@ async function loadDecisions() {
       if (adj && data.targetAdjustments) adj.textContent = 'Basis: ' + data.targetAdjustments.join(' · ') + confText;
     }
 
+    // Data warning banner — shown when inputs are unreliable
+    const dwEl = document.getElementById('data-warning');
+    if (dwEl) {
+      if (data.dataWarning) {
+        dwEl.textContent = '⚠ ' + data.dataWarning;
+        dwEl.style.display = 'block';
+      } else {
+        dwEl.style.display = 'none';
+      }
+    }
+
     // Primary objective banner — always shown
     const poEl = document.getElementById('primary-objective');
     if (poEl && data.primaryObjective) {
@@ -1210,6 +1221,13 @@ function renderTCBotCard(bot, capital, roi, score, status) {
 
 async function load3CommasBots() {
   const data = await apiFetch('commas-bots');
+  if (data.error) {
+    const container = document.getElementById('bots-container');
+    if (container) container.innerHTML = '<div style="grid-column:span 3;text-align:center;color:var(--amber);padding:24px;font-size:12px;background:rgba(245,158,11,.06);border-radius:10px;border:1px solid rgba(245,158,11,.2)">⚠️ 3Commas API Error: ' + data.error + '<br><span style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Check that TC_API_KEY and TC_SECRET are correct in Render environment variables</span></div>';
+    setEl('h-3commas', 'Error');
+    document.getElementById('h-3commas-dot').className = 'health-dot err';
+    return;
+  }
   const container = document.getElementById('bots-container');
   const signalContainer = document.getElementById('signal-container');
   const signalHeader    = document.getElementById('tc-signal-header');
@@ -1260,7 +1278,7 @@ async function load3CommasBots() {
   // Update section count
   setEl('tc-all-count', tradingBots.length);
 
-  window._tcTrades = data.bots.reduce((s,b)=>s+(b.completedDeals||0),0);
+  window._tcTrades = (data.bots||[]).reduce((s,b)=>s+(b.completedDeals||0),0);
   updateTotalTrades();
 }
 
@@ -1642,6 +1660,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   } catch(e) {}
   // Render any user-added bots
   renderUserBotCards();
+  // Fetch status immediately on load — fixes advisory mode badge stale state
+  fetch('/api/status').then(r=>r.json()).then(d=>{
+    const modeEl = document.getElementById('h-mode');
+    if (modeEl) {
+      modeEl.textContent = d.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode';
+      modeEl.style.background = d.advisoryMode ? 'var(--amber-dim)' : 'var(--green-dim)';
+      modeEl.style.color = d.advisoryMode ? 'var(--amber)' : 'var(--green)';
+    }
+  }).catch(()=>{});
 });
 </script>
 </body>
