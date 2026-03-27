@@ -211,6 +211,36 @@ main{padding:24px 32px;max-width:1400px;margin:0 auto}
 .history-text{color:var(--muted);line-height:1.3}
 .history-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 
+
+/* BOT MANAGER */
+.mgr-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px;display:none}
+.mgr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.mgr-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.mgr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.mgr-field{display:flex;flex-direction:column;gap:4px}
+.mgr-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.mgr-input,.mgr-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;padding:8px 10px;font-family:'JetBrains Mono',monospace;outline:none;width:100%}
+.mgr-input:focus,.mgr-select:focus{border-color:var(--green)}
+.mgr-select option{background:var(--bg2)}
+.mgr-actions{display:flex;gap:8px;margin-top:6px}
+.mgr-btn{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
+.mgr-btn-add{background:var(--green);color:#000}
+.mgr-btn-add:hover{opacity:.85}
+.mgr-btn-cancel{background:var(--bg3);color:var(--muted)}
+.mgr-btn-cancel:hover{color:var(--text)}
+.mgr-list{display:flex;flex-direction:column;gap:6px;max-height:250px;overflow-y:auto}
+.mgr-bot-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg3);border-radius:8px}
+.mgr-bot-name{font-size:12px;font-weight:700;flex:1}
+.mgr-bot-meta{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.mgr-bot-tag{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase}
+.mgr-remove{background:var(--red-dim);color:var(--red);border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700;flex-shrink:0}
+.mgr-remove:hover{background:var(--red);color:#fff}
+.mgr-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px}
+.mgr-toggle-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s}
+.mgr-toggle-btn:hover{border-color:var(--green);color:var(--green)}
+.mgr-show-form{margin-bottom:12px}
+.mgr-form-wrap{background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:14px;display:none}
+
 </style>
 </head>
 <body>
@@ -366,6 +396,116 @@ main{padding:24px 32px;max-width:1400px;margin:0 auto}
     </div>
   </div>
 
+  <!-- BOT MANAGER PANEL -->
+  <div class="mgr-panel" id="bot-mgr-panel">
+    <div class="mgr-header">
+      <div class="mgr-title">⚙️ Manage Bots</div>
+      <button class="mgr-toggle-btn" onclick="toggleBotManager()">✕ Close</button>
+    </div>
+
+    <!-- EXPLANATION BOXES -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:10px;padding:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--green);margin-bottom:6px">✅ 3Commas Bots — Fully Automatic</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">Any bot you create or delete in 3Commas will automatically appear or disappear here on the next dashboard refresh. Capital, direction, and strategy are all read directly from the 3Commas API. <strong style="color:var(--text)">You don't need to do anything.</strong></div>
+      </div>
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">⚠️ Binance Native Bots — One-Time Setup</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">Binance's API does not have an endpoint that lists your active Grid or DCA bots — this is a known limitation of the Binance API that even professional platforms cannot work around. You need to register each Binance bot <strong style="color:var(--text)">once</strong> using the form below. After that, trade counts, scores and risk calculations update automatically.</div>
+      </div>
+    </div>
+
+    <!-- HOW TO FIND YOUR INFO -->
+    <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px">📋 How to register a Binance bot — step by step</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div style="font-size:11px;color:var(--muted);line-height:1.5">
+          <div style="color:var(--green);font-weight:700;margin-bottom:4px">1. Open Binance</div>
+          Go to Binance → Trading Bots → find your active bot
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5">
+          <div style="color:var(--green);font-weight:700;margin-bottom:4px">2. Find the details</div>
+          Note the trading pair (e.g. BTC/USDT), how much capital you put in, and whether it's Grid or DCA
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5">
+          <div style="color:var(--green);font-weight:700;margin-bottom:4px">3. Fill in the form</div>
+          Enter those details below. The symbol should be in format BTCUSDT (no slash)
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5">
+          <div style="color:var(--green);font-weight:700;margin-bottom:4px">4. What happens next</div>
+          A card appears instantly. AlphaControl will track its trades, score its performance, and include it in your risk calculations — all automatically from then on
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD BOT FORM -->
+    <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span>➕ Register a Binance Bot</span>
+      <button class="mgr-btn mgr-btn-add" style="font-size:11px;padding:5px 14px" onclick="toggleAddForm()">+ Add Bot</button>
+    </div>
+    <div class="mgr-form-wrap" id="add-bot-form">
+      <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--muted);line-height:1.5">
+        Fill in the details exactly as they appear in your Binance Trading Bots page. Capital is the total amount you allocated to this bot when you set it up (e.g. $400 for a grid bot). This is stored in your browser and never sent anywhere.
+      </div>
+      <div class="mgr-grid">
+        <div class="mgr-field">
+          <label class="mgr-label">Bot Name <span style="color:var(--red)">*</span></label>
+          <input class="mgr-input" id="mgr-name" placeholder="e.g. ETH/USDT Spot Grid" />
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Symbol <span style="color:var(--red)">*</span></label>
+          <input class="mgr-input" id="mgr-symbol" placeholder="e.g. ETHUSDT (no slash)" />
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Capital Invested ($) <span style="color:var(--red)">*</span></label>
+          <input class="mgr-input" id="mgr-capital" type="number" placeholder="e.g. 400" />
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Strategy</label>
+          <select class="mgr-select" id="mgr-strategy">
+            <option value="grid">Grid Bot</option>
+            <option value="dca">DCA Bot</option>
+            <option value="signal">Signal Bot</option>
+          </select>
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Market Type</label>
+          <select class="mgr-select" id="mgr-market">
+            <option value="spot">Spot</option>
+            <option value="futures">Futures / Perpetual</option>
+          </select>
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Direction</label>
+          <select class="mgr-select" id="mgr-direction">
+            <option value="long">Long (Buy)</option>
+            <option value="short">Short (Sell)</option>
+          </select>
+        </div>
+        <div class="mgr-field">
+          <label class="mgr-label">Current ROI % (optional)</label>
+          <input class="mgr-input" id="mgr-roi" type="number" step="0.01" placeholder="e.g. 1.83 (from Binance)" />
+        </div>
+        <div class="mgr-field" style="grid-column:span 2">
+          <label class="mgr-label" style="color:var(--muted)">Leave Venue as Binance — this form is for Binance bots only</label>
+          <input class="mgr-input" value="Binance Native Bot" readonly style="opacity:.5" />
+          <input type="hidden" id="mgr-venue" value="binance" />
+        </div>
+      </div>
+      <div class="mgr-actions">
+        <button class="mgr-btn mgr-btn-add" onclick="saveNewBot()">✓ Save & Add to Dashboard</button>
+        <button class="mgr-btn mgr-btn-cancel" onclick="hideAddBotForm()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- REGISTERED BOTS LIST -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Registered Binance Bots (<span id="mgr-count">0</span>)</div>
+      <div style="font-size:10px;color:var(--muted)">3Commas bots appear automatically — no registration needed</div>
+    </div>
+    <div class="mgr-list" id="mgr-list"></div>
+  </div>
+
   <!-- FILTER -->
   <div class="filter-bar">
     <button class="filter-btn active" onclick="filterBots('all',this)">All</button>
@@ -374,97 +514,23 @@ main{padding:24px 32px;max-width:1400px;margin:0 auto}
     <button class="filter-btn" onclick="filterBots('spot',this)">Spot</button>
     <button class="filter-btn" onclick="filterBots('futures',this)">Futures</button>
     <button class="filter-btn" onclick="filterBots('binance',this)">Binance Native</button>
+    <button class="filter-btn" onclick="toggleBotManager()" id="mgr-btn" style="margin-left:auto;border-color:var(--border2)">⚙️ Manage Bots</button>
   </div>
 
-  <!-- 3COMMAS DCA -->
-  <div class="section-header"><span class="section-title">3Commas DCA Bots</span><span class="section-count">4</span><div class="section-line"></div></div>
-  <div class="bots-grid">
-    <div class="bot-card long" data-type="dca futures">
-      <div class="bot-header"><div class="bot-name">BTC Long Futures Bot</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801943">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801943">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-futures">Futures</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">BTCUSDT / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$350</span></div>
-        <div class="stat"><span class="stat-label">Leverage</span><span class="stat-value amber">2×</span></div>
-        <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801943">0</span></div>
-        <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
-        <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">22%</span></div>
-      </div>
-    </div>
-    <div class="bot-card short" data-type="dca futures">
-      <div class="bot-header"><div class="bot-name" data-bot-id="16801248">BTC Hedge Bot</div><div class="bot-header-right"><span class="status-badge status-active" id="status-16801248">Active</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-stable" id="score-16801248">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-short">Short</span><span class="tag tag-futures">Futures</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">BTCUSDT / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$250</span></div>
-        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green" id="pnl-16801248">+$8.50</span></div>
-        <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801248">1</span></div>
-        <div class="stat"><span class="stat-label">Leverage</span><span class="stat-value amber">2×</span></div>
-        <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">22%</span></div>
-      </div>
-      <div class="pnl-bar"><div class="pnl-fill positive" style="width:60%"></div></div>
-    </div>
-    <div class="bot-card long" data-type="dca spot">
-      <div class="bot-header"><div class="bot-name" data-bot-id="16801317">BTC Break Out Bot</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801317">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801317">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
-        <div class="stat"><span class="stat-label">Active</span><span class="stat-value">1/1</span></div>
-        <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">3%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801317">0</span></div>
-        <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
-        <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">5%</span></div>
-      </div>
-    </div>
-    <div class="bot-card long" data-type="dca spot">
-      <div class="bot-header"><div class="bot-name" data-bot-id="16801290">USDT Stable Coin Engine</div><div class="bot-header-right"><span class="status-badge status-idle" id="status-16801290">Idle</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-idle" id="score-16801290">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-dca">DCA</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
-        <div class="stat"><span class="stat-label">Active</span><span class="stat-value">1/1</span></div>
-        <div class="stat"><span class="stat-label">Take Profit</span><span class="stat-value">2.4%</span></div>
-        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-16801290">0</span></div>
-        <div class="stat"><span class="stat-label">Avg Orders</span><span class="stat-value">3</span></div>
-        <div class="stat"><span class="stat-label">Stop Loss</span><span class="stat-value red">5%</span></div>
-      </div>
-    </div>
+  <!-- 3COMMAS BOTS — fully dynamic, rendered by load3CommasBots() -->
+  <div class="section-header" id="tc-all-header">
+    <span class="section-title">3Commas Bots</span>
+    <span class="section-count" id="tc-all-count">—</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="bots-grid" id="bots-container">
+    <!-- Cards rendered dynamically from /api/commas-bots -->
   </div>
 
-  <!-- SIGNAL BOTS -->
-  <div class="section-header"><span class="section-title">3Commas Signal Bots</span><span class="section-count">2</span><div class="section-line"></div></div>
-  <div class="bots-grid">
-    <div class="bot-card signal" data-type="signal spot">
-      <div class="bot-header"><div class="bot-name" data-bot-id="194116">BTC Binance Signal Bot</div><div class="bot-header-right"><span class="status-badge status-waiting" id="status-194116">Waiting</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-194116">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-signal">Signal</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
-        <div class="stat"><span class="stat-label">Signals</span><span class="stat-value">1</span></div>
-        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px">EMA 9×21</span></div>
-        <div class="stat"><span class="stat-label">Active</span><span class="stat-value">0/1</span></div>
-        <div class="stat"><span class="stat-label">Timeframe</span><span class="stat-value">15m</span></div>
-        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px">✓ Live</span></div>
-      </div>
-      <div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>
-    </div>
-    <div class="bot-card signal" data-type="signal spot">
-      <div class="bot-header"><div class="bot-name" data-bot-id="194115">ETH Binance Signal Bot</div><div class="bot-header-right"><span class="status-badge status-waiting" id="status-194115">Waiting</span><div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-weak" id="score-194115">—</span></div></div></div>
-      <div class="bot-tags"><span class="tag tag-long">Long</span><span class="tag tag-spot">Spot</span><span class="tag tag-signal">Signal</span><span class="tag tag-binance">Binance</span></div>
-      <div class="bot-pair mono">ETH / USDT</div><div class="divider"></div>
-      <div class="bot-stats">
-        <div class="stat"><span class="stat-label">Size</span><span class="stat-value">$100</span></div>
-        <div class="stat"><span class="stat-label">Signals</span><span class="stat-value">1</span></div>
-        <div class="stat"><span class="stat-label">Trigger</span><span class="stat-value" style="font-size:11px">EMA 9×21</span></div>
-        <div class="stat"><span class="stat-label">Active</span><span class="stat-value">0/1</span></div>
-        <div class="stat"><span class="stat-label">Timeframe</span><span class="stat-value">15m</span></div>
-        <div class="stat"><span class="stat-label">Webhook</span><span class="stat-value green" style="font-size:11px">✓ Live</span></div>
-      </div>
-      <div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>
-    </div>
+  <!-- SIGNAL BOTS — dynamic -->
+  <div class="section-header" id="tc-signal-header" style="display:none"><span class="section-title">3Commas Signal Bots</span><span class="section-count" id="tc-signal-count">—</span><div class="section-line"></div></div>
+  <div class="bots-grid" id="signal-container" style="display:none">
+    <!-- Dynamic signal bot cards rendered by JS -->
   </div>
 
   <!-- BINANCE NATIVE -->
@@ -819,23 +885,127 @@ async function loadWallets() {
   if(be){ be.textContent=lPct>sPct?'LONG':'SHORT'; be.className='bias-badge '+(lPct>sPct?'bias-long':'bias-short'); }
 }
 
+// 3Commas bot type inference from pair/name
+function inferTCBotType(bot) {
+  const name = (bot.name||'').toLowerCase();
+  const pair = (bot.pair||'').toUpperCase();
+  if (name.includes('signal') || name.includes('rsi') || name.includes('ma cross') || name.includes('bb')) return 'signal';
+  if (name.includes('hedge') || name.includes('short')) return 'short';
+  if (name.includes('break') || name.includes('breakout')) return 'breakout';
+  return 'dca';
+}
+
+function inferTCMarket(bot) {
+  const pair = (bot.pair||'').toUpperCase();
+  const name = (bot.name||'').toLowerCase();
+  if (pair.includes('FUTURES') || name.includes('futures') || name.includes('perp')) return 'futures';
+  return 'spot';
+}
+
+function inferTCSymbol(bot) {
+  const pair = (bot.pair||'').replace('USDT_','').replace('_USDT','').replace('USDT','');
+  return (pair || 'BTC') + 'USDT';
+}
+
+function inferDirection(bot) {
+  const name = (bot.name||'').toLowerCase();
+  if (name.includes('short') || name.includes('hedge') || name.includes('bear')) return 'short';
+  return 'long';
+}
+
+function renderTCBotCard(bot, capital, roi, score, status) {
+  const type      = inferTCBotType(bot);
+  const market    = inferTCMarket(bot);
+  const symbol    = inferTCSymbol(bot);
+  const direction = inferDirection(bot);
+  const trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
+  const dirClass  = direction === 'short' ? 'short' : type === 'signal' ? 'signal' : 'long';
+  const sc        = score >= 75 ? 'score-strong' : score >= 55 ? 'score-stable' : score >= 35 ? 'score-weak' : trades===0 ? 'score-idle' : 'score-critical';
+
+  return `
+    <div class="bot-card ${dirClass}" data-type="${type} ${market}" id="card-${bot.id}">
+      <div class="bot-header">
+        <div class="bot-name" data-bot-id="${bot.id}">${bot.name}</div>
+        <div class="bot-header-right">
+          <span class="status-badge ${status.cls}" id="status-${bot.id}">${status.label}</span>
+          <div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score ${sc}" id="score-${bot.id}">${score}</span></div>
+        </div>
+      </div>
+      <div class="bot-tags">
+        <span class="tag ${direction==='short'?'tag-short':'tag-long'}">${direction}</span>
+        <span class="tag ${market==='futures'?'tag-futures':'tag-spot'}">${market}</span>
+        <span class="tag ${type==='signal'?'tag-signal':'tag-dca'}">${type}</span>
+        <span class="tag tag-binance">3Commas</span>
+      </div>
+      <div class="bot-pair mono">${symbol}</div>
+      <div class="divider"></div>
+      <div class="bot-stats">
+        <div class="stat"><span class="stat-label">Capital</span><span class="stat-value blue">${capital ? '$'+capital : '—'}</span><span style="font-size:9px;color:var(--muted)">${capital ? 'from API' : 'unknown'}</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value ${bot.profit>=0?'green':'red'}" id="pnl-${bot.id}">${fmtProfit(bot.profit||0)}</span></div>
+        <div class="stat"><span class="stat-label">ROI</span><span class="stat-value ${roi>=0?'green':'red'}">${roi>=0?'+':''}${roi.toFixed(2)}%</span></div>
+        <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-${bot.id}">${trades}</span></div>
+        <div class="stat"><span class="stat-label">Active Deals</span><span class="stat-value">${bot.activeDeals||0}</span></div>
+        <div class="stat"><span class="stat-label">Completed</span><span class="stat-value green">${bot.completedDeals||0}</span></div>
+      </div>
+      ${bot.profit > 0 ? '<div class="pnl-bar"><div class="pnl-fill positive" style="width:'+Math.min(100,roi*10)+'%"></div></div>' : ''}
+    </div>`;
+}
+
 async function load3CommasBots() {
   const data = await apiFetch('commas-bots');
-  const CAPS = {16801943:350,16801248:250,16801317:100,16801290:100,194116:100,194115:100};
-  data.bots.forEach(b => {
-    const trades = (b.completedDeals||0)+(b.activeDeals||0);
-    const cap    = CAPS[b.id]||100;
-    const roi    = b.profit ? (b.profit/cap)*100 : 0;
-    setEl('trades-'+b.id, trades);
-    const pe=document.getElementById('pnl-'+b.id);
-    if(pe&&b.profit!==undefined){ pe.textContent=fmtProfit(b.profit); pe.className='stat-value '+cc(b.profit); }
-    // Status driven by score (scores loaded separately via /api/decisions)
-    const st = !b.enabled ? {label:'Paused',cls:'status-paused'} :
-               trades===0  ? {label:'Idle',  cls:'status-idle'}   :
-               roi<-1      ? {label:'Underperforming',cls:'status-underperforming'} :
-                             {label:'Active',cls:'status-active'};
-    setEl('status-'+b.id, st.label, 'status-badge '+st.cls);
-  });
+  const container = document.getElementById('bots-container');
+  const signalContainer = document.getElementById('signal-container');
+  const signalHeader    = document.getElementById('tc-signal-header');
+
+  // Capital comes directly from 3Commas API — no hardcoding needed
+  // Separate signal bots from trading bots
+  const signalKeywords = ['signal','rsi','ma cross','bb strategy'];
+  const isSignal = b => signalKeywords.some(k => (b.name||'').toLowerCase().includes(k));
+  const tradingBots = data.bots.filter(b => !isSignal(b));
+  const signalBots  = data.bots.filter(b => isSignal(b));
+
+  // Render trading bots dynamically
+  if (container) {
+    container.innerHTML = tradingBots.map(bot => {
+      // Capital comes from API (base + safety orders), no hardcoding needed
+      const capital = bot.capital || 100; // API provides this, fallback 100
+      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      const roi     = bot.profit ? (bot.profit/capital)*100 : 0;
+      const score   = scoreBot({ roi, trades, drawdownPct:roi<0?Math.abs(roi):0, change24h:0, type:'dca', capital });
+      const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
+                      trades===0   ? {label:'Idle',  cls:'status-idle'}   :
+                      roi<-1       ? {label:'Underperforming',cls:'status-underperforming'} :
+                                     {label:'Active',cls:'status-active'};
+      return renderTCBotCard(bot, capital, roi, score, status);
+    }).join('');
+  }
+
+  // Render signal bots dynamically
+  if (signalBots.length > 0 && signalContainer && signalHeader) {
+    signalContainer.style.display = '';
+    signalHeader.style.display    = '';
+    setEl('tc-signal-count', signalBots.length);
+    signalContainer.innerHTML = signalBots.map(bot => {
+      const capital = 100;
+      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      const roi     = 0;
+      const score   = scoreBot({ roi, trades, drawdownPct:0, change24h:0, type:'signal' });
+      const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
+                      trades===0   ? {label:'Waiting',cls:'status-waiting'} :
+                                     {label:'Active',cls:'status-active'};
+      const card = renderTCBotCard(bot, capital, roi, score, status);
+      // Add alert banner for idle signal bots
+      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>' : '';
+      return card.replace('</div>
+    </div>', alertBanner + '
+    </div>
+    </div>');
+    }).join('');
+  }
+
+  // Update section count
+  setEl('tc-all-count', tradingBots.length);
+
   window._tcTrades = data.bots.reduce((s,b)=>s+(b.completedDeals||0),0);
   updateTotalTrades();
 }
@@ -907,6 +1077,249 @@ function filterBots(type,btn) {
 // Decisions: every 15 minutes (server-side engine)
 let _decisionInterval;
 
+// ============================================================
+// BOT MANAGER — Frontend bot registry stored in localStorage
+// Users add/remove bots without any backend changes
+// ============================================================
+
+const LS_KEY = 'alphacontrol_bots';
+
+function getUserBots() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch(e) { return []; }
+}
+
+function saveUserBots(bots) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(bots)); } catch(e) {}
+}
+
+function getMergedBotMeta() {
+  // Merge hardcoded defaults with user-added bots
+  // User bots take precedence if same ID/symbol
+  const userBots = getUserBots();
+  const merged = {};
+  // Start with user bots
+  userBots.forEach(b => {
+    const key = b.tcId || b.id;
+    merged[key] = {
+      name:       b.name,
+      capital:    parseFloat(b.capital)||0,
+      direction:  b.direction||'long',
+      strategy:   b.strategy||'grid',
+      venue:      b.venue||'binance',
+      marketType: b.market||'spot',
+      symbol:     (b.symbol||'').toUpperCase(),
+      roi:        parseFloat(b.roi)||0,
+      scoreType:  b.strategy==='grid' ? (b.market==='futures'?'futures-grid':'spot-grid') : 'spot-dca',
+      userAdded:  true
+    };
+  });
+  return merged;
+}
+
+function toggleBotManager() {
+  const panel = document.getElementById('bot-mgr-panel');
+  const btn   = document.getElementById('mgr-btn');
+  if (!panel) return;
+  const open = panel.style.display !== 'none' && panel.style.display !== '';
+  panel.style.display = open ? 'none' : 'block';
+  if (btn) { btn.style.borderColor = open ? '' : 'var(--green)'; btn.style.color = open ? '' : 'var(--green)'; }
+  if (!open) renderBotManager();
+}
+
+function showAddBotForm() {
+  const f = document.getElementById('add-bot-form');
+  if (f) f.style.display = 'block';
+}
+function toggleAddForm() {
+  const f = document.getElementById('add-bot-form');
+  if (f) f.style.display = f.style.display === 'block' ? 'none' : 'block';
+}
+
+function hideAddBotForm() {
+  const f = document.getElementById('add-bot-form');
+  if (f) f.style.display = 'none';
+  // Clear fields
+  ['mgr-name','mgr-symbol','mgr-capital','mgr-roi','mgr-tcid'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+
+function saveNewBot() {
+  const name    = document.getElementById('mgr-name')?.value?.trim();
+  const symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
+  const capital = parseFloat(document.getElementById('mgr-capital')?.value);
+  const direction = document.getElementById('mgr-direction')?.value;
+  const strategy  = document.getElementById('mgr-strategy')?.value;
+  const venue     = document.getElementById('mgr-venue')?.value;
+  const market    = document.getElementById('mgr-market')?.value;
+  const roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
+  const tcId      = document.getElementById('mgr-tcid')?.value?.trim();
+
+  if (!name || !symbol || !capital || capital <= 0) {
+    showToast('❌ Name, symbol and capital are required', 'error');
+    return;
+  }
+
+  const bots = getUserBots();
+  const newBot = {
+    id:        'user-' + Date.now(),
+    name, symbol, capital, direction, strategy, venue, market, roi,
+    tcId:      tcId || null,
+    addedAt:   new Date().toISOString()
+  };
+  bots.push(newBot);
+  saveUserBots(bots);
+  hideAddBotForm();
+  renderBotManager();
+  // Re-render dynamic bot cards
+  renderUserBotCards();
+  showToast('✅ Bot added: ' + name, 'success');
+}
+
+function removeUserBot(id) {
+  const bots = getUserBots().filter(b => b.id !== id);
+  saveUserBots(bots);
+  renderBotManager();
+  renderUserBotCards();
+  showToast('Bot removed', 'success');
+}
+
+function renderBotManager() {
+  const list    = document.getElementById('mgr-list');
+  const countEl = document.getElementById('mgr-count');
+  const bots    = getUserBots();
+  if (countEl) countEl.textContent = bots.length;
+  if (!list) return;
+  if (!bots.length) {
+    list.innerHTML = '<div class="mgr-empty">
+  <div style="font-weight:700;color:var(--text);margin-bottom:4px">3Commas bots auto-appear ✅</div>
+  <div>Use "+ Add Bot" for Binance native bots — Binance's API doesn't expose a bot list, so capital must be entered once per bot.</div>
+</div>';
+    return;
+  }
+  const colors = { binance:'#f0b90b', '3commas':'var(--teal)' };
+  list.innerHTML = bots.map(b => `
+    <div class="mgr-bot-row">
+      <div>
+        <div class="mgr-bot-name">${b.name}</div>
+        <div class="mgr-bot-meta">${b.symbol} · $${b.capital} · ${b.direction} · ${b.strategy}</div>
+      </div>
+      <span class="mgr-bot-tag" style="background:rgba(255,255,255,.06);color:${colors[b.venue]||'var(--muted)'}">${b.venue}</span>
+      <button class="mgr-remove" onclick="removeUserBot('${b.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+function renderUserBotCards() {
+  // Inject dynamic bot cards for user-added bots into the correct section
+  const bots = getUserBots();
+  // Remove any previously injected dynamic cards
+  document.querySelectorAll('.bot-card[data-user-added]').forEach(el => el.remove());
+  if (!bots.length) return;
+
+  // Group by section
+  const commasBots  = bots.filter(b => b.venue==='3commas');
+  const binanceBots = bots.filter(b => b.venue==='binance');
+
+  // Inject Binance native bots into binance grid
+  const binanceGrid = document.getElementById('binance-grid');
+  if (binanceGrid && binanceBots.length) {
+    binanceBots.forEach(b => {
+      const card = createUserBotCard(b);
+      binanceGrid.appendChild(card);
+    });
+  }
+
+  // Inject 3Commas bots into bots-container
+  const botsContainer = document.getElementById('bots-container');
+  if (botsContainer && commasBots.length) {
+    commasBots.forEach(b => {
+      const card = createUserBotCard(b);
+      botsContainer.appendChild(card);
+    });
+  }
+
+  // Update section counts
+  const binanceCount = document.querySelector('.section-count');
+  updateSectionCounts();
+}
+
+function updateSectionCounts() {
+  const userBots = getUserBots();
+  const binanceExtra  = userBots.filter(b => b.venue==='binance').length;
+  const commasExtra   = userBots.filter(b => b.venue==='3commas').length;
+  // Update count badges
+  const sections = document.querySelectorAll('.section-header');
+  sections.forEach(s => {
+    const title = s.querySelector('.section-title')?.textContent||'';
+    const badge = s.querySelector('.section-count');
+    if (!badge) return;
+    const base = parseInt(badge.dataset.base||badge.textContent)||0;
+    if (!badge.dataset.base) badge.dataset.base = base;
+    if (title.includes('Binance')) badge.textContent = base + binanceExtra;
+    if (title.includes('3Commas DCA')) badge.textContent = base + commasExtra;
+  });
+}
+
+function createUserBotCard(b) {
+  const div = document.createElement('div');
+  const dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
+  const stratTag = b.strategy==='grid'?'tag-grid':b.strategy==='signal'?'tag-signal':'tag-dca';
+  const venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
+  div.className = `bot-card ${dirClass}`;
+  div.dataset.type = `${b.strategy} ${b.market} ${b.venue}`;
+  div.dataset.userAdded = 'true';
+  div.id = `card-user-${b.id}`;
+  div.innerHTML = `
+    <div class="bot-header">
+      <div class="bot-name">${b.name}</div>
+      <div class="bot-header-right">
+        <span class="status-badge status-active" id="status-user-${b.id}">Active</span>
+        <div class="score-wrap"><span class="score-lbl">AI</span><span class="ai-score score-stable" id="score-user-${b.id}">—</span></div>
+      </div>
+    </div>
+    <div class="bot-tags">
+      <span class="tag ${dirClass==='short'?'tag-short':'tag-long'}">${b.direction}</span>
+      <span class="tag ${b.market==='futures'?'tag-futures':'tag-spot'}">${b.market}</span>
+      <span class="tag ${stratTag}">${b.strategy}</span>
+      <span class="tag" style="background:rgba(255,255,255,.06);color:${venueColor}">${b.venue}</span>
+    </div>
+    <div class="bot-pair mono">${b.symbol}</div>
+    <div class="divider"></div>
+    <div class="bot-stats">
+      <div class="stat"><span class="stat-label">Capital</span><span class="stat-value blue">$${b.capital}</span></div>
+      <div class="stat"><span class="stat-label">Direction</span><span class="stat-value">${b.direction.toUpperCase()}</span></div>
+      <div class="stat"><span class="stat-label">Strategy</span><span class="stat-value" style="font-size:11px">${b.strategy.toUpperCase()}</span></div>
+      <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="trades-user-${b.id}">—</span></div>
+      <div class="stat"><span class="stat-label">ROI</span><span class="stat-value ${b.roi>=0?'green':'red'}">${b.roi>=0?'+':''}${b.roi}%</span></div>
+      <div class="stat"><span class="stat-label">Added</span><span class="stat-value" style="font-size:10px">${new Date(b.addedAt).toLocaleDateString('en-GB')}</span></div>
+    </div>
+  `;
+  // Score the bot
+  const score = scoreBot({ roi:b.roi||0, trades:0, drawdownPct:b.roi<0?Math.abs(b.roi):0, change24h:0, type:b.strategy==='grid'?(b.market==='futures'?'futures-grid':'spot-grid'):'spot-dca' });
+  const scoreEl = div.querySelector('.ai-score');
+  if (scoreEl) {
+    scoreEl.textContent = score;
+    scoreEl.className = 'ai-score ' + (score>=75?'score-strong':score>=55?'score-stable':score>=35?'score-weak':'score-critical');
+  }
+  return div;
+}
+
+// Scoring function (mirrors worker logic, runs in browser)
+function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
+  const roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
+  const ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
+  const actScore  = Math.min(100, trades * 8);
+  const conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
+  const absChange = Math.abs(change24h||0);
+  const marketFit = (type==='spot-grid'||type==='futures-grid')
+    ? (absChange < 2 ? 80 : absChange < 4 ? 55 : 35)
+    : (absChange > 1 ? 75 : 45);
+  return Math.round(roiScore*0.30 + ddScore*0.25 + actScore*0.15 + conScore*0.15 + marketFit*0.15);
+}
+
 function renderHistory(history) {
   const panel = document.getElementById('history-panel');
   const list  = document.getElementById('history-list');
@@ -976,6 +1389,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
     if (h.length) renderHistory(h);
   } catch(e) {}
+  // Render any user-added bots
+  renderUserBotCards();
 });
 </script>
 </body>

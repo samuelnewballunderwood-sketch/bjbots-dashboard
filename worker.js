@@ -27,6 +27,10 @@ const BOT_META = {
   16801290: { name:'USDT Stable Coin Engine', capital:100, direction:'long',  strategy:'dca',    venue:'3commas', marketType:'spot',    symbol:'BTCUSDT' },
   194116:   { name:'BTC Binance Signal Bot',  capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT' },
   194115:   { name:'ETH Binance Signal Bot',  capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT' },
+  // New bots detected from 3Commas API
+  16805646: { name:'Long MA Cross 30m',               capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT' },
+  16805638: { name:'Short RSI/BB Strategy (ETH/USDT)', capital:100, direction:'short', strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT' },
+  16805637: { name:'Short RSI/BB Strategy (BTC/USDT)', capital:100, direction:'short', strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT' },
   'eth-grid-trades':    { name:'ETH/USDT Spot Grid',   capital:400, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'ETHUSDT', roi:0.83,  scoreType:'spot-grid'    },
   'btc-dca-trades':     { name:'BTC/USDT Spot DCA',    capital:300, direction:'long', strategy:'dca',  venue:'binance', marketType:'spot',    symbol:'BTCUSDT', roi:2.54,  scoreType:'spot-dca'     },
   'bnb-grid-trades':    { name:'BNB/USDT Spot Grid',   capital:300, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'BNBUSDT', roi:0.39,  scoreType:'spot-grid'    },
@@ -291,9 +295,93 @@ async function getBinanceBots(env) {
 async function getBinanceBotsData(env) { const res=await getBinanceBots(env); return res.json(); }
 async function getFuturesWalletData(env) { const res=await getFuturesWallet(env); return res.json(); }
 
+// Infer Binance bot capital from locked spot balances + futures positions
+// This is the only way to get capital data without a dedicated bot API
+async function getBinanceCapital(env) {
+  try {
+    const ts    = Date.now(), q = `timestamp=${ts}&recvWindow=10000`;
+    const sig   = await hmacSign(env.BINANCE_SECRET, q);
+    const [spot, fut] = await Promise.all([
+      fetch(`https://api.binance.com/api/v3/account?${q}&signature=${sig}`,  { headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY} }).then(r=>r.json()),
+      fetch(`https://fapi.binance.com/fapi/v2/account?${q}&signature=${sig}`,{ headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY} }).then(r=>r.json()),
+    ]);
+    // Spot: locked amounts = capital held in grid/DCA orders
+    const spotCapital = {};
+    (spot.balances||[]).forEach(b => {
+      const locked = parseFloat(b.locked||0);
+      const free   = parseFloat(b.free||0);
+      if (locked > 0 || free > 0) {
+        spotCapital[b.asset + 'USDT'] = {
+          locked, free,
+          totalUSDT: b.asset === 'USDT' ? locked+free : null // USDT directly
+        };
+      }
+    });
+    // Futures: position notional value = capital in use
+    const futCapital = {};
+    (fut.positions||[]).forEach(p => {
+      const notional = Math.abs(parseFloat(p.notional||0));
+      const margin   = parseFloat(p.initialMargin||0);
+      if (notional > 1) {
+        futCapital[p.symbol] = { notional: Math.round(notional), margin: Math.round(margin) };
+      }
+    });
+    return { spotCapital, futCapital };
+  } catch(e) {
+    console.warn('getBinanceCapital failed:', e.message);
+    return { spotCapital:{}, futCapital:{} };
+  }
+}
+
 // ============================================================
 // DECISIONS ENDPOINT
 // ============================================================
+// Build portfolio snapshot from LIVE API data
+// This replaces BOT_META hardcoding — capital comes from actual API responses
+function buildLivePortfolio(tcBots, bnBots, futData) {
+  let totalAllocated = 0, longCapital = 0, shortCapital = 0;
+  const byStrategy = {}, byVenue = {}, bySymbol = {};
+
+  // 3Commas bots — capital from API (base + safety orders)
+  tcBots.forEach(b => {
+    const capital = b.capital || 100; // API provides this now, fallback to 100
+    const symbol  = (b.pair||'BTCUSDT').replace('USDT_','').replace('_USDT','') + 'USDT';
+    const dir     = b.direction || 'long';
+    totalAllocated += capital;
+    if (dir === 'short') shortCapital += capital; else longCapital += capital;
+    byStrategy[b.strategy||'dca'] = (byStrategy[b.strategy||'dca']||0) + capital;
+    byVenue['3commas'] = (byVenue['3commas']||0) + capital;
+    bySymbol[symbol]   = (bySymbol[symbol]||0) + capital;
+  });
+
+  // Binance bots — capital from trade sizes in BOT_META (user-defined) 
+  // or from futures margin if available
+  bnBots.forEach(b => {
+    const meta    = BOT_META[b.id];
+    const capital = meta?.capital || 0;
+    if (capital <= 0) return;
+    const symbol  = b.symbol || 'BTCUSDT';
+    totalAllocated += capital;
+    longCapital    += capital; // Binance bots are always long-side (grid/DCA)
+    byStrategy[meta?.strategy||'grid'] = (byStrategy[meta?.strategy||'grid']||0) + capital;
+    byVenue['binance'] = (byVenue['binance']||0) + capital;
+    bySymbol[symbol]   = (bySymbol[symbol]||0) + capital;
+  });
+
+  return {
+    totalAllocated,
+    longCapital,
+    shortCapital,
+    longPct:  totalAllocated ? Math.round((longCapital/totalAllocated)*100) : 0,
+    shortPct: totalAllocated ? Math.round((shortCapital/totalAllocated)*100) : 0,
+    byStrategy,
+    byVenue,
+    bySymbol,
+    botCount: tcBots.length + bnBots.length,
+    source:   'live', // marks this as computed from live data
+  };
+}
+
 async function getDecisions(env) {
   try {
     const [tcData, bnData, futData] = await Promise.all([
