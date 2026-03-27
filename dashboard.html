@@ -432,7 +432,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
   </div>
   <div class="header-right">
     <div class="last-sync"><span class="live-dot"></span><span id="last-updated">Connecting...</span></div>
-    <div class="mode-badge mode-advisory" id="h-mode">Advisory Mode</div>
+    <div class="mode-badge mode-advisory" id="h-mode">Checking...</div>
   </div>
 </header>
 
@@ -2819,6 +2819,20 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // ── UX: Control system upgrades — presentation only ──────────────────────
 
+function updateModeBadge() {
+  fetch('/api/status').then(function(r){return r.json();}).then(function(s){
+    const m = document.getElementById('h-mode');
+    if (!m) return;
+    if (s.advisoryMode) {
+      m.textContent = 'Advisory Mode';
+      m.className = 'mode-badge mode-advisory';
+    } else {
+      m.textContent = '⚡ Live Mode';
+      m.className = 'mode-badge mode-live';
+    }
+  }).catch(function(){});
+}
+
 function _syncHero(data) {
   if (!data || !data.riskState) return;
   const rs = data.riskState;
@@ -2934,6 +2948,8 @@ function checkPw() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Set mode badge immediately on page load — don't wait for login
+  updateModeBadge();
   const inp = document.getElementById('pw-input');
   if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPw(); });
   if (sessionStorage.getItem('bjbots_auth')==='1') {
