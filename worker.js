@@ -642,7 +642,7 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
   const now = new Date().toISOString();
 
   // Risk state gates everything
-  const { riskState, riskScore, factors, floatingPct } = computeRiskState({
+  const { riskState, riskScore, factors, floatingPct, riskSubLabel } = computeRiskState({
     longPct, floatingPnl, totalAllocated,
     volatility:market.volatility||'Low', byStrategy,
   });
