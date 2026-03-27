@@ -986,9 +986,12 @@ function renderDecisionCard(d, i) {
     ? '<div class="cost-of-inaction">⚠ ' + d.costOfInaction + '</div>'
     : '';
   const OBJ_TIPS = {'long_exposure':'% capital betting prices rise. Target: 55% in bear market.','hedge_exposure':'Capital that profits when prices fall — downside protection.','idle_capital':'Capital in bots with 0 trades — not actively working.','bot_efficiency':'Bots scoring below 50/100 — underperforming vs capital deployed.','btc_concentration':'% portfolio correlated to BTC price movements.','grid_allocation':'Capital in grid bots — work best in sideways low-vol markets.','dca_allocation':'DCA bots buy over time to average your entry price.','drawdown_protection':'Open positions currently losing money.','portfolio_balance':'Overall composition vs target allocation.'};
-  const objTip  = (d.objective && OBJ_TIPS[d.objective]) ? ' title="' + OBJ_TIPS[d.objective] + '"' : '';
+  const objTip  = (d.objective && OBJ_TIPS[d.objective]) ? OBJ_TIPS[d.objective] : '';
   const objHtml = d.objective
-    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;cursor:help"' + objTip + '>' + d.objective.replace(/_/g,' ') + '</span>'
+    ? '<span class="tip" style="display:inline-flex;align-items:center">' +
+        '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;cursor:help">' + d.objective.replace(/_/g,' ') + '</span>' +
+        (objTip ? '<span class="tip-box" style="width:200px"><div class="tip-title">' + d.objective.replace(/_/g,' ') + '</div>' + objTip + '</span>' : '') +
+      '</span>'
     : '';
   const isSuggested = d.category === 'suggested';
   return (
