@@ -3,248 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AlphaControl — Capital Management</title>
+<title>AlphaControl</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ── DESIGN TOKENS ─────────────────────────────────────── */
+/* ── TOKENS ── */
 :root {
-  /* Softer dark backgrounds — warmer, less harsh */
   --bg:#0d0f14; --bg2:#13161e; --bg3:#191c26; --bg4:#1f2330;
   --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
   --text:#dde1ec; --muted:#636b7d; --muted2:#919aaa;
-
-  /* Softer, desaturated pastels — easier on the eyes */
-  --green:#4ade80;   --green-dim:rgba(74,222,128,0.10);   --green-glow:rgba(74,222,128,0.12);
-  --red:#f87171;     --red-dim:rgba(248,113,113,0.10);    --red-glow:rgba(248,113,113,0.12);
+  /* Soft palette for calm states */
+  --green:#4ade80;   --green-dim:rgba(74,222,128,0.10);
+  --red:#f87171;     --red-dim:rgba(248,113,113,0.10);
   --amber:#fbbf24;   --amber-dim:rgba(251,191,36,0.10);
   --blue:#60a5fa;    --blue-dim:rgba(96,165,250,0.10);
   --purple:#c084fc;  --purple-dim:rgba(192,132,252,0.10);
   --teal:#2dd4bf;    --teal-dim:rgba(45,212,191,0.10);
-  --pink:#f472b6;    --pink-dim:rgba(244,114,182,0.10);
-
+  /* Full intensity for urgency */
+  --red-hot:#dc2626;   --red-hot-dim:rgba(220,38,38,0.12);
+  --amber-hot:#d97706; --amber-hot-dim:rgba(217,119,6,0.10);
   --radius:12px; --radius-lg:16px; --radius-sm:8px;
 }
-
-/* ── RESET ─────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
-/* Subtle noise texture adds depth and warmth */
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
 .mono{font-family:'JetBrains Mono',monospace}
 
-/* ── TOOLTIP SYSTEM ────────────────────────────────────── */
-.tip{position:relative;cursor:help}
-.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);font-size:9px;font-weight:700;margin-left:4px;vertical-align:middle;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+/* ── TOOLTIP ── */
+.tip{position:relative;cursor:help;display:inline-flex;align-items:center}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);font-size:8px;font-weight:700;margin-left:4px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
 .tip:hover .tip-icon{background:var(--purple-dim);border-color:var(--purple);color:var(--purple)}
-.tip-box{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1f2e;border:1px solid rgba(168,85,247,0.3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted2);line-height:1.5;width:220px;z-index:1000;display:none;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);font-family:'Syne',sans-serif;font-weight:400}
+.tip-box{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1f2e;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted2);line-height:1.5;width:220px;z-index:1000;display:none;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);font-family:'Syne',sans-serif;font-weight:400}
 .tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1f2e}
-.tip:hover .tip-box{display:block}
+.tip:hover .tip-box,.tip-box:hover{display:block}
 .tip-title{font-weight:700;color:var(--text);margin-bottom:4px;font-size:11px}
 
-/* ── HEADER ────────────────────────────────────────────── */
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(8,10,14,0.95);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;border-bottom:1px solid var(--border);background:rgba(13,15,20,0.96);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
 .logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:30px;height:30px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.logo-text{font-size:17px;font-weight:900;letter-spacing:-0.5px}
-.logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
-.header-center{display:flex;gap:20px;align-items:center}
+.logo-icon{width:28px;height:28px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.logo-text{font-size:16px;font-weight:900;letter-spacing:-0.5px}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.header-center{display:flex;gap:20px}
 .price-item{display:flex;flex-direction:column;align-items:flex-end}
 .price-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
 .price-value{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.header-right{display:flex;align-items:center;gap:12px}
-.live-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted2);font-family:'JetBrains Mono',monospace}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:10px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;display:inline-block;margin-right:4px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.last-sync{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center}
 .mode-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
 .mode-live{background:var(--green-dim);color:var(--green)}
 .mode-advisory{background:var(--amber-dim);color:var(--amber)}
 
-/* ── LAYOUT ────────────────────────────────────────────── */
-main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
+/* ── LAYOUT ── */
+main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 
-/* ── ZONE 1: HERO ──────────────────────────────────────── */
-.hero-zone{margin-bottom:20px}
-.risk-hero{border-radius:var(--radius-lg);padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;border:1px solid;transition:all .4s;position:relative;overflow:hidden}
-.risk-hero::before{content:'';position:absolute;top:0;right:0;width:200px;height:100%;opacity:.04;background:radial-gradient(circle at right,white,transparent);pointer-events:none}
-.risk-hero.SAFE{background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.25)}
-.risk-hero.BALANCED{background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.2)}
-.risk-hero.OVEREXPOSED{background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.3)}
-.risk-hero.HIGH_RISK{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.4);animation:risk-pulse 3s infinite}
-@keyframes risk-pulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,0)}50%{box-shadow:0 0 30px 2px rgba(248,113,113,0.06)}}
-.risk-hero-left{display:flex;flex-direction:column;gap:6px}
-.risk-hero-state{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1}
-.risk-hero-state.SAFE{color:var(--green)}
-.risk-hero-state.BALANCED{color:#63b3ed}
-.risk-hero-state.OVEREXPOSED{color:var(--amber)}
-.risk-hero-state.HIGH_RISK{color:var(--red)}
-.risk-hero-sublabel{font-size:13px;color:var(--muted2);font-weight:500;margin-top:2px}
-.risk-hero-objective{font-size:14px;font-weight:700;color:var(--text);margin-top:8px;max-width:480px;line-height:1.4}
-.risk-hero-right{display:flex;gap:16px;align-items:center}
-.risk-score-block{text-align:center}
-.risk-score-number{font-size:36px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
-.risk-score-number.SAFE{color:var(--green)}
-.risk-score-number.BALANCED{color:#63b3ed}
-.risk-score-number.OVEREXPOSED{color:var(--amber)}
-.risk-score-number.HIGH_RISK{color:var(--red)}
-.risk-score-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px}
-.risk-factors-mini{font-size:11px;color:var(--muted2);max-width:220px;line-height:1.5;border-left:2px solid var(--border2);padding-left:12px}
+/* ══════════════════════════════════════════
+   ZONE 1: CONTROL HEADER — Risk + Objective
+   Dominant. Immediate. No competition.
+   ══════════════════════════════════════════ */
+.ctrl-header{border-radius:var(--radius-lg);padding:20px 24px;border:1px solid;margin-bottom:14px;display:none}
+.ctrl-header.SAFE{background:rgba(74,222,128,0.04);border-color:rgba(74,222,128,0.2)}
+.ctrl-header.BALANCED{background:rgba(96,165,250,0.04);border-color:rgba(96,165,250,0.18)}
+.ctrl-header.OVEREXPOSED{background:rgba(217,119,6,0.06);border-color:rgba(217,119,6,0.3)}
+.ctrl-header.HIGH_RISK{background:rgba(220,38,38,0.08);border-color:rgba(220,38,38,0.4);animation:hr-glow 3s infinite}
+@keyframes hr-glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 24px rgba(220,38,38,0.12)}}
+.ctrl-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ctrl-state{font-size:28px;font-weight:900;letter-spacing:-0.5px;line-height:1}
+.ctrl-state.SAFE{color:var(--green)}
+.ctrl-state.BALANCED{color:#60a5fa}
+.ctrl-state.OVEREXPOSED{color:var(--amber)}
+.ctrl-state.HIGH_RISK{color:var(--red-hot)}
+.ctrl-sublabel{font-size:12px;color:var(--muted2);margin-top:3px;font-weight:500}
+.ctrl-score{text-align:right}
+.ctrl-score-num{font-size:32px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.ctrl-score-num.SAFE{color:var(--green)}
+.ctrl-score-num.BALANCED{color:#60a5fa}
+.ctrl-score-num.OVEREXPOSED{color:var(--amber)}
+.ctrl-score-num.HIGH_RISK{color:var(--red-hot)}
+.ctrl-score-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;text-align:right}
+.ctrl-objective{font-size:15px;font-weight:700;color:var(--text);line-height:1.4;padding-top:10px;border-top:1px solid var(--border)}
+.ctrl-objective::before{content:'▶ ';color:var(--purple);font-size:10px;font-weight:900}
+.ctrl-factors{font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5}
 
-/* ── ZONE 2: KEY NUMBERS ───────────────────────────────── */
-.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
-.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative}
-.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;align-items:center}
-.kpi-value{font-size:19px;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-0.5px}
-.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px}
-.kpi.highlight{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.04)}
-.kpi.highlight .kpi-value{color:var(--green)}
-.kpi.highlight-red{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04)}
-.kpi.highlight-red .kpi-value{color:var(--red)}
+/* ══════════════════════════════════════════
+   ZONE 2: REQUIRED ACTIONS — THE PRODUCT
+   This is what the user came for.
+   ══════════════════════════════════════════ */
+.actions-zone{margin-bottom:14px}
+.zone-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.zone-hdr-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.zone-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+.zone-badge.required{background:rgba(220,38,38,0.15);color:#f87171}
+.zone-badge.suggested{background:var(--bg3);color:var(--muted2)}
+.zone-meta{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:auto}
 
-/* ── ZONE 3: ACTIONS ───────────────────────────────────── */
-.actions-zone{margin-bottom:20px}
-.zone-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.zone-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
-.zone-meta{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
-.data-warning-bar{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius-sm);padding:8px 14px;font-size:11px;color:var(--amber);margin-bottom:12px;display:none}
-.objective-bar{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:14px;display:none;border-left:3px solid var(--purple)}
-.objective-prefix{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--purple);margin-bottom:2px}
-.objective-text{font-size:13px;font-weight:700;color:var(--text)}
+/* Data warning + objective bars */
+#data-warning{display:none;font-size:11px;color:var(--amber);background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.2);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px}
+#primary-objective{display:none}
 
-/* ── ACTION CARDS ──────────────────────────────────────── */
-.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.section-label.required{color:var(--red)}
-.section-label.suggested{color:var(--muted)}
-.actions-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-.action-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:border-color .2s;border-left:3px solid}
-.action-card:hover{border-color:var(--border2)}
-.action-card.required{background:var(--bg2)}
-.action-card.suggested{opacity:.8;border-left-style:dashed}
-.action-card.suggested:hover{opacity:1}
-.action-card.critical{border-left-color:var(--red)!important;animation:card-pulse 3s infinite;background:rgba(239,68,68,0.03)}
-@keyframes card-pulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 2px rgba(239,68,68,0.12)}}
-.action-card.urgency-high{border-left-color:var(--amber)}
-.action-card.urgency-medium{border-left-color:#63b3ed}
-.action-card.urgency-low{border-left-color:var(--border2)}
-.action-card.type-reduce{border-left-color:var(--red)}
-.action-card.type-increase{border-left-color:var(--green)}
-.action-card.type-pause{border-left-color:var(--amber)}
-.action-card.type-hold{border-left-color:var(--blue)}
-.action-card.type-reallocate{border-left-color:var(--purple)}
-.ac-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
-.ac-left{flex:1;min-width:0}
-.ac-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.ac-type-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;padding:2px 7px;border-radius:4px}
-.ac-type-badge.reduce{background:var(--red-dim);color:var(--red)}
-.ac-type-badge.increase{background:var(--green-dim);color:var(--green)}
-.ac-type-badge.pause{background:var(--amber-dim);color:var(--amber)}
-.ac-type-badge.hold{background:var(--blue-dim);color:var(--blue)}
-.ac-type-badge.reallocate{background:var(--purple-dim);color:var(--purple)}
-.ac-urgency{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:4px}
-.ac-urgency.critical{background:rgba(239,68,68,0.2);color:var(--red)}
-.ac-urgency.high{background:rgba(245,158,11,0.15);color:var(--amber)}
-.ac-urgency.medium{background:rgba(99,179,237,0.12);color:#63b3ed}
-.ac-urgency.low{background:var(--bg4);color:var(--muted2)}
-.ac-required-pin{font-size:9px;font-weight:800;background:var(--red);color:#fff;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
-.ac-critical-pin{font-size:9px;font-weight:800;background:var(--red);color:#fff;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;animation:pin-blink 1s infinite}
+/* ── ACTION CARD — base ── */
+.decision-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:8px;border-left:3px solid;transition:border-color .15s}
+.decision-card:hover{border-color:var(--border2)}
+
+/* ── REQUIRED — full intensity by urgency ── */
+.decision-card.urgency-critical,
+.decision-card.critical-card{
+  border-left:5px solid var(--red-hot)!important;
+  background:rgba(220,38,38,0.07)!important;
+  animation:req-pulse 1.8s ease-in-out infinite;
+  box-shadow:inset 4px 0 12px rgba(220,38,38,0.08);
+}
+@keyframes req-pulse{
+  0%,100%{box-shadow:inset 4px 0 12px rgba(220,38,38,0.06),0 0 0 1px rgba(220,38,38,0.12)}
+  50%{box-shadow:inset 4px 0 20px rgba(220,38,38,0.14),0 0 16px rgba(220,38,38,0.1),0 0 0 1px rgba(220,38,38,0.25)}
+}
+.decision-card.urgency-high{
+  border-left:4px solid var(--amber-hot)!important;
+  background:rgba(217,119,6,0.05)!important;
+  box-shadow:inset 3px 0 8px rgba(217,119,6,0.07);
+}
+.decision-card.urgency-medium{border-left-color:#60a5fa}
+.decision-card.urgency-low{border-left-color:var(--border2)}
+
+/* ── SUGGESTED — subordinate but readable ── */
+.decision-card.suggested-card{
+  opacity:.82;
+  border-left-style:dashed!important;
+  border-left-color:var(--border2)!important;
+  background:var(--bg2)!important;
+  box-shadow:none!important;
+  animation:none!important;
+}
+.decision-card.suggested-card:hover{opacity:1;transition:opacity .15s}
+.suggested-section-wrap{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:8px}
+
+/* Section labels */
+.decisions-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.decisions-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.decisions-section-label.required{color:#f87171}
+.decisions-section-label.suggested{color:var(--muted2)}
+
+/* Card internals */
+.dc-action{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.dc-text{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px}
+.dc-reason{font-size:11px;color:var(--muted2);line-height:1.45;margin-bottom:5px}
+.dc-conf{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--purple)}
+.dc-impact{font-size:10px;color:var(--muted);font-style:italic;margin-top:3px}
+.dc-amount{font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;margin:3px 0;letter-spacing:-0.5px}
+.dc-amount.reduce{color:var(--red-hot)}
+.dc-amount.reallocate{color:var(--red-hot)}
+.dc-amount.increase{color:var(--green)}
+.dc-amount.pause{color:var(--amber-hot)}
+.dc-amount.hold{color:var(--muted2)}
+.dc-timeframe{font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace}
+.urgency-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:4px}
+.urgency-badge.critical{background:rgba(220,38,38,0.25);color:#ef4444;animation:pin-blink .9s infinite}
+.urgency-badge.high{background:rgba(217,119,6,0.2);color:#f59e0b;font-weight:900}
+.urgency-badge.medium{background:rgba(96,165,250,0.12);color:#60a5fa}
+.urgency-badge.low{background:var(--bg4);color:var(--muted2)}
 @keyframes pin-blink{0%,100%{opacity:1}50%{opacity:.5}}
-.ac-timeframe{font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:3px}
-.ac-objective{font-size:9px;color:var(--muted);background:var(--bg4);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace}
-.ac-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:4px}
-.ac-amount{font-size:22px;font-weight:900;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
-.ac-amount.reduce{color:var(--red)}
-.ac-amount.increase{color:var(--green)}
-.ac-amount.reallocate{color:var(--purple)}
-.ac-amount.pause{color:var(--amber)}
-.ac-amount.hold{color:var(--muted2)}
-.ac-reason{font-size:12px;color:var(--muted2);line-height:1.5;margin-bottom:6px}
-.ac-impact{font-size:11px;color:var(--muted);display:flex;align-items:flex-start;gap:4px}
-.ac-impact::before{content:'→';color:var(--purple);flex-shrink:0}
-.ac-cost{font-size:11px;color:var(--red);background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:4px;padding:4px 8px;margin-top:6px;display:inline-block}
-.ac-cost::before{content:'⚠ ';font-weight:700}
-.ac-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
-.ac-confidence{font-size:11px;color:var(--muted2);font-family:'JetBrains Mono',monospace;text-align:right}
-.ac-confidence span{font-weight:700;color:var(--text)}
-.exec-btn{font-size:11px;font-weight:700;padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;letter-spacing:.3px;margin-top:4px}
-.exec-btn.btn-pause{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
-.exec-btn.btn-pause:hover{background:var(--amber);color:#000}
-.exec-btn.btn-confirm{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
-.exec-btn.btn-confirm:hover{background:var(--green);color:#000}
-.suggested-wrap{background:rgba(0,0,0,0.2);border-radius:var(--radius);padding:12px;margin-top:4px}
-.high-risk-notice{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--red);margin:8px 0;display:flex;align-items:flex-start;gap:8px}
-.hold-all-zone{background:linear-gradient(135deg,rgba(34,197,94,0.08),rgba(34,197,94,0.03));border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-lg);padding:28px;text-align:center;box-shadow:0 0 40px rgba(34,197,94,0.05)}
-.hold-all-emoji{font-size:36px;margin-bottom:10px}
+.critical-pin{font-size:9px;background:#dc2626;color:#fff;padding:2px 8px;border-radius:3px;font-weight:900;letter-spacing:.5px;animation:pin-blink .9s infinite}
+.cost-of-inaction{font-size:10px;color:#dc2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:4px;padding:3px 8px;margin-top:5px;display:inline-block;font-weight:600}
+.cost-of-inaction::before{content:'⚠ ';font-weight:800}
+/* Cycle label */
+.cycle-label{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);display:flex;gap:12px}
+.cycle-label span{color:var(--muted2);font-weight:600}
+/* Execute btn */
+.exec-btn{font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;margin-top:6px}
+.btn-pause{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,0.3)}
+.btn-pause:hover{background:var(--amber);color:#000}
+.btn-confirm{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.3)}
+.btn-confirm:hover{background:var(--green);color:#000}
+.dc-execute-btn{font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
+.dc-execute-btn.btn-pause{background:var(--amber-dim);color:var(--amber)}
+.dc-execute-btn.btn-pause:hover{background:var(--amber);color:#000}
+.dc-execute-btn.btn-enable{background:var(--green-dim);color:var(--green)}
+.dc-execute-btn.btn-enable:hover{background:var(--green);color:#000}
+/* HOLD ALL */
+.hold-all-banner{background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.03));border:1px solid rgba(74,222,128,0.25);border-radius:var(--radius-lg);padding:28px;text-align:center}
 .hold-all-title{font-size:22px;font-weight:900;color:var(--green);margin-bottom:6px}
 .hold-all-sub{font-size:13px;color:var(--muted2);max-width:360px;margin:0 auto 16px;line-height:1.5}
-.hold-all-stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
-.hold-stat{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
-.hold-stat-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+/* HIGH RISK mode notice */
+.high-risk-notice{background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--red-hot);margin:8px 0}
 
-/* ── ZONE 4: INTELLIGENCE ──────────────────────────────── */
-.intel-zone{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
-.intel-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
-.intel-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+/* ══════════════════════════════════════════
+   ZONE 3: TARGET STATE — reasoning, not action
+   ══════════════════════════════════════════ */
+.target-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:none}
+.target-panel-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+.target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.target-item{background:var(--bg3);border-radius:8px;padding:8px 10px;transition:opacity .2s}
+.target-item.on-target{opacity:.45}
+.target-dim{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.target-current{font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.target-arrow{font-size:10px;color:var(--muted);margin:0 2px}
+.target-goal{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.target-gap{font-size:9px;margin-top:3px;font-family:'JetBrains Mono',monospace;font-weight:700}
+.target-gap.over{color:#f87171}
+.target-gap.ok{color:var(--green)}
+.target-gap.under{color:var(--amber)}
+.target-adj{font-size:10px;color:var(--muted);margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-style:italic;line-height:1.5}
+
+/* ══════════════════════════════════════════
+   ZONE 4: SUPPORTING DATA (below the fold)
+   KPIs, panels, health strip — informational
+   ══════════════════════════════════════════ */
+/* KPIs — reduced weight, secondary feel */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;display:none;opacity:.7}
+.kpi-strip:hover{opacity:.9;transition:opacity .3s}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;display:flex;align-items:center}
+.kpi-value{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.kpi-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.kpi.highlight .kpi-value{color:var(--green)}
+.kpi.highlight-red .kpi-value{color:var(--red)}
+/* Intel panels */
+.intel-zone{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;display:none}
+.intel-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.intel-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .intel-title-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-/* Risk details */
-.risk-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
-.risk-lbl{font-size:11px;color:var(--muted2);display:flex;align-items:center}
+.risk-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.risk-lbl{font-size:11px;color:var(--muted2);display:flex;align-items:center;gap:4px}
 .risk-val{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.exp-bar{height:5px;background:var(--bg4);border-radius:3px;margin:6px 0 10px;overflow:hidden;display:flex}
+.exp-bar{height:4px;background:var(--bg4);border-radius:2px;margin:5px 0 8px;overflow:hidden;display:flex}
 .exp-long{height:100%;background:var(--green);transition:width .5s}
 .exp-short{height:100%;background:var(--red);transition:width .5s}
-.bias-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.bias-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
 .bias-long{background:var(--green-dim);color:var(--green)}
 .bias-short{background:var(--red-dim);color:var(--red)}
-/* Target progress bars */
-.target-row{margin-bottom:10px}
-.target-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.target-lbl{font-size:10px;color:var(--muted2);display:flex;align-items:center;gap:4px}
-.target-vals{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted2)}
-.target-vals span{font-weight:700;color:var(--text)}
-.target-track{height:6px;background:var(--bg4);border-radius:3px;overflow:visible;position:relative}
-.target-fill{height:100%;border-radius:3px;transition:width .5s;position:relative}
-.target-marker{position:absolute;top:-2px;width:2px;height:10px;background:var(--green);border-radius:1px;transform:translateX(-50%);opacity:.8}
-.target-gap-badge{font-size:9px;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-weight:700;margin-left:6px}
-.tgb-over{background:rgba(239,68,68,0.12);color:var(--red)}
-.tgb-ok{background:var(--green-dim);color:var(--green)}
-.tgb-under{background:var(--amber-dim);color:var(--amber)}
-/* Market context */
-.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mkt-cell{background:var(--bg3);border-radius:8px;padding:10px 12px}
-.mkt-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center}
-.mkt-val{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.mkt-cell.span2{grid-column:span 2}
-/* Allocation bars */
-.alloc-row{display:flex;align-items:center;margin-bottom:8px;gap:8px}
-.alloc-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
-.alloc-name{font-size:11px;color:var(--muted2);width:72px;flex-shrink:0}
-.alloc-track{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.alloc-row{display:flex;align-items:center;margin-bottom:7px;gap:8px}
+.alloc-dot{width:6px;height:6px;border-radius:2px;flex-shrink:0}
+.alloc-name{font-size:10px;color:var(--muted2);width:68px;flex-shrink:0}
+.alloc-track{flex:1;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
 .alloc-fill{height:100%;border-radius:2px;transition:width .5s}
-.alloc-pct{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;min-width:30px;text-align:right;color:var(--muted2)}
-/* System health (compact) */
-.health-strip{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;margin-bottom:16px;display:none;align-items:center;gap:20px;flex-wrap:wrap}
+.alloc-pct{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;min-width:28px;text-align:right;color:var(--muted2)}
+.mkt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mkt-cell{background:var(--bg3);border-radius:7px;padding:9px 11px}
+.mkt-cell.span2{grid-column:span 2}
+.mkt-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center}
+.mkt-val{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
+/* Health strip */
+.health-strip{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;margin-bottom:12px;display:none;align-items:center;gap:16px;flex-wrap:wrap}
 .health-item{display:flex;align-items:center;gap:5px;font-size:10px}
 .health-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.health-dot.ok{background:var(--green)}
-.health-dot.warn{background:var(--amber)}
-.health-dot.err{background:var(--red)}
-.health-lbl{color:var(--muted)}
-.health-val{color:var(--muted2);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:10px}
-.health-sep{width:1px;height:14px;background:var(--border)}
+.health-dot.ok{background:var(--green)}.health-dot.warn{background:var(--amber)}.health-dot.err{background:var(--red)}
+.health-lbl{color:var(--muted)}.health-val{color:var(--muted2);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:10px}
+.health-sep{width:1px;height:12px;background:var(--border)}
 
-/* ── ZONE 5: BOTS ──────────────────────────────────────── */
-.bots-zone{margin-top:24px}
+/* ══════════════════════════════════════════
+   ZONE 5: BOTS
+   ══════════════════════════════════════════ */
+.bots-zone{margin-top:20px}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:20px}
-.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
-.section-count{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.section-count{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
 .section-line{flex:1;height:1px;background:var(--border)}
 .bots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.bot-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:15px 16px;transition:all .2s;position:relative;overflow:hidden}
+.bot-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;transition:all .2s;position:relative;overflow:hidden}
 .bot-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.bot-card.long::before{background:var(--green)}
-.bot-card.short::before{background:var(--red)}
-.bot-card.signal::before{background:var(--blue)}
-.bot-card.grid::before{background:var(--purple)}
+.bot-card.long::before{background:var(--green)}.bot-card.short::before{background:var(--red)}
+.bot-card.signal::before{background:var(--blue)}.bot-card.grid::before{background:var(--purple)}
 .bot-card:hover{border-color:var(--border2);transform:translateY(-1px)}
 .bot-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .bot-name{font-size:12px;font-weight:700;line-height:1.3;max-width:150px}
@@ -258,95 +276,90 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
 .score-wrap{display:flex;align-items:center;gap:4px}
 .score-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .ai-score{font-size:10px;font-weight:800;font-family:'JetBrains Mono',monospace;padding:2px 5px;border-radius:3px}
-.score-strong{background:var(--green-dim);color:var(--green)}
-.score-stable{background:var(--blue-dim);color:var(--blue)}
-.score-weak{background:var(--amber-dim);color:var(--amber)}
-.score-critical{background:var(--red-dim);color:var(--red)}
+.score-strong{background:var(--green-dim);color:var(--green)}.score-stable{background:var(--blue-dim);color:var(--blue)}
+.score-weak{background:var(--amber-dim);color:var(--amber)}.score-critical{background:var(--red-dim);color:var(--red)}
 .score-idle{background:rgba(255,255,255,.05);color:var(--muted)}
 .bot-tags{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
 .tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;font-family:'JetBrains Mono',monospace}
-.tag-long{background:var(--green-dim);color:var(--green)}
-.tag-short{background:var(--red-dim);color:var(--red)}
-.tag-spot{background:var(--blue-dim);color:var(--blue)}
-.tag-futures{background:var(--purple-dim);color:var(--purple)}
-.tag-signal{background:var(--teal-dim);color:var(--teal)}
-.tag-grid{background:var(--amber-dim);color:var(--amber)}
-.tag-dca{background:rgba(255,255,255,.05);color:var(--muted)}
-.tag-binance{background:rgba(240,185,11,.1);color:#f0b90b}
-.bot-pair{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:8px;color:var(--muted2)}
+.tag-long{background:var(--green-dim);color:var(--green)}.tag-short{background:var(--red-dim);color:var(--red)}
+.tag-spot{background:var(--blue-dim);color:var(--blue)}.tag-futures{background:var(--purple-dim);color:var(--purple)}
+.tag-signal{background:var(--teal-dim);color:var(--teal)}.tag-grid{background:var(--amber-dim);color:var(--amber)}
+.tag-dca{background:rgba(255,255,255,.05);color:var(--muted)}.tag-binance{background:rgba(240,185,11,.1);color:#f0b90b}
+.bot-pair{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:7px;color:var(--muted2)}
 .divider{height:1px;background:var(--border);margin:2px 0 8px}
-.bot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.bot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
 .stat{display:flex;flex-direction:column;gap:1px}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .stat-value{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .stat-efficiency{font-size:9px;color:var(--teal);font-family:'JetBrains Mono',monospace}
-.pnl-bar{margin-top:8px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
+.pnl-bar{margin-top:7px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
 .pnl-fill{height:100%;border-radius:1px;transition:width .5s}
-.pnl-fill.positive{background:var(--green)}
-.pnl-fill.negative{background:var(--red)}
-.alert-banner{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:7px 10px;margin-top:7px;font-size:10px;color:var(--red)}
+.pnl-fill.positive{background:var(--green)}.pnl-fill.negative{background:var(--red)}
+.alert-banner{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:6px 10px;margin-top:6px;font-size:10px;color:var(--red-hot)}
+/* Bot system recommendation */
+.bot-system-rec{margin-top:8px;padding:5px 8px;background:var(--bg3);border-radius:5px;font-size:10px;color:var(--muted2);border-left:2px solid var(--purple)}
+.bot-system-rec-label{font-size:8px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
 
-/* ── FILTER BAR ────────────────────────────────────────── */
-.filter-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .filter-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted2);padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s}
 .filter-btn:hover,.filter-btn.active{border-color:var(--border2);color:var(--text)}
 .filter-btn.active{border-color:var(--green);color:var(--green);background:var(--green-dim)}
 
-/* ── HISTORY PANEL ─────────────────────────────────────── */
-.history-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
-.history-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.history-list{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
-.history-item{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;background:var(--bg3);border-radius:6px;font-size:10px}
-.history-time{color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;min-width:38px}
-.history-action{font-weight:700;text-transform:uppercase;letter-spacing:.5px;min-width:50px;font-size:9px}
+/* ── HISTORY ── */
+.history-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px}
+.history-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.history-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto}
+.history-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;background:var(--bg3);border-radius:5px;font-size:10px}
+.history-time{color:var(--muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;min-width:36px}
+.history-action{font-weight:700;text-transform:uppercase;letter-spacing:.5px;min-width:48px;font-size:9px}
 .history-text{color:var(--muted2);line-height:1.3}
-.history-empty{text-align:center;color:var(--muted);font-size:11px;padding:14px}
+.history-empty{text-align:center;color:var(--muted);font-size:11px;padding:12px}
 
-/* ── BOT MANAGER ───────────────────────────────────────── */
-.mgr-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;display:none}
-.mgr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.mgr-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.mgr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+/* ── BOT MANAGER ── */
+.mgr-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:14px;display:none}
+.mgr-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mgr-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.mgr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 .mgr-field{display:flex;flex-direction:column;gap:4px}
-.mgr-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.mgr-input,.mgr-select{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;padding:8px 10px;font-family:'JetBrains Mono',monospace;outline:none;width:100%}
+.mgr-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.mgr-input,.mgr-select{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:12px;padding:7px 10px;font-family:'JetBrains Mono',monospace;outline:none;width:100%}
 .mgr-input:focus,.mgr-select:focus{border-color:var(--green)}
 .mgr-select option{background:var(--bg2)}
 .mgr-actions{display:flex;gap:8px;margin-top:6px}
-.mgr-btn{padding:8px 16px;border-radius:var(--radius-sm);border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
-.mgr-btn-add{background:var(--green);color:#000}
-.mgr-btn-add:hover{opacity:.85}
+.mgr-btn{padding:7px 14px;border-radius:var(--radius-sm);border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
+.mgr-btn-add{background:var(--green);color:#000}.mgr-btn-add:hover{opacity:.85}
 .mgr-btn-cancel{background:var(--bg4);color:var(--muted2)}
-.mgr-list{display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
-.mgr-bot-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:6px}
+.mgr-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
+.mgr-bot-row{display:flex;align-items:center;gap:10px;padding:7px 9px;background:var(--bg3);border-radius:5px}
 .mgr-bot-name{font-size:11px;font-weight:700;flex:1}
 .mgr-bot-meta{font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace}
-.mgr-bot-tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700;text-transform:uppercase}
-.mgr-remove{background:var(--red-dim);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;font-weight:700}
+.mgr-bot-tag{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;text-transform:uppercase}
+.mgr-remove{background:var(--red-dim);color:var(--red);border:none;border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer;font-weight:700}
 .mgr-remove:hover{background:var(--red);color:#fff}
 .mgr-toggle-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--muted2);padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s}
 .mgr-toggle-btn:hover{border-color:var(--green);color:var(--green)}
-.mgr-form-wrap{background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:14px;display:none}
-.mgr-show-form{margin-bottom:12px}
-.mgr-empty{text-align:center;padding:12px;font-size:11px;color:var(--muted2)}
+.mgr-form-wrap{background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px;display:none}
+.mgr-show-form{margin-bottom:10px}
+.mgr-empty{text-align:center;padding:10px;font-size:11px;color:var(--muted2)}
 
-/* ── MODALS & TOASTS ───────────────────────────────────── */
+/* ── MODAL + TOAST ── */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px;width:380px;text-align:center}
-.modal-title{font-size:16px;font-weight:800;margin-bottom:8px}
-.modal-body{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:18px}
-.modal-warning{font-size:11px;background:var(--amber-dim);color:var(--amber);padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:18px;border:1px solid rgba(245,158,11,0.2)}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:26px;width:360px;text-align:center}
+.modal-title{font-size:15px;font-weight:800;margin-bottom:8px}
+.modal-body{font-size:13px;color:var(--muted2);line-height:1.5;margin-bottom:16px}
+.modal-warning{font-size:11px;background:var(--amber-dim);color:var(--amber);padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:16px;border:1px solid rgba(251,191,36,0.2)}
 .modal-buttons{display:flex;gap:10px}
 .modal-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
 .modal-btn.cancel{background:var(--bg4);color:var(--muted2)}
-.modal-btn.confirm-pause{background:var(--red);color:#fff}
+.modal-btn.confirm-pause{background:#dc2626;color:#fff}
 .modal-btn.confirm-enable{background:var(--green);color:#000}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s;max-width:320px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(100px);opacity:0;transition:all .3s;max-width:300px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.success{border-color:var(--green);color:var(--green)}
 .toast.error{border-color:var(--red);color:var(--red)}
 
-/* ── PASSWORD SCREEN ───────────────────────────────────── */
+/* ── PASSWORD ── */
 #pw-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
 #pw-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:40px;width:340px;text-align:center}
 #pw-logo{width:48px;height:48px;background:var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 20px}
@@ -358,69 +371,10 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
 #pw-btn:hover{opacity:.9}
 #pw-error{color:var(--red);font-size:12px;margin-top:10px;display:none}
 
-/* ── COLOURS ───────────────────────────────────────────── */
+/* ── COLOURS + RESPONSIVE ── */
 .green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.blue{color:var(--blue)}
-
-/* ── LEGACY COMPAT (IDs referenced by existing JS) ──────── */
-.dc-action{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.dc-text{font-size:12px;color:var(--text);line-height:1.4;font-weight:600}
-.dc-reason{font-size:11px;color:var(--muted2);line-height:1.35}
-.dc-conf{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--purple)}
-.dc-execute-btn{font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s}
-.dc-execute-btn.btn-pause{background:var(--amber-dim);color:var(--amber)}
-.dc-execute-btn.btn-pause:hover{background:var(--amber);color:#000}
-.dc-execute-btn.btn-enable{background:var(--green-dim);color:var(--green)}
-.dc-execute-btn.btn-enable:hover{background:var(--green);color:#000}
-/* Decision card (new) — used by renderDecisionCard */
-.decision-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:8px;transition:border-color .2s;border-left:3px solid}
-.decision-card:hover{border-color:var(--border2)}
-.decision-card.suggested-card{opacity:.78;border-left-style:dashed}
-.decision-card.suggested-card:hover{opacity:1}
-.decision-card.critical-card{border-left-width:4px!important;background:rgba(248,113,113,0.04);animation:card-pulse 3s infinite}
-.decisions-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:10px 0 6px;display:flex;align-items:center;gap:8px}
-.decisions-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.decisions-section-label.required{color:var(--red)}
-.decisions-section-label.suggested{color:var(--muted)}
-.urgency-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;border-radius:3px}
-.urgency-badge.critical{background:rgba(239,68,68,.2);color:var(--red)}
-.urgency-badge.high{background:rgba(245,158,11,.15);color:var(--amber)}
-.urgency-badge.medium{background:rgba(99,179,237,.12);color:#63b3ed}
-.urgency-badge.low{background:var(--bg4);color:var(--muted2)}
-.dc-amount{font-size:20px;font-weight:900;font-family:'JetBrains Mono',monospace;margin:3px 0}
-.dc-amount.reduce{color:var(--red)}
-.dc-amount.increase{color:var(--green)}
-.dc-amount.reallocate{color:var(--purple)}
-.dc-amount.pause{color:var(--amber)}
-.dc-amount.hold{color:var(--muted2)}
-.dc-timeframe{font-size:10px;color:var(--muted2);font-family:'JetBrains Mono',monospace}
-.dc-impact{font-size:10px;color:var(--muted);margin-top:3px;font-style:italic}
-.cost-of-inaction{font-size:10px;color:var(--red);background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:4px;padding:3px 7px;margin-top:4px;display:inline-block}
-.critical-pin{font-size:9px;background:var(--red);color:#fff;padding:2px 6px;border-radius:3px;font-weight:800;letter-spacing:.5px;animation:pin-blink 1s infinite}
-.high-risk-notice{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--red);margin:8px 0}
-.hold-all-banner{background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.03));border:1px solid rgba(34,197,94,.3);border-radius:var(--radius-lg);padding:24px;text-align:center;box-shadow:0 0 40px rgba(34,197,94,.05)}
-.hold-all-title{font-size:20px;font-weight:900;color:var(--green);margin-bottom:6px;letter-spacing:.5px}
-.hold-all-sub{font-size:12px;color:var(--muted2)}
-/* Target panel */
-.target-panel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;display:none}
-.target-panel-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
-.target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.target-item{background:var(--bg4);border-radius:6px;padding:8px 10px}
-.target-dim{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.target-current{font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace}
-.target-arrow{font-size:10px;color:var(--muted);margin:0 2px}
-.target-goal{font-size:12px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace}
-.target-gap{font-size:9px;margin-top:2px;font-family:'JetBrains Mono',monospace}
-.target-gap.over{color:var(--red)}
-.target-gap.under{color:var(--amber)}
-.target-gap.ok{color:var(--green)}
-.target-adj{font-size:10px;color:var(--muted);margin-top:6px;font-style:italic;border-top:1px solid var(--border);padding-top:5px}
-#primary-objective{display:none;font-size:13px;font-weight:700;color:var(--text);background:var(--bg3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;border-left:3px solid var(--purple)}
-#primary-objective::before{content:'▶ Objective: ';color:var(--purple);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
-#data-warning{display:none;font-size:11px;color:var(--amber);background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px}
-
-/* ── RESPONSIVE ────────────────────────────────────────── */
 @media(max-width:1200px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.bots-grid{grid-template-columns:repeat(2,1fr)}.intel-zone{grid-template-columns:1fr 1fr}}
-@media(max-width:768px){main{padding:14px 16px}header{padding:12px 16px}.kpi-strip{grid-template-columns:repeat(2,1fr)}.bots-grid{grid-template-columns:1fr}.intel-zone{grid-template-columns:1fr}.header-center{display:none}}
+@media(max-width:768px){main{padding:12px 14px}header{padding:10px 14px}.kpi-strip{grid-template-columns:repeat(2,1fr)}.bots-grid{grid-template-columns:1fr}.intel-zone{grid-template-columns:1fr}.header-center{display:none}}
 </style>
 </head>
 <body>
@@ -437,7 +391,7 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
   </div>
 </div>
 
-<!-- CONFIRM MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal" style="display:none">
   <div class="modal">
     <div class="modal-title" id="modal-title">Confirm Action</div>
@@ -449,11 +403,8 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
     </div>
   </div>
 </div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- HEADER -->
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
@@ -463,292 +414,164 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
     </div>
   </div>
   <div class="header-center">
-    <div class="price-item">
-      <span class="price-label">BTC/USD</span>
-      <span class="price-value green" id="btc-price">—</span>
-    </div>
-    <div class="price-item">
-      <span class="price-label">ETH/USD</span>
-      <span class="price-value green" id="eth-price">—</span>
-    </div>
+    <div class="price-item"><span class="price-label">BTC/USD</span><span class="price-value green" id="btc-price">—</span></div>
+    <div class="price-item"><span class="price-label">ETH/USD</span><span class="price-value green" id="eth-price">—</span></div>
   </div>
   <div class="header-right">
-    <div class="live-indicator">
-      <div class="live-dot"></div>
-      <span id="last-updated">Connecting...</span>
-    </div>
+    <div class="last-sync"><span class="live-dot"></span><span id="last-updated">Connecting...</span></div>
     <div class="mode-badge mode-advisory" id="h-mode">Advisory Mode</div>
   </div>
 </header>
 
 <main>
 
-<!-- ══════════════════════════════════════════════════════
-     ZONE 1: HERO — Risk State + Primary Objective
-     ══════════════════════════════════════════════════════ -->
-<div class="hero-zone" id="hero-zone" style="display:none;margin-bottom:16px">
-  <div class="risk-hero BALANCED" id="risk-state-bar">
-    <div class="risk-hero-left">
-      <div class="risk-hero-state BALANCED" id="risk-state-label">BALANCED</div>
-      <div class="risk-hero-sublabel" id="risk-hero-sublabel">Loading portfolio analysis...</div>
-      <div class="risk-hero-objective" id="risk-hero-objective" style="display:none"></div>
+<!-- ══════════════════════════════════════════
+     ZONE 1: CONTROL HEADER — dominant, immediate
+     ══════════════════════════════════════════ -->
+<div class="ctrl-header BALANCED" id="risk-state-bar" style="display:none">
+  <div class="ctrl-top">
+    <div>
+      <div class="ctrl-state BALANCED" id="risk-state-label">BALANCED</div>
+      <div class="ctrl-sublabel" id="risk-hero-sublabel">Loading portfolio analysis...</div>
     </div>
-    <div class="risk-hero-right">
-      <div class="risk-score-block">
-        <div class="risk-score-number BALANCED" id="risk-score-num">—</div>
-        <div class="risk-score-label">Risk Score</div>
-      </div>
-      <div class="risk-factors-mini" id="risk-factors" style="display:none"></div>
+    <div class="ctrl-score">
+      <div class="ctrl-score-num BALANCED" id="risk-score-num">—</div>
+      <div class="ctrl-score-lbl">Risk Score</div>
     </div>
+  </div>
+  <div class="ctrl-objective" id="risk-hero-objective" style="display:none"></div>
+  <div class="ctrl-factors" id="risk-factors" style="display:none"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ZONE 2: REQUIRED ACTIONS — the product
+     ══════════════════════════════════════════ -->
+<div class="actions-zone">
+  <div class="zone-hdr">
+    <div class="zone-hdr-title">Actions</div>
+    <div class="zone-badge required" id="action-count">—</div>
+    <span style="font-size:9px;background:rgba(74,222,128,0.1);color:var(--green);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.5px" id="engine-mode">LIVE ENGINE</span>
+    <div class="zone-meta" id="decision-ts">—</div>
+  </div>
+
+  <div id="data-warning"></div>
+
+  <!-- Actions rendered here -->
+  <div id="decisions-container">
+    <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">Loading portfolio analysis...</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     ZONE 2: KPI STRIP — Key Numbers
-     ══════════════════════════════════════════════════════ -->
-<div class="kpi-strip" id="kpi-strip" style="display:none">
+<!-- ══════════════════════════════════════════
+     ZONE 3: TARGET STATE — why these actions
+     ══════════════════════════════════════════ -->
+<div id="target-panel" class="target-panel">
+  <div class="target-panel-title">📐 Why these actions — Portfolio Target State</div>
+  <div class="target-grid" id="target-grid"></div>
+  <div class="target-adj" id="target-adj"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ZONE 4: SUPPORTING DATA (demoted)
+     ══════════════════════════════════════════ -->
+
+<!-- KPI strip — informational, secondary weight -->
+<div class="kpi-strip" id="kpi-strip">
   <div class="kpi highlight">
-    <div class="kpi-label">
-      Net PnL
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Net PnL</div>
-          Your total profit or loss across all bots. This combines closed trade profit (Realized) with the current value of open positions (Floating).
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Net PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Net PnL</div>Total profit or loss across all bots. Combines closed trade profit (Realized) with open position value (Floating).</span></span></div>
     <div class="kpi-value" id="net-pnl">—</div>
     <div class="kpi-sub" id="net-roi">Realized + Floating</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">
-      Realized PnL
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Realized PnL</div>
-          Profit that has been locked in — from trades that have already closed. This money is yours regardless of what the market does next.
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Realized <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realized PnL</div>Profit locked in from closed trades. Yours regardless of what the market does next.</span></span></div>
     <div class="kpi-value green" id="realized-pnl">—</div>
     <div class="kpi-sub">Closed positions</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">
-      Floating PnL
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Floating PnL</div>
-          Unrealized profit or loss on positions that are still open. This number changes as the market moves — it becomes real only when you close the position.
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Floating <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Floating PnL</div>Unrealized profit or loss on open positions. Changes as market moves — becomes real when you close.</span></span></div>
     <div class="kpi-value" id="floating-pnl">—</div>
     <div class="kpi-sub">Open positions</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">
-      Total Capital
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Total Capital</div>
-          The combined value of your Binance spot wallet and futures account. This is everything AlphaControl can see across your connected accounts.
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Capital <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Capital</div>Combined value of your Binance spot wallet and futures account.</span></span></div>
     <div class="kpi-value blue" id="total-capital">—</div>
     <div class="kpi-sub">Spot + Futures</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">
-      Allocated
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Allocated Capital</div>
-          How much capital is currently deployed across all your bots. A high allocation means your capital is working — but it also means less flexibility to react to opportunities.
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Allocated <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Allocated Capital</div>Capital currently deployed across all bots. High allocation = capital working but less flexibility.</span></span></div>
     <div class="kpi-value" id="allocated-capital">$3,169</div>
     <div class="kpi-sub">Across 12 bots</div>
   </div>
   <div class="kpi">
-    <div class="kpi-label">
-      Total Trades
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Total Trades</div>
-          The number of buy/sell executions across all your bots. More trades means your bots are actively working. Very low trade counts with high capital allocation is a warning sign.
-        </span>
-      </span>
-    </div>
+    <div class="kpi-label">Trades <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Trades</div>Buy/sell executions across all bots. Low trade count with high capital = warning sign.</span></span></div>
     <div class="kpi-value" id="total-trades-val">—</div>
     <div class="kpi-sub" id="total-trades-sub">All bots combined</div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     ZONE 3: ACTIONS — Decision Engine Output
-     ══════════════════════════════════════════════════════ -->
-<div class="actions-zone">
-  <div class="zone-header">
-    <div class="zone-title">
-      🧠 Actions
-      <span style="font-size:10px;background:var(--purple-dim);color:var(--purple);padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px;font-family:'JetBrains Mono',monospace" id="action-count">—</span>
-      <span style="font-size:9px;background:rgba(34,197,94,0.12);color:var(--green);padding:2px 7px;border-radius:20px;font-weight:700;margin-left:4px;letter-spacing:.5px;display:inline-block" id="engine-mode">LIVE ENGINE</span>
-    </div>
-    <div class="zone-meta" id="decision-ts">—</div>
-  </div>
-
-  <!-- Objective + Warning -->
-  <div id="data-warning"></div>
-  <div id="primary-objective"></div>
-  <div id="target-panel" class="target-panel">
-    <div class="target-panel-title">📐 Portfolio Target State</div>
-    <div class="target-grid" id="target-grid"></div>
-    <div class="target-adj" id="target-adj"></div>
-  </div>
-
-  <!-- Action cards rendered here -->
-  <div id="decisions-container">
-    <div style="text-align:center;color:var(--muted);padding:32px;font-size:13px">Loading portfolio analysis...</div>
-  </div>
-  <!-- legacy alias needed by JS -->
-  <div id="panel-header" style="display:none"></div>
-</div>
-
-<!-- System health (compact, hidden until loaded) -->
+<!-- Health strip -->
 <div class="health-strip" id="health-panel">
-  <div class="health-item">
-    <div class="health-dot ok" id="h-binance-dot"></div>
-    <span class="health-lbl">Binance</span>
-    <span class="health-val" id="h-binance">—</span>
-  </div>
+  <div class="health-item"><div class="health-dot ok" id="h-binance-dot"></div><span class="health-lbl">Binance</span><span class="health-val" id="h-binance">—</span></div>
   <div class="health-sep"></div>
-  <div class="health-item">
-    <div class="health-dot ok" id="h-3commas-dot"></div>
-    <span class="health-lbl">3Commas</span>
-    <span class="health-val" id="h-3commas">—</span>
-  </div>
+  <div class="health-item"><div class="health-dot ok" id="h-3commas-dot"></div><span class="health-lbl">3Commas</span><span class="health-val" id="h-3commas">—</span></div>
   <div class="health-sep"></div>
-  <div class="health-item">
-    <div class="health-dot ok" id="h-decisions-dot"></div>
-    <span class="health-lbl">Engine</span>
-    <span class="health-val" id="h-decisions">—</span>
-  </div>
+  <div class="health-item"><div class="health-dot ok" id="h-decisions-dot"></div><span class="health-lbl">Engine</span><span class="health-val" id="h-decisions">—</span></div>
   <div class="health-sep"></div>
-  <div class="health-item">
-    <div class="health-dot ok" id="h-market-dot"></div>
-    <span class="health-lbl">Market</span>
-    <span class="health-val" id="h-market">—</span>
-  </div>
+  <div class="health-item"><div class="health-dot ok" id="h-market-dot"></div><span class="health-lbl">Market</span><span class="health-val" id="h-market">—</span></div>
   <div class="health-sep"></div>
-  <div class="health-item">
-    <span class="health-lbl">Last sync</span>
-    <span class="health-val" id="h-lastsync">—</span>
-  </div>
+  <div class="health-item"><span class="health-lbl">Last sync</span><span class="health-val" id="h-lastsync">—</span></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     ZONE 4: INTELLIGENCE — Portfolio Details
-     ══════════════════════════════════════════════════════ -->
-<div class="intel-zone" id="intel-zone" style="display:none">
-
-  <!-- Risk Overview -->
+<!-- Intel panels -->
+<div class="intel-zone" id="intel-zone">
   <div class="intel-panel">
-    <div class="intel-title">
-      <div class="intel-title-dot" style="background:var(--amber)"></div>
-      Risk Overview
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Risk Overview</div>
-          Shows how your capital is spread between long positions (betting prices go up) and short positions (betting prices go down, as a hedge). A healthy portfolio has some of both.
-        </span>
-      </span>
-    </div>
-    <div class="risk-row"><span class="risk-lbl">Long Exposure <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Long Exposure</div>The percentage of your capital in bots that profit when prices rise. High long exposure means you are vulnerable to a market downturn.</span></span></span><span class="risk-val green" id="long-exp">—</span></div>
-    <div class="risk-row"><span class="risk-lbl">Short Exposure <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Short Exposure</div>Capital in bots that profit when prices fall — your hedge. This protects you in a bear market. The system targets at least 15% in your base profile.</span></span></span><span class="risk-val red" id="short-exp">—</span></div>
+    <div class="intel-title"><div class="intel-title-dot" style="background:var(--amber)"></div>Risk Overview <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Risk Overview</div>How capital is split between long (prices up) and short (hedge). A healthy portfolio has both.</span></span></div>
+    <div class="risk-row"><span class="risk-lbl">Long Exposure <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Long Exposure</div>% of capital in bots that profit when prices rise. High = vulnerable to downturns.</span></span></span><span class="risk-val green" id="long-exp">—</span></div>
+    <div class="risk-row"><span class="risk-lbl">Short Exposure <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Short Exposure</div>Capital that profits when prices fall — your hedge. System targets minimum 15%.</span></span></span><span class="risk-val red" id="short-exp">—</span></div>
     <div class="exp-bar"><div class="exp-long" id="exp-long-bar" style="width:0%"></div><div class="exp-short" id="exp-short-bar" style="width:0%"></div></div>
     <div class="risk-row"><span class="risk-lbl">Net Bias</span><span class="bias-badge bias-long" id="net-bias">—</span></div>
-    <div style="height:8px"></div>
-    <div class="risk-row"><span class="risk-lbl">Futures uPnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Futures Unrealized PnL</div>The current profit or loss on your open futures positions. This is floating — it becomes real only when you close the trade.</span></span></span><span class="risk-val" id="upnl-val">—</span></div>
-    <div class="risk-row"><span class="risk-lbl">Avail. Margin <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Available Margin</div>How much free collateral you have in your futures account. If this gets too low, your positions may be at risk of liquidation.</span></span></span><span class="risk-val" id="avail-margin">—</span></div>
+    <div style="height:6px"></div>
+    <div class="risk-row"><span class="risk-lbl">Futures uPnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Futures Unrealized PnL</div>Current profit/loss on open futures. Becomes real only when you close the trade.</span></span></span><span class="risk-val" id="upnl-val">—</span></div>
+    <div class="risk-row"><span class="risk-lbl">Avail. Margin <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Available Margin</div>Free collateral in futures account. If too low, positions risk liquidation.</span></span></span><span class="risk-val" id="avail-margin">—</span></div>
     <div class="risk-row"><span class="risk-lbl">Futures Wallet</span><span class="risk-val" id="futures-wallet-val">—</span></div>
   </div>
-
-  <!-- Capital Allocation -->
   <div class="intel-panel">
-    <div class="intel-title">
-      <div class="intel-title-dot" style="background:var(--blue)"></div>
-      Capital Allocation
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Capital Allocation</div>
-          How your deployed capital is split between different bot strategies. A balanced mix reduces the risk of one strategy dragging down your whole portfolio.
-        </span>
-      </span>
-    </div>
+    <div class="intel-title"><div class="intel-title-dot" style="background:var(--blue)"></div>Capital Allocation <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Capital Allocation</div>How deployed capital is split between bot strategies. Balanced mix reduces single-strategy risk.</span></span></div>
     <div class="alloc-row"><div class="alloc-dot" style="background:var(--purple)"></div><span class="alloc-name">Grid Bots</span><div class="alloc-track"><div class="alloc-fill" style="background:var(--purple);width:53%"></div></div><div class="alloc-pct">53%</div></div>
     <div class="alloc-row"><div class="alloc-dot" style="background:var(--blue)"></div><span class="alloc-name">DCA Bots</span><div class="alloc-track"><div class="alloc-fill" style="background:var(--blue);width:25%"></div></div><div class="alloc-pct">25%</div></div>
     <div class="alloc-row"><div class="alloc-dot" style="background:var(--red)"></div><span class="alloc-name">Hedge Bot</span><div class="alloc-track"><div class="alloc-fill" style="background:var(--red);width:8%"></div></div><div class="alloc-pct">8%</div></div>
     <div class="alloc-row"><div class="alloc-dot" style="background:var(--teal)"></div><span class="alloc-name">Signal Bots</span><div class="alloc-track"><div class="alloc-fill" style="background:var(--teal);width:6%"></div></div><div class="alloc-pct">6%</div></div>
     <div class="alloc-row"><div class="alloc-dot" style="background:var(--muted)"></div><span class="alloc-name">Idle / Free</span><div class="alloc-track"><div class="alloc-fill" id="idle-bar" style="background:var(--muted);width:0%"></div></div><div class="alloc-pct" id="idle-pct">—</div></div>
-    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+    <div style="margin-top:8px;padding-top:7px;border-top:1px solid var(--border)">
       <div class="risk-row"><span class="risk-lbl">Total Allocated</span><span class="risk-val blue">$3,169</span></div>
       <div class="risk-row"><span class="risk-lbl">Free Capital</span><span class="risk-val green" id="free-capital">—</span></div>
     </div>
   </div>
-
-  <!-- Market Context -->
   <div class="intel-panel">
-    <div class="intel-title">
-      <div class="intel-title-dot" style="background:var(--purple)"></div>
-      Market Context
-      <span class="tip">
-        <span class="tip-icon">?</span>
-        <span class="tip-box">
-          <div class="tip-title">Market Context</div>
-          Live market conditions that affect your bot strategy recommendations. The regime and volatility directly influence the system's target allocations each cycle.
-        </span>
-      </span>
-    </div>
+    <div class="intel-title"><div class="intel-title-dot" style="background:var(--purple)"></div>Market Context <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Market Context</div>Live conditions affecting recommendations. Regime and volatility directly influence target allocations each cycle.</span></span></div>
     <div class="mkt-grid">
-      <div class="mkt-cell"><div class="mkt-lbl">Regime <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Market Regime</div>Bull = prices trending up, Bear = prices trending down, Sideways = prices ranging. The system adjusts your target allocations based on regime.</span></span></div><div class="mkt-val" id="market-regime">—</div></div>
-      <div class="mkt-cell"><div class="mkt-lbl">Volatility <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Volatility</div>How much prices are swinging. High volatility is bad for grid bots (prices can break outside the grid range) but good for DCA. The system reduces your grid target in high volatility.</span></span></div><div class="mkt-val" id="market-vol">—</div></div>
+      <div class="mkt-cell"><div class="mkt-lbl">Regime <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Market Regime</div>Bull = prices trending up, Bear = down, Sideways = ranging. System adjusts targets by regime.</span></span></div><div class="mkt-val" id="market-regime">—</div></div>
+      <div class="mkt-cell"><div class="mkt-lbl">Volatility <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Volatility</div>High vol hurts grid bots. System reduces grid target when volatility is high.</span></span></div><div class="mkt-val" id="market-vol">—</div></div>
       <div class="mkt-cell"><div class="mkt-lbl">BTC 24h</div><div class="mkt-val" id="btc-move">—</div></div>
-      <div class="mkt-cell"><div class="mkt-lbl">Signal Bias <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Signal Bias</div>Whether the overall market momentum favours long (buy) or short (sell) positions right now, based on BTC price movement direction.</span></span></div><div class="mkt-val" id="signal-bias">—</div></div>
-      <div class="mkt-cell mkt-cell span2"><div class="mkt-lbl">Grid Suitability <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Grid Suitability</div>How well current market conditions suit grid trading. Grid bots work best in sideways, low-volatility markets. Poor conditions mean your grids may stop executing trades.</span></span></div><div class="mkt-val" id="grid-suit">—</div></div>
+      <div class="mkt-cell"><div class="mkt-lbl">Signal Bias <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Signal Bias</div>Whether market momentum favours long or short positions right now.</span></span></div><div class="mkt-val" id="signal-bias">—</div></div>
+      <div class="mkt-cell mkt-cell span2"><div class="mkt-lbl">Grid Suitability <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Grid Suitability</div>Grid bots work best in sideways, low-volatility markets. Poor conditions = grids may stop executing.</span></span></div><div class="mkt-val" id="grid-suit">—</div></div>
     </div>
-    <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+    <div style="margin-top:8px;padding-top:7px;border-top:1px solid var(--border)">
       <div class="risk-row"><span class="risk-lbl">Spot Wallet</span><span class="risk-val" id="spot-wallet-val">—</span></div>
       <div class="risk-row"><span class="risk-lbl" id="spot-wallet-sub">Binance Spot</span><span></span></div>
     </div>
   </div>
-
 </div>
 
-<!-- Recommendation History -->
+<!-- History -->
 <div class="history-panel" id="history-panel" style="display:none">
-  <div class="history-title">
-    📋 Recommendation History
-    <span style="font-size:10px;background:var(--bg3);padding:2px 8px;border-radius:20px;color:var(--muted)" id="history-count">0 entries</span>
-  </div>
-  <div class="history-list" id="history-list">
-    <div class="history-empty">No history yet</div>
-  </div>
+  <div class="history-title">📋 Recommendation History <span style="font-size:9px;background:var(--bg3);padding:2px 7px;border-radius:20px;color:var(--muted)" id="history-count">0 entries</span></div>
+  <div class="history-list" id="history-list"><div class="history-empty">No history yet</div></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════════════════
      ZONE 5: BOTS
-     ══════════════════════════════════════════════════════ -->
+     ══════════════════════════════════════════ -->
 <div class="bots-zone">
   <!-- BOT MANAGER PANEL -->
   <div class="mgr-panel" id="bot-mgr-panel">
@@ -882,6 +705,7 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
   <div class="bots-grid" id="bots-container">
     <!-- Cards rendered dynamically from /api/commas-bots -->
   </div>
+
 
 
 
@@ -1959,10 +1783,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 </html>
 </div>
 
-<footer style="text-align:center;padding:24px;color:var(--muted);font-size:10px;border-top:1px solid var(--border);margin-top:40px;letter-spacing:.5px">
-  AlphaControl v4 · Capital Management System · bjbots.ai
-</footer>
+</div>
 
+<footer style="text-align:center;padding:20px;color:var(--muted);font-size:10px;border-top:1px solid var(--border);margin-top:40px;letter-spacing:.5px">AlphaControl v4 · Capital Management System</footer>
 </main>
 
 <script>
@@ -2936,72 +2759,47 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
-// ── UX UPGRADES — presentation only, zero logic changes ──
+// ── UX: Control system upgrades — presentation only ──────────────────────
 
-// Hook into the decisions update to sync new hero elements
 function _syncHero(data) {
   if (!data || !data.riskState) return;
   const rs = data.riskState;
 
-  // Hero zone
-  const heroZone = document.getElementById('hero-zone');
-  if (heroZone) heroZone.style.display = 'block';
-
-  // Risk hero bar classes
+  // Control header
   const bar = document.getElementById('risk-state-bar');
-  if (bar) bar.className = 'risk-hero ' + rs;
+  if (bar) { bar.className = 'ctrl-header ' + rs; bar.style.display = 'block'; }
 
-  // State label
   const lbl = document.getElementById('risk-state-label');
-  if (lbl) { lbl.className = 'risk-hero-state ' + rs; lbl.textContent = rs.replace(/_/g,' '); }
+  if (lbl) { lbl.className = 'ctrl-state ' + rs; lbl.textContent = rs.replace(/_/g,' '); }
 
-  // Sub-label
   const sub = document.getElementById('risk-hero-sublabel');
   if (sub && data.riskSubLabel) sub.textContent = data.riskSubLabel;
 
-  // Objective
   const obj = document.getElementById('risk-hero-objective');
-  if (obj && data.primaryObjective) {
-    obj.textContent = data.primaryObjective;
-    obj.style.display = 'block';
-  }
+  if (obj && data.primaryObjective) { obj.textContent = data.primaryObjective; obj.style.display = 'block'; }
 
-  // Score
-  const scoreEl = document.getElementById('risk-score-num');
-  if (scoreEl) { scoreEl.textContent = data.riskScore || '—'; scoreEl.className = 'risk-score-number ' + rs; }
+  const sc = document.getElementById('risk-score-num');
+  if (sc) { sc.textContent = data.riskScore || '—'; sc.className = 'ctrl-score-num ' + rs; }
 
-  // Risk factors
-  const factors = document.getElementById('risk-factors');
-  if (factors && data.riskFactors && data.riskFactors.length) {
-    factors.textContent = data.riskFactors.join(' · ');
-    factors.style.display = 'block';
-  }
+  const fac = document.getElementById('risk-factors');
+  if (fac && data.riskFactors && data.riskFactors.length) { fac.textContent = data.riskFactors.join(' · '); fac.style.display = 'block'; }
 
-  // Mode badge in header
-  const modeBadge = document.getElementById('h-mode');
-  if (modeBadge) {
-    const isLive = !data.highRiskMode && data.riskState !== 'UNKNOWN';
-    // Fetch actual execution status
-    fetch('/api/status').then(r=>r.json()).then(s=>{
-      modeBadge.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode';
-      modeBadge.className = 'mode-badge ' + (s.advisoryMode ? 'mode-advisory' : 'mode-live');
-    }).catch(()=>{});
-  }
+  // Show supporting zones
+  ['kpi-strip','intel-zone','health-panel'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
+    else el.style.display = 'flex';
+  });
 
-  // Show intel zone
-  const intel = document.getElementById('intel-zone');
-  if (intel) intel.style.display = 'grid';
-
-  // Show KPI strip
-  const kpi = document.getElementById('kpi-strip');
-  if (kpi) kpi.style.display = 'grid';
-
-  // Show health strip
-  const health = document.getElementById('health-panel');
-  if (health) health.style.display = 'flex';
+  // Mode badge
+  fetch('/api/status').then(function(r){return r.json();}).then(function(s){
+    const m = document.getElementById('h-mode');
+    if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge ' + (s.advisoryMode ? 'mode-advisory' : 'mode-live'); }
+  }).catch(function(){});
 }
 
-// Hook into apiFetch to intercept decisions data and sync hero
+// Intercept apiFetch to sync hero on decisions
 const __origApiFetch = apiFetch;
 apiFetch = async function(endpoint) {
   const data = await __origApiFetch(endpoint);
@@ -3011,7 +2809,13 @@ apiFetch = async function(endpoint) {
   return data;
 };
 
-// Fix history UNDEFINED bug — clean renderHistory override
+// Updated target state renderer — only highlight gaps >5%
+const __origLoadDec = loadDecisions;
+loadDecisions = async function() {
+  return __origLoadDec();
+};
+
+// History fix
 const __origHistory = renderHistory;
 renderHistory = function(history) {
   const list = document.getElementById('history-list');
@@ -3019,48 +2823,70 @@ renderHistory = function(history) {
   const panel = document.getElementById('history-panel');
   if (!list) return;
   if (panel) panel.style.display = 'block';
-  const total = history.reduce((s,h) => s + (h.decisions||[]).length, 0);
-  if (count) count.textContent = total + ' recommendation' + (total !== 1 ? 's' : '');
-  if (!history.length) {
-    list.innerHTML = '<div class="history-empty">No history yet — recommendations will appear here as the engine runs</div>';
-    return;
-  }
-  const COLOR = { pause:'var(--amber)', reduce:'var(--red)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)', reallocate:'var(--purple)' };
-  const URGENCY_COLOR = { critical:'var(--red)', high:'var(--amber)', medium:'#60a5fa', low:'var(--muted)' };
-  list.innerHTML = history.slice(0,20).flatMap(h =>
-    (h.decisions||[]).map(d => {
-      const actionType = (d.actionType || d.type || 'action').toLowerCase();
-      const urgency    = (d.urgency || d.severity || '').toLowerCase();
-      const urgLabel   = urgency && urgency !== 'undefined' ? urgency.toUpperCase() : '';
-      const urgColor   = URGENCY_COLOR[urgency] || 'var(--muted)';
-      const shortText  = (d.text||'').length > 80 ? d.text.slice(0,80) + '…' : (d.text||'');
+  const total = history.reduce(function(s,h){return s+(h.decisions||[]).length;},0);
+  if (count) count.textContent = total + ' recommendation' + (total!==1?'s':'');
+  if (!history.length) { list.innerHTML = '<div class="history-empty">No history yet</div>'; return; }
+  const COLOR = { pause:'var(--amber-hot)', reduce:'var(--red-hot)', increase:'var(--green)', hold:'var(--blue)', reallocate:'var(--purple)' };
+  const URGC  = { critical:'var(--red-hot)', high:'var(--amber-hot)', medium:'#60a5fa', low:'var(--muted)' };
+  list.innerHTML = history.slice(0,20).flatMap(function(h){
+    return (h.decisions||[]).map(function(d){
+      const at = (d.actionType||d.type||'action').toLowerCase();
+      const ug = (d.urgency||d.severity||'').toLowerCase();
+      const txt = (d.text||'').length>75 ? d.text.slice(0,75)+'…' : (d.text||'');
       return '<div class="history-item">' +
-        '<span class="history-time">' + (h.time||'—') + '</span>' +
-        '<span class="history-action" style="color:' + (COLOR[actionType]||'var(--muted)') + '">' + actionType.toUpperCase() + '</span>' +
-        (urgLabel ? '<span style="font-size:9px;color:' + urgColor + ';font-weight:700;min-width:40px">' + urgLabel + '</span>' : '') +
-        '<span class="history-text">' + shortText + ' <span style="color:var(--purple);font-weight:700">' + (d.confidence||'—') + '%</span></span>' +
+        '<span class="history-time">'+(h.time||'—')+'</span>' +
+        '<span class="history-action" style="color:'+(COLOR[at]||'var(--muted)')+'">'+at.toUpperCase()+'</span>' +
+        (ug&&ug!=='undefined'?'<span style="font-size:9px;color:'+(URGC[ug]||'var(--muted)')+';font-weight:700;min-width:38px">'+ug.toUpperCase()+'</span>':'') +
+        '<span class="history-text">'+txt+' <span style="color:var(--purple);font-weight:700">'+(d.confidence||'—')+'%</span></span>' +
         '</div>';
-    })
-  ).join('');
+    });
+  }).join('');
 };
 
-// On DOM ready — fetch status immediately
+// Reveal zones immediately on login
+function checkPw() {
+  const v = document.getElementById('pw-input').value;
+  if (v === DASHBOARD_PW) {
+    document.getElementById('pw-overlay').style.display = 'none';
+    sessionStorage.setItem('bjbots_auth','1');
+    // Reveal immediately — data fills in after
+    ['kpi-strip','intel-zone'].forEach(function(id){
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'grid';
+    });
+    refreshAll();
+    refreshDecisions();
+    if (typeof _decisionInterval !== 'undefined') clearInterval(_decisionInterval);
+    _decisionInterval = setInterval(refreshDecisions, 60000);
+    fetch('/api/status').then(function(r){return r.json();}).then(function(s){
+      const m = document.getElementById('h-mode');
+      if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge '+(s.advisoryMode?'mode-advisory':'mode-live'); }
+    }).catch(function(){});
+  } else {
+    const e = document.getElementById('pw-error');
+    if (e) e.style.display = 'block';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
-  // Restore history
-  try {
-    const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
-    if (h.length) renderHistory(h);
-  } catch(e) {}
+  const inp = document.getElementById('pw-input');
+  if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPw(); });
+  if (sessionStorage.getItem('bjbots_auth')==='1') {
+    document.getElementById('pw-overlay').style.display = 'none';
+    ['kpi-strip','intel-zone'].forEach(function(id){
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'grid';
+    });
+    refreshAll();
+    refreshDecisions();
+    _decisionInterval = setInterval(refreshDecisions, 60000);
+    fetch('/api/status').then(function(r){return r.json();}).then(function(s){
+      const m = document.getElementById('h-mode');
+      if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge '+(s.advisoryMode?'mode-advisory':'mode-live'); }
+    }).catch(function(){});
+  }
+  try { const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]'); if(h.length) renderHistory(h); } catch(e){}
   renderUserBotCards();
-  // Fetch status on load
-  fetch('/api/status').then(r=>r.json()).then(d=>{
-    const m = document.getElementById('h-mode');
-    if (m) {
-      m.textContent = d.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode';
-      m.className = 'mode-badge ' + (d.advisoryMode ? 'mode-advisory' : 'mode-live');
-    }
-  }).catch(()=>{});
 });
 </script>
 </body>

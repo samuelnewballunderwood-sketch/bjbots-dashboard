@@ -296,6 +296,12 @@ function consolidateActions(actions) {
           ? botNames.slice(0,3).join(', ') + ' + ' + (botNames.length-3) + ' more'
           : botNames.join(', ');
         const nameShort = shortNames.length > 0 ? ' — ' + shortNames : '';
+        // Capital movement language — no abstract system terms
+        if (lead.objective === 'bot_efficiency' || lead.objective === 'idle_capital') {
+          return lead.actionType === 'reduce'
+            ? 'Reallocate $' + totalAmt + ' from underperforming bots' + nameShort
+            : 'Deploy $' + totalAmt + ' to stronger strategies' + nameShort;
+        }
         return (lead.actionType === 'reduce'
           ? 'Reduce ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameShort
           : 'Increase ' + lead.objective.replace(/_/g,' ') + ' by $' + totalAmt + nameShort);
@@ -390,7 +396,7 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
       const urg = bot.score < 30 ? 'critical' : bot.score < 40 ? 'high' : 'medium';
       moves.push(makeDecision({
         actionType:'reduce', category:'required',
-        text:'Reduce ' + bot.name + ' by $' + amt + ' (' + Math.round(pct*100) + '%)',
+        text:'Reduce capital in ' + bot.name + ' by $' + amt,
         reason:'Score ' + bot.score + '/100 — below ' + RC.scoreThresholds.reduce + ' threshold. Capital efficiency: $' + bot.effUsd.toFixed(2) + ' return on $' + bot.capital + '.',
         amount:amt, amountPct:Math.round(pct*100), targetBotIds:[bot.id],
         urgency:urg, timeframe:urg==='critical'?'immediate':'4h',
@@ -429,7 +435,7 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
       if (amt < RC.minimumMoveUsd) return;
       moves.push(makeDecision({
         actionType:'reduce', category:'required',
-        text:'Reduce ' + bot.name + ' by $' + amt + ' (capital inefficient)',
+        text:'Reallocate $' + amt + ' from ' + bot.name + ' (underperforming)',
         reason:'Score ' + bot.score + '/100. Returning $' + bot.effUsd.toFixed(2) + ' on $' + bot.capital + ' allocated.',
         amount:amt, amountPct:20, targetBotIds:[bot.id],
         urgency:'medium', timeframe:'4h',
