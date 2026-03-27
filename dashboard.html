@@ -864,7 +864,7 @@ function fmtChange(c) { return (c>=0?'+':'')+c.toFixed(2)+'%'; }
 
 // ============ TOAST ============
 function showToast(msg, type='success') {
-  const t = document.getElementById('toast');
+  let t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast ' + type + ' show';
   setTimeout(() => t.className='toast', 3500);
@@ -893,7 +893,7 @@ async function confirmAction() {
 
 // ============ BOT ACTIONS ============
 async function executeBotAction(botId, action, btnEl) {
-  const actionLabel = action === 'disable' ? 'Pause' : 'Enable';
+  let actionLabel = action === 'disable' ? 'Pause' : 'Enable';
   const warningText = action === 'disable'
     ? 'This will pause the bot in 3Commas. Active deals will remain open until their take-profit or stop-loss is hit.'
     : 'This will re-enable the bot in 3Commas. New deals will start according to the bot strategy.';
@@ -907,7 +907,7 @@ async function executeBotAction(botId, action, btnEl) {
       if (btnEl) { btnEl.disabled = true; btnEl.classList.add('loading'); btnEl.textContent = '⏳'; }
       try {
         const res  = await fetch(`/api/bot/${botId}/${action}`, { method: 'POST' });
-        const data = await res.json();
+        let data = await res.json();
         if (!data.success) throw new Error(data.error || 'Action failed');
         showToast(`✅ Bot ${action}d successfully`, 'success');
         // Refresh bot status after action
@@ -941,7 +941,7 @@ async function apiFetch(p) { r=await fetch('/api/'+p); if(!r.ok)throw new Error(
 function handleExecClick(btn) {
   const act   = btn.getAttribute('data-action');
   const id    = btn.getAttribute('data-id');
-  const label = btn.getAttribute('data-label');
+  let label = btn.getAttribute('data-label');
   const amt   = btn.getAttribute('data-amount');
   const cls   = btn.getAttribute('data-cls');
   confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
@@ -1022,7 +1022,7 @@ async function loadDecisions() {
     data = await apiFetch('decisions');
     const decisions = data.decisions || [];
     const scores    = data.scores    || {};
-    const market    = data.marketSnapshot || {};
+    let market    = data.marketSnapshot || {};
 
     // Apply scores to bot cards
     Object.entries(scores).forEach(([id, score]) => {
@@ -1314,8 +1314,8 @@ async function loadWallets() {
 
 // 3Commas bot type inference from pair/name
 function inferTCBotType(bot) {
-  const name = (bot.name||'').toLowerCase();
-  const pair = (bot.pair||'').toUpperCase();
+  let name = (bot.name||'').toLowerCase();
+  let pair = (bot.pair||'').toUpperCase();
   if (name.includes('signal') || name.includes('rsi') || name.includes('ma cross') || name.includes('bb')) return 'signal';
   if (name.includes('hedge') || name.includes('short')) return 'short';
   if (name.includes('break') || name.includes('breakout')) return 'breakout';
@@ -1513,7 +1513,7 @@ let _decisionInterval;
 // Users add/remove bots without any backend changes
 // ============================================================
 
-const LS_KEY = 'alphacontrol_bots';
+let LS_KEY = 'alphacontrol_bots';
 
 function getUserBots() {
   try {
