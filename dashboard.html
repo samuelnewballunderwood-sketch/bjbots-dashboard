@@ -486,7 +486,7 @@ main{padding:20px 28px 40px;max-width:1440px;margin:0 auto}
 <!-- ══════════════════════════════════════════════════════
      ZONE 1: HERO — Risk State + Primary Objective
      ══════════════════════════════════════════════════════ -->
-<div class="hero-zone" id="hero-zone" style="display:none">
+<div class="hero-zone" id="hero-zone" style="display:none;margin-bottom:16px">
   <div class="risk-hero BALANCED" id="risk-state-bar">
     <div class="risk-hero-left">
       <div class="risk-hero-state BALANCED" id="risk-state-label">BALANCED</div>
@@ -1904,6 +1904,13 @@ function checkPw() {
   if(v===DASHBOARD_PW){
     document.getElementById('pw-overlay').style.display='none';
     sessionStorage.setItem('bjbots_auth','1');
+    // Reveal structural zones immediately — data fills in after
+    ['hero-zone','kpi-strip','intel-zone'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
+      else el.style.display = 'block';
+    });
     refreshAll();
     refreshDecisions();
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000); // 15 min
@@ -2877,6 +2884,13 @@ function checkPw() {
   if(v===DASHBOARD_PW){
     document.getElementById('pw-overlay').style.display='none';
     sessionStorage.setItem('bjbots_auth','1');
+    // Reveal structural zones immediately — data fills in after
+    ['hero-zone','kpi-strip','intel-zone'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
+      else el.style.display = 'block';
+    });
     refreshAll();
     refreshDecisions();
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000); // 15 min
@@ -2997,7 +3011,7 @@ apiFetch = async function(endpoint) {
   return data;
 };
 
-// Fix history UNDEFINED bug — patch renderHistory
+// Fix history UNDEFINED bug — clean renderHistory override
 const __origHistory = renderHistory;
 renderHistory = function(history) {
   const list = document.getElementById('history-list');
@@ -3007,15 +3021,24 @@ renderHistory = function(history) {
   if (panel) panel.style.display = 'block';
   const total = history.reduce((s,h) => s + (h.decisions||[]).length, 0);
   if (count) count.textContent = total + ' recommendation' + (total !== 1 ? 's' : '');
-  if (!history.length) { list.innerHTML = '<div class="history-empty">No history yet — recommendations will appear here as the engine runs</div>'; return; }
-  const COLOR = { pause:'var(--red)', reduce:'var(--amber)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)', reallocate:'var(--purple)' };
-  list.innerHTML = history.slice(0,15).flatMap(h =>
+  if (!history.length) {
+    list.innerHTML = '<div class="history-empty">No history yet — recommendations will appear here as the engine runs</div>';
+    return;
+  }
+  const COLOR = { pause:'var(--amber)', reduce:'var(--red)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)', reallocate:'var(--purple)' };
+  const URGENCY_COLOR = { critical:'var(--red)', high:'var(--amber)', medium:'#60a5fa', low:'var(--muted)' };
+  list.innerHTML = history.slice(0,20).flatMap(h =>
     (h.decisions||[]).map(d => {
-      const actionType = d.type || d.actionType || 'action';
+      const actionType = (d.actionType || d.type || 'action').toLowerCase();
+      const urgency    = (d.urgency || d.severity || '').toLowerCase();
+      const urgLabel   = urgency && urgency !== 'undefined' ? urgency.toUpperCase() : '';
+      const urgColor   = URGENCY_COLOR[urgency] || 'var(--muted)';
+      const shortText  = (d.text||'').length > 80 ? d.text.slice(0,80) + '…' : (d.text||'');
       return '<div class="history-item">' +
-        '<span class="history-time">' + h.time + '</span>' +
+        '<span class="history-time">' + (h.time||'—') + '</span>' +
         '<span class="history-action" style="color:' + (COLOR[actionType]||'var(--muted)') + '">' + actionType.toUpperCase() + '</span>' +
-        '<span class="history-text">' + d.text + ' <span style="color:var(--purple)">' + d.confidence + '%</span></span>' +
+        (urgLabel ? '<span style="font-size:9px;color:' + urgColor + ';font-weight:700;min-width:40px">' + urgLabel + '</span>' : '') +
+        '<span class="history-text">' + shortText + ' <span style="color:var(--purple);font-weight:700">' + (d.confidence||'—') + '%</span></span>' +
         '</div>';
     })
   ).join('');
