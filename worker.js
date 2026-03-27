@@ -856,6 +856,8 @@ async function getDecisions(env){
     ]);
     const portfolio=buildLivePortfolio(tcData.bots||[],bnData.bots||[]);
     const market=bnData.market||{regime:'Unknown',volatility:'Unknown',btcChange24h:0};
+    const dataIntegrity={hasTCBots:(tcData.bots||[]).length>0,hasBNBots:(bnData.bots||[]).length>0,hasHedge:portfolio.shortCapital>0,exposureValid:portfolio.totalAllocated>100};
+    const dataReliable=dataIntegrity.hasTCBots&&dataIntegrity.hasBNBots&&dataIntegrity.hasHedge&&dataIntegrity.exposureValid;
     const botScores={},botEff={};
     ;(tcData.bots||[]).forEach(b=>{
       const meta=getBotMeta(b.id),cap=b.capital||meta?.capital||100;
