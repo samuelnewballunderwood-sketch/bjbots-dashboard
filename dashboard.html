@@ -1059,7 +1059,7 @@ async function loadDecisions() {
       const existing = JSON.parse(sessionStorage.getItem(histKey)||'[]');
       const newEntry = {
         time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
-        decisions: decisions.map(d => ({ action:d.action, text:d.text, confidence:d.confidence, type:d.type }))
+        decisions: decisions.map(d => ({ action:d.actionType||d.action||d.type||'action', text:d.text, confidence:d.confidence, type:d.actionType||d.type, urgency:d.urgency||d.severity||'' }))
       };
       existing.unshift(newEntry);
       if (existing.length > 20) existing.pop();
@@ -1341,6 +1341,17 @@ function inferDirection(bot) {
 }
 
 function renderTCBotCard(bot, capital, roi, score, status) {
+  // Ensure status always has valid label/cls — derive from bot data if missing
+  if (!status || !status.label) {
+    const isEnabled = bot.enabled || bot.is_enabled;
+    const trades2 = (bot.completedDeals||0) + (bot.activeDeals||0);
+    const roi2 = roi || 0;
+    status = !isEnabled                        ? {label:'Paused',          cls:'status-paused'} :
+             bot.activeDeals > 0               ? {label:'Active',          cls:'status-active'} :
+             trades2 === 0                     ? {label:'Waiting',         cls:'status-waiting'} :
+             roi2 < -1                         ? {label:'Underperforming', cls:'status-underperforming'} :
+                                                 {label:'Active',          cls:'status-active'};
+  }
   type      = inferTCBotType(bot);
   market    = inferTCMarket(bot);
   const symbol    = inferTCSymbol(bot);
@@ -1850,7 +1861,7 @@ async function loadDecisions() {
       existing = JSON.parse(sessionStorage.getItem(histKey)||'[]');
       newEntry = {
         time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
-        decisions: decisions.map(d => ({ action:d.action, text:d.text, confidence:d.confidence, type:d.type }))
+        decisions: decisions.map(d => ({ action:d.actionType||d.action||d.type||'action', text:d.text, confidence:d.confidence, type:d.actionType||d.type, urgency:d.urgency||d.severity||'' }))
       };
       existing.unshift(newEntry);
       if (existing.length > 20) existing.pop();
@@ -2132,6 +2143,17 @@ function inferDirection(bot) {
 }
 
 function renderTCBotCard(bot, capital, roi, score, status) {
+  // Ensure status always has valid label/cls — derive from bot data if missing
+  if (!status || !status.label) {
+    const isEnabled = bot.enabled || bot.is_enabled;
+    const trades2 = (bot.completedDeals||0) + (bot.activeDeals||0);
+    const roi2 = roi || 0;
+    status = !isEnabled                        ? {label:'Paused',          cls:'status-paused'} :
+             bot.activeDeals > 0               ? {label:'Active',          cls:'status-active'} :
+             trades2 === 0                     ? {label:'Waiting',         cls:'status-waiting'} :
+             roi2 < -1                         ? {label:'Underperforming', cls:'status-underperforming'} :
+                                                 {label:'Active',          cls:'status-active'};
+  }
   type      = inferTCBotType(bot);
   market    = inferTCMarket(bot);
   symbol    = inferTCSymbol(bot);
