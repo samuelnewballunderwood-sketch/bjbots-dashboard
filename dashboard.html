@@ -33,7 +33,7 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-he
 .tip:hover .tip-icon{background:var(--purple-dim);border-color:var(--purple);color:var(--purple)}
 .tip-box{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1f2e;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted2);line-height:1.5;width:220px;z-index:1000;display:none;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);font-family:'Syne',sans-serif;font-weight:400}
 .tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1a1f2e}
-.tip:hover .tip-box,.tip-box:hover{display:block}
+.tip:hover > .tip-box{display:block!important}
 .tip-title{font-weight:700;color:var(--text);margin-bottom:4px;font-size:11px}
 
 /* ── HEADER ── */
