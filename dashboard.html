@@ -825,6 +825,21 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 <div class="footer">AlphaControl Dashboard · Last synced <span id="sync-time">—</span> · Rules engine v2 · Data: 3Commas + Binance</div>
 
 <script>
+// updateModeBadge — defined early so original script can call it
+function updateModeBadge() {
+  fetch('/api/status').then(function(r){return r.json();}).then(function(s){
+    var m = document.getElementById('h-mode');
+    if (!m) return;
+    if (s.advisoryMode) {
+      m.textContent = 'Advisory Mode';
+      m.className = 'mode-badge mode-advisory';
+    } else {
+      m.textContent = '⚡ Live Mode';
+      m.className = 'mode-badge mode-live';
+    }
+  }).catch(function(){});
+}
+
 // ============ CONSTANTS ============
 const TOTAL_ALLOCATED = 3169;
 const TOTAL_REALIZED  = 34.37;
@@ -2806,20 +2821,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 // ── UX: Control system upgrades — presentation only ──────────────────────
-
-function updateModeBadge() {
-  fetch('/api/status').then(function(r){return r.json();}).then(function(s){
-    const m = document.getElementById('h-mode');
-    if (!m) return;
-    if (s.advisoryMode) {
-      m.textContent = 'Advisory Mode';
-      m.className = 'mode-badge mode-advisory';
-    } else {
-      m.textContent = '⚡ Live Mode';
-      m.className = 'mode-badge mode-live';
-    }
-  }).catch(function(){});
-}
 
 function _syncHero(data) {
   if (!data || !data.riskState) return;
