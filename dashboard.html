@@ -1036,7 +1036,11 @@ async function loadDecisions() {
         bar.style.display = 'flex';
         bar.className = 'risk-state-bar ' + data.riskState;
       }
-      if (label) { label.textContent = data.riskState.replace('_',' '); label.className = 'risk-label ' + data.riskState; }
+      if (label) {
+        const subLabel = data.riskSubLabel ? ' — ' + data.riskSubLabel : '';
+        label.textContent = data.riskState.replace('_',' ') + subLabel;
+        label.className = 'risk-label ' + data.riskState;
+      }
       if (scoreEl) { scoreEl.textContent = data.riskScore; scoreEl.className = 'risk-score-num ' + data.riskState; }
       if (factors && data.riskFactors) factors.textContent = data.riskFactors.length ? data.riskFactors.join(' · ') : 'No elevated risk factors detected';
     }

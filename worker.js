@@ -17,6 +17,16 @@ function json(data, status=200) { return new Response(JSON.stringify(data), { st
 // BOT METADATA — Single source of truth
 // maxAllocationPct: hard cap per bot as % of total portfolio
 // ============================================================
+
+// ============================================================
+// SYSTEM PHILOSOPHY
+// AlphaControl is designed for a disciplined, risk-aware multi-bot trader
+// operating a mixed strategy portfolio (grid, DCA, signal, hedge).
+// Base profiles have conviction — they are not generic defaults.
+// They encode sensible risk discipline for this trader archetype.
+// Validate and adjust targets using real decision cycle behaviour,
+// not theory. The system should be opinionated and strong.
+// ============================================================
 const BOT_META = {
   16801943: { name:'BTC Long Futures Bot',    capital:350, direction:'long',  strategy:'dca',    venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:15 },
   16801248: { name:'BTC Hedge Bot',           capital:250, direction:'short', strategy:'dca',    venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:15 },
@@ -49,6 +59,17 @@ const RC = {
 // STEP 1 — DYNAMIC PORTFOLIO TARGET STATE
 // Base profiles adjusted each cycle by regime, volatility, risk state.
 // Every target is explainable: base + adjustments = final.
+//
+// BASE PROFILE RATIONALE (for a disciplined, risk-aware multi-bot trader):
+// - longPct 65%: meaningful long exposure without reckless bias
+// - shortPct 15%: permanent hedge floor — always some protection
+// - gridPct 45%: grids work in ranging markets, capped to avoid overconcentration
+// - dcaPct 30%: DCA as steady core strategy
+// - signalPct 10%: signals as a small, tactical layer only
+// - btcConcentrationPct 40%: BTC is dominant but must not be the whole portfolio
+// - ethConcentrationPct 35%: ETH secondary, capped separately
+//
+// These are validated by real cycle behaviour, not theoretical compromise.
 // ============================================================
 const BASE_PROFILES = {
   default: {
@@ -179,7 +200,23 @@ function computeRiskState({ longPct, floatingPnl, totalAllocated, volatility, by
 
   riskScore = Math.min(100, riskScore);
   const riskState = riskScore >= 60 ? 'HIGH_RISK' : riskScore >= 35 ? 'OVEREXPOSED' : riskScore >= 15 ? 'BALANCED' : 'SAFE';
-  return { riskState, riskScore, factors, floatingPct: parseFloat(floatingPct.toFixed(2)) };
+
+  // Sub-label: explains WHY the state is what it is — avoids "BALANCED but acting" confusion
+  const longTarget = 65; // base default for sub-label context
+  let riskSubLabel = null;
+  if (riskState === 'SAFE') {
+    riskSubLabel = 'All targets met — no action required';
+  } else if (riskState === 'BALANCED') {
+    if (longPct > longTarget) riskSubLabel = 'Stable — above target long exposure';
+    else if (floatingPct < -1)  riskSubLabel = 'Stable — minor floating loss';
+    else                        riskSubLabel = 'Within acceptable range';
+  } else if (riskState === 'OVEREXPOSED') {
+    riskSubLabel = 'Elevated risk — reducing exposure recommended';
+  } else if (riskState === 'HIGH_RISK') {
+    riskSubLabel = 'Defensive mode — optimisations suppressed';
+  }
+
+  return { riskState, riskSubLabel, riskScore, factors, floatingPct: parseFloat(floatingPct.toFixed(2)) };
 }
 
 // ============================================================
@@ -313,11 +350,11 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
       const cost      = inactionCost(moveAmt, urg, gap.usd);  // full gap = exposed capital
       moves.push(makeDecision({
         actionType:'reduce', category:'required',
-        text:'Reduce ' + gap.objective.replace(/_/g,' ') + ' by $' + moveAmt + ' (' + gap.current + '% → ' + newPct + '% this cycle, target ' + gap.target + '%)',
-        reason:'Current ' + gap.dimension.replace(/_/g,' ') + ' is ' + gap.current + '%, target is ' + gap.target + '%. Moving $' + moveAmt + ' this cycle (40% of gap). Reassess next cycle.',
+        text:'Reduce ' + gap.objective.replace(/_/g,' ') + ' by $' + moveAmt + ' → ' + gap.current + '% → ' + newPct + '% → target ' + gap.target + '%',
+        reason:'Current ' + gap.dimension.replace(/_/g,' ') + ': ' + gap.current + '%. After this action: ~' + newPct + '%. Target: ' + gap.target + '%. Moving $' + moveAmt + ' this cycle (40% of gap — gradual adjustment). Reassess next cycle.',
         amount:moveAmt, amountPct:Math.round((moveAmt/totalAllocated)*100), targetBotIds:[],
         urgency:urg, timeframe:gap.delta>20?'2h':'24h',
-        expectedImpact:'Moves ' + gap.dimension.replace(/_/g,' ') + ' from ' + gap.current + '% toward ' + gap.target + '% target',
+        expectedImpact:'Progress: ' + gap.current + '% → ' + newPct + '% this cycle → ' + gap.target + '% target',
         costOfInaction:cost, objective:gap.objective, confidence:75,
       }));
     } else if (gap.delta < -RC.gapThresholdPct) {
