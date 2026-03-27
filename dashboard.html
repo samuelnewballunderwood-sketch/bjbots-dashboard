@@ -1057,14 +1057,8 @@ async function loadDecisions() {
     // Update 3Commas health from decisions data
     setEl('h-3commas', 'Connected');
     document.getElementById('h-3commas-dot').className = 'health-dot ok';
-    // Update mode badge
-    const modeEl = document.getElementById('h-mode');
-    if (modeEl) {
-      const isAdvisory = !data.executionEnabled;
-      modeEl.textContent = isAdvisory ? 'Advisory Mode' : '⚡ Live Mode';
-      modeEl.style.background = isAdvisory ? 'var(--amber-dim)' : 'var(--green-dim)';
-      modeEl.style.color = isAdvisory ? 'var(--amber)' : 'var(--green)';
-    }
+    // Mode badge handled by updateModeBadge() — do not set from bot data
+    updateModeBadge();
     // Apply capital efficiency to bot cards
     if (data.efficiency) {
       Object.entries(data.efficiency).forEach(([id, eff]) => {
@@ -2058,14 +2052,8 @@ async function loadDecisions() {
     // Update 3Commas health from decisions data
     setEl('h-3commas', 'Connected');
     document.getElementById('h-3commas-dot').className = 'health-dot ok';
-    // Update mode badge
-    const modeEl = document.getElementById('h-mode');
-    if (modeEl) {
-      const isAdvisory = !data.executionEnabled;
-      modeEl.textContent = isAdvisory ? 'Advisory Mode' : '⚡ Live Mode';
-      modeEl.style.background = isAdvisory ? 'var(--amber-dim)' : 'var(--green-dim)';
-      modeEl.style.color = isAdvisory ? 'var(--amber)' : 'var(--green)';
-    }
+    // Mode badge handled by updateModeBadge() — do not set from bot data
+    updateModeBadge();
     // Apply capital efficiency to bot cards
     if (data.efficiency) {
       Object.entries(data.efficiency).forEach(([id, eff]) => {
