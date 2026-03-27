@@ -996,10 +996,7 @@ async function load3CommasBots() {
       const card = renderTCBotCard(bot, capital, roi, score, status);
       // Add alert banner for idle signal bots
       const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>' : '';
-      return card.replace('</div>
-    </div>', alertBanner + '
-    </div>
-    </div>');
+      return card.slice(0, card.lastIndexOf('<' + '/div>')) + alertBanner + '<' + '/div>';
     }).join('');
   }
 
@@ -1193,10 +1190,7 @@ function renderBotManager() {
   if (countEl) countEl.textContent = bots.length;
   if (!list) return;
   if (!bots.length) {
-    list.innerHTML = '<div class="mgr-empty">
-  <div style="font-weight:700;color:var(--text);margin-bottom:4px">3Commas bots auto-appear ✅</div>
-  <div>Use "+ Add Bot" for Binance native bots — Binance's API doesn't expose a bot list, so capital must be entered once per bot.</div>
-</div>';
+    list.innerHTML = '<div class="mgr-empty"><strong style="color:var(--text)">3Commas bots auto-appear ✅</strong><br><br>Use the + Add Bot button for Binance bots. Binance API does not expose a bot list so capital must be entered once per bot.<' + '/div>';
     return;
   }
   const colors = { binance:'#f0b90b', '3commas':'var(--teal)' };
