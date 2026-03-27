@@ -834,6 +834,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 <div class="footer">AlphaControl Dashboard · Last synced <span id="sync-time">—</span> · Rules engine v2 · Data: 3Commas + Binance</div>
 
 <script>
+
 // updateModeBadge — defined early so original script can call it
 function updateModeBadge() {
   fetch('/api/status').then(function(r){return r.json();}).then(function(s){
@@ -934,7 +935,7 @@ function statusFromScore(s, trades, enabled) {
 }
 
 // ============ API ============
-async function apiFetch(p) { const r=await fetch('/api/'+p); if(!r.ok)throw new Error(r.status); return r.json(); }
+async function apiFetch(p) { r=await fetch('/api/'+p); if(!r.ok)throw new Error(r.status); return r.json(); }
 
 // ============ DECISION ENGINE (calls server-side) ============
 function handleExecClick(btn) {
@@ -973,7 +974,7 @@ function renderDecisionCard(d, i) {
   const amtDisplay  = d.amount > 0 ? '$' + d.amount.toLocaleString() : '';
   const pctDisplay  = d.amountPct > 0 ? '(' + d.amountPct + '%)' : '';
   actionLabel = (d.actionType || 'action').toUpperCase();
-  const execBtn = (function() {
+  execBtn = (function() {
     if (!d.executable || !d.targetBotIds || !d.targetBotIds.length) return '';
     return d.targetBotIds.map(function(id) {
       var act = d.actionType === 'pause' ? 'disable' : 'enable';
@@ -1025,7 +1026,7 @@ async function loadDecisions() {
 
     // Apply scores to bot cards
     Object.entries(scores).forEach(([id, score]) => {
-      const scEl = document.getElementById('score-' + id);
+      scEl = document.getElementById('score-' + id);
       if (scEl) { scEl.textContent = score; scEl.className = 'ai-score ' + scoreClass(score); }
     });
 
@@ -1039,7 +1040,7 @@ async function loadDecisions() {
       if (ve) { ve.textContent = market.volatility; ve.style.color = market.volatility==='High'?'var(--amber)':market.volatility==='Low'?'var(--green)':'var(--text)'; }
     }
     if (market.btcChange24h !== undefined) {
-      const me = document.getElementById('btc-move');
+      me = document.getElementById('btc-move');
       if (me) { me.textContent = fmtChange(market.btcChange24h); me.style.color = market.btcChange24h>=0?'var(--green)':'var(--red)'; }
       const bias = market.btcChange24h > 1 ? 'LONG' : market.btcChange24h < -1 ? 'SHORT' : 'NEUTRAL';
       setEl('signal-bias', bias);
@@ -1076,7 +1077,7 @@ async function loadDecisions() {
     setEl('h-decisions', decisions.length + ' actions');
     document.getElementById('h-decisions-dot').className = 'health-dot ok';
     if (data.marketSnapshot) {
-      const mk = data.marketSnapshot;
+      mk = data.marketSnapshot;
       setEl('h-market', mk.regime + ' / ' + mk.volatility);
       document.getElementById('h-market-dot').className = 'health-dot ' + (mk.regime==='Bear'?'warn':'ok');
     }
@@ -1109,7 +1110,7 @@ async function loadDecisions() {
         const gap     = gaps.find(g => g.objective === key);
         const cur     = current !== null ? current : (gap ? gap.current : 0);
         const delta   = gap ? gap.delta : 0;
-        const hasGap  = Math.abs(delta) >= 5;
+        hasGap  = Math.abs(delta) >= 5;
         // Only highlight problematic dimensions — dim on-target ones
         const opacity  = hasGap ? '1' : '0.4';
         const gapClass = !hasGap ? 'ok' : delta > 0 ? 'over' : 'under';
@@ -1278,7 +1279,7 @@ async function loadWallets() {
   fc = document.getElementById('floating-pnl-card');
   if(fc) fc.className='pnl-card'+(floatPnl<0?' primary-red':'');
 
-  const net = TOTAL_REALIZED + floatPnl;
+  net = TOTAL_REALIZED + floatPnl;
   const ne  = document.getElementById('net-pnl');
   if(ne){ ne.textContent=fmtProfit(net); ne.className='pnl-value '+cc(net); }
   const nc = document.getElementById('net-pnl-card');
@@ -1453,7 +1454,7 @@ async function loadBinanceBots() {
   };
   data.bots.forEach(b => {
     const el=document.getElementById(b.id); if(el) el.textContent=b.trades;
-    const m=META[b.id]; if(!m) return;
+    m=META[b.id]; if(!m) return;
     // 24h change
     const ce=document.getElementById(m.chg);
     if(ce&&b.change24h!==undefined){ ce.textContent=fmtChange(b.change24h); ce.style.color=b.change24h>=0?'var(--green)':'var(--red)'; }
@@ -1750,7 +1751,7 @@ function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
 function renderHistory(history) {
   panel = document.getElementById('history-panel');
   list  = document.getElementById('history-list');
-  const count = document.getElementById('history-count');
+  count = document.getElementById('history-count');
   if (!panel || !list) return;
   panel.style.display = 'block';
   total = history.reduce((s,h) => s + h.decisions.length, 0);
@@ -1759,241 +1760,28 @@ function renderHistory(history) {
     list.innerHTML = '<div class="history-empty">No history yet</div>';
     return;
   }
-  const COLOR = { pause:'var(--red)', reduce:'var(--amber)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)' };
-  list.innerHTML = history.slice(0,10).flatMap(h =>
-    h.decisions.map(d => `
-      <div class="history-item">
-        <span class="history-time">${h.time}</span>
-        <span class="history-action" style="color:${COLOR[d.type]||'var(--muted)'}">${d.action}</span>
-        <span class="history-text">${d.text} <span style="color:var(--purple)">${d.confidence}%</span></span>
-      </div>`)
-  ).join('');
-}
-
-async function refreshAll() {
-  updateTime();
-  await Promise.allSettled([loadPrices(), loadWallets(), load3CommasBots(), loadBinanceBots()]);
-}
-async function refreshDecisions() {
-  await loadDecisions();
-}
-
-// ============ AUTH ============
-const DASHBOARD_PW = 'Underwood10';
-function checkPw() {
-  v=document.getElementById('pw-input').value;
-  if(v===DASHBOARD_PW){
-    document.getElementById('pw-overlay').style.display='none';
-    sessionStorage.setItem('bjbots_auth','1');
-    // Reveal structural zones immediately — data fills in after
-    ['hero-zone','kpi-strip','intel-zone'].forEach(function(id) {
-      el = document.getElementById(id);
-      if (!el) return;
-      if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
-      else el.style.display = 'block';
+  const COLOR2 = { pause:'var(--amber)', reduce:'var(--red)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)', reallocate:'var(--purple)', action:'var(--muted)' };
+  list.innerHTML = history.slice(0,20).flatMap(function(h) {
+    return (h.decisions||[]).map(function(d) {
+      var at = (d.actionType||d.type||d.action||'action').toLowerCase(); if(at==='undefined')at='action';
+      var txt = (d.text||'').slice(0,75)+((d.text||'').length>75?'…':'');
+      var conf = typeof d.confidence==='number'?d.confidence+'%':'';
+      return '<div class="history-item">'+
+        '<span class="history-time">'+(h.time||'—')+'</span>'+
+        '<span class="history-action" style="color:'+(COLOR2[at]||'var(--muted)')+'">'+at.toUpperCase()+'</span>'+
+        '<span class="history-text">'+txt+(conf?' <span style="color:var(--purple)">'+conf+'</span>':'')+'</span>'+
+        '</div>';
     });
-    refreshAll();
-    refreshDecisions();
-    _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000); // 15 min
-  } else {
-    document.getElementById('pw-error').style.display='block';
-    document.getElementById('pw-input').value='';
-    document.getElementById('pw-input').focus();
-  }
-}
-
-if(sessionStorage.getItem('bjbots_auth')==='1'){
-  refreshAll();
-  refreshDecisions();
-  _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000);
-}
-setInterval(()=>{if(sessionStorage.getItem('bjbots_auth')==='1')refreshAll();},30000);
-setInterval(updateTime,1000);
-
-document.addEventListener('DOMContentLoaded',()=>{
-  if(sessionStorage.getItem('bjbots_auth')==='1'){
-    document.getElementById('pw-overlay').style.display='none';
-    refreshAll();
-    refreshDecisions();
-    _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000);
-  }
-  document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
-  // Clear old-format history (pre-urgency field) that causes UNDEFINED labels
-  try {
-    var oldH = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
-    var needsClear = oldH.some(function(e){ return (e.decisions||[]).some(function(d){ return d.urgency===undefined&&d.severity===undefined; }); });
-    if (needsClear) sessionStorage.removeItem('alphacontrol_history');
-  } catch(e) {}
-  // Restore history from session
-  try {
-    const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
-    if (h.length) renderHistory(h);
-  } catch(e) {}
-  // Render any user-added bots
-  renderUserBotCards();
-  // Fetch status immediately on load — fixes advisory mode badge stale state
-  fetch('/api/status').then(r=>r.json()).then(d=>{
-    const modeEl = document.getElementById('h-mode');
-    if (modeEl) {
-      modeEl.textContent = d.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode';
-      modeEl.style.background = d.advisoryMode ? 'var(--amber-dim)' : 'var(--green-dim)';
-      modeEl.style.color = d.advisoryMode ? 'var(--amber)' : 'var(--green)';
-    }
-  }).catch(()=>{});
-});
-</script>
-</body>
-</html>
-</div>
-
-</div>
-
-<footer style="text-align:center;padding:20px;color:var(--muted);font-size:10px;border-top:1px solid var(--border);margin-top:40px;letter-spacing:.5px">AlphaControl v4 · Capital Management System</footer>
-</main>
-
-<script>
-
-// ============ CONSTANTS ============
-TOTAL_ALLOCATED = 3169;
-TOTAL_REALIZED  = 34.37;
-
-// ============ HELPERS ============
-function fmtUSD(n)    { v=parseFloat(n); return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
-function fmtProfit(n) { v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
-function fmt(n,d=2)   { return parseFloat(n).toFixed(d); }
-function cc(n)        { return parseFloat(n)>=0?'green':'red'; }
-function setEl(id, val, cls) { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(cls!==undefined)e.className=cls; }
-function fmtChange(c) { return (c>=0?'+':'')+c.toFixed(2)+'%'; }
-
-// ============ TOAST ============
-function showToast(msg, type='success') {
-  t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.className='toast', 3500);
-}
-
-// ============ MODAL ============
-let _pendingAction = null;
-function openModal(title, body, warning, confirmCls, action) {
-  document.getElementById('modal-title').textContent   = title;
-  document.getElementById('modal-body').textContent    = body;
-  document.getElementById('modal-warning').textContent = warning;
-  document.getElementById('modal-confirm').className   = 'modal-btn ' + confirmCls;
-  document.getElementById('modal-confirm').textContent = title;
-  document.getElementById('modal').style.display       = 'flex';
-  _pendingAction = action;
-}
-function closeModal() {
-  document.getElementById('modal').style.display = 'none';
-  _pendingAction = null;
-}
-async function confirmAction() {
-  if (!_pendingAction) return;
-  closeModal();
-  await _pendingAction();
-}
-
-// ============ BOT ACTIONS ============
-async function executeBotAction(botId, action, btnEl) {
-  actionLabel = action === 'disable' ? 'Pause' : 'Enable';
-  const warningText = action === 'disable'
-    ? 'This will pause the bot in 3Commas. Active deals will remain open until their take-profit or stop-loss is hit.'
-    : 'This will re-enable the bot in 3Commas. New deals will start according to the bot strategy.';
-
-  openModal(
-    `${actionLabel} Bot`,
-    `Are you sure you want to ${action} this bot in 3Commas?`,
-    warningText,
-    action === 'disable' ? 'confirm-pause' : 'confirm-enable',
-    async () => {
-      if (btnEl) { btnEl.disabled = true; btnEl.classList.add('loading'); btnEl.textContent = '⏳'; }
-      try {
-        res  = await fetch(`/api/bot/${botId}/${action}`, { method: 'POST' });
-        data = await res.json();
-        if (!data.success) throw new Error(data.error || 'Action failed');
-        showToast(`✅ Bot ${action}d successfully`, 'success');
-        // Refresh bot status after action
-        setTimeout(refreshAll, 1500);
-      } catch(e) {
-        showToast(`❌ Failed: ${e.message}`, 'error');
-        if (btnEl) { btnEl.disabled = false; btnEl.classList.remove('loading'); btnEl.textContent = actionLabel; }
-      }
-    }
-  );
-}
-
-// ============ SCORE DISPLAY ============
-function scoreClass(s) {
-  if (s >= 75) return 'score-strong';
-  if (s >= 55) return 'score-stable';
-  if (s >= 35) return 'score-weak';
-  return 'score-critical';
-}
-function statusFromScore(s, trades, enabled) {
-  if (!enabled)   return { label:'Paused',          cls:'status-paused'          };
-  if (trades===0) return { label:'Idle',             cls:'status-idle'            };
-  if (s < 35)     return { label:'Underperforming',  cls:'status-underperforming' };
-  return                 { label:'Active',           cls:'status-active'          };
-}
-
-// ============ API ============
-async function apiFetch(p) { const r=await fetch('/api/'+p); if(!r.ok)throw new Error(r.status); return r.json(); }
-
-// ============ DECISION ENGINE (calls server-side) ============
-function handleExecClick(btn) {
-  const act   = btn.getAttribute('data-action');
-  const id    = btn.getAttribute('data-id');
-  label = btn.getAttribute('data-label');
-  const amt   = btn.getAttribute('data-amount');
-  const cls   = btn.getAttribute('data-cls');
-  confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
-}
-
-function buildProjectedBlock(d) {
-  if (!d.projectedState || !d.projectedState.summary) return '';
-  const p = d.projectedState;
-  const isImproving = p.riskState === 'SAFE' || p.riskState === 'BALANCED';
-  const color = isImproving ? 'var(--green)' : 'var(--amber)';
-  const bg    = isImproving ? 'rgba(74,222,128,0.06)' : 'rgba(251,191,36,0.06)';
-  const bord  = isImproving ? 'rgba(74,222,128,0.2)'  : 'rgba(251,191,36,0.2)';
-  html = '<div style="margin-top:8px;padding:6px 10px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:6px;font-size:10px">';
-  html += '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:' + color + ';margin-bottom:2px">After this action</div>';
-  html += '<div style="color:var(--muted2);line-height:1.5">' + p.summary + '</div>';
-  if (p.gapClosed > 0) {
-    html += '<div style="margin-top:4px;height:3px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,p.gapClosed) + '%;background:' + color + ';border-radius:2px"></div></div>';
-    html += '<div style="font-size:9px;color:' + color + ';margin-top:2px">' + p.gapClosed + '% of imbalance resolved</div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderDecisionCard(d, i) {
-  const UC = { critical:'var(--red)', high:'var(--amber)', medium:'#63b3ed', low:'var(--muted)' };
-  const AC = { reduce:'var(--red)', increase:'var(--green)', reallocate:'var(--purple)', pause:'var(--amber)', hold:'var(--muted)' };
-  const isCritical  = d.urgency === 'critical';
-  const borderColor = UC[d.urgency] || 'var(--border)';
-  const amtColor    = AC[d.actionType] || 'var(--text)';
-  const amtDisplay  = d.amount > 0 ? '$' + d.amount.toLocaleString() : '';
-  const pctDisplay  = d.amountPct > 0 ? '(' + d.amountPct + '%)' : '';
-  actionLabel = (d.actionType || 'action').toUpperCase();
-  execBtn = (function() {
-    if (!d.executable || !d.targetBotIds || !d.targetBotIds.length) return '';
-    return d.targetBotIds.map(function(id) {
-      var act = d.actionType === 'pause' ? 'disable' : 'enable';
-      var cls = d.actionType === 'pause' ? 'pause' : 'confirm';
-      return '<button class="exec-btn" data-act="' + act + '" data-id="' + id + '" data-cls="btn-' + cls + '" data-amt="' + (d.amount||0) + '" onclick="handleExecBtn(this)" style="margin-top:6px;font-size:10px">Execute: ' + actionLabel + ' Bot ' + id + '</button>';
-    }).join('');
-  })();
-  const costHtml = d.costOfInaction
+  }).join('');
+  costHtml = d.costOfInaction
     ? '<div class="cost-of-inaction">⚠ ' + d.costOfInaction + '</div>'
     : '';
-  const OBJ_TIPS = {'long_exposure':'% capital betting prices rise. Target: 55% in bear market.','hedge_exposure':'Capital that profits when prices fall — downside protection.','idle_capital':'Capital in bots with 0 trades — not actively working.','bot_efficiency':'Bots scoring below 50/100 — underperforming vs capital deployed.','btc_concentration':'% portfolio correlated to BTC price movements.','grid_allocation':'Capital in grid bots — work best in sideways low-vol markets.','dca_allocation':'DCA bots buy over time to average your entry price.','drawdown_protection':'Open positions currently losing money.','portfolio_balance':'Overall composition vs target allocation.'};
-  const objTip  = (d.objective && OBJ_TIPS[d.objective]) ? ' title="' + OBJ_TIPS[d.objective] + '"' : '';
-  const objHtml = d.objective
+  OBJ_TIPS = {'long_exposure':'% capital betting prices rise. Target: 55% in bear market.','hedge_exposure':'Capital that profits when prices fall — downside protection.','idle_capital':'Capital in bots with 0 trades — not actively working.','bot_efficiency':'Bots scoring below 50/100 — underperforming vs capital deployed.','btc_concentration':'% portfolio correlated to BTC price movements.','grid_allocation':'Capital in grid bots — work best in sideways low-vol markets.','dca_allocation':'DCA bots buy over time to average your entry price.','drawdown_protection':'Open positions currently losing money.','portfolio_balance':'Overall composition vs target allocation.'};
+  objTip  = (d.objective && OBJ_TIPS[d.objective]) ? ' title="' + OBJ_TIPS[d.objective] + '"' : '';
+  objHtml = d.objective
     ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;cursor:help"' + objTip + '>' + d.objective.replace(/_/g,' ') + '</span>'
     : '';
-  const isSuggested = d.category === 'suggested';
+  isSuggested = d.category === 'suggested';
   return (
     '<div class="decision-card ' + (isCritical?'critical-card':'') + (isSuggested?' suggested-card':'') + '" style="border-left:' + (isCritical?'4':'3') + 'px solid ' + borderColor + ';margin-bottom:8px">' +
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
@@ -2023,13 +1811,13 @@ function renderDecisionCard(d, i) {
 async function loadDecisions() {
   try {
     data = await apiFetch('decisions');
-    const decisions = data.decisions || [];
+    decisions = data.decisions || [];
     scores    = data.scores    || {};
     market    = data.marketSnapshot || {};
 
     // Apply scores to bot cards
     Object.entries(scores).forEach(([id, score]) => {
-      const scEl = document.getElementById('score-' + id);
+      scEl = document.getElementById('score-' + id);
       if (scEl) { scEl.textContent = score; scEl.className = 'ai-score ' + scoreClass(score); }
     });
 
@@ -2058,9 +1846,9 @@ async function loadDecisions() {
 
     // Store decision history in sessionStorage (last 20 snapshots)
     try {
-      const histKey = 'alphacontrol_history';
-      const existing = JSON.parse(sessionStorage.getItem(histKey)||'[]');
-      const newEntry = {
+      histKey = 'alphacontrol_history';
+      existing = JSON.parse(sessionStorage.getItem(histKey)||'[]');
+      newEntry = {
         time: new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
         decisions: decisions.map(d => ({ action:d.action, text:d.text, confidence:d.confidence, type:d.type }))
       };
@@ -2092,7 +1880,7 @@ async function loadDecisions() {
     // Apply capital efficiency to bot cards
     if (data.efficiency) {
       Object.entries(data.efficiency).forEach(([id, eff]) => {
-        const effEl = document.getElementById('eff-' + id);
+        effEl = document.getElementById('eff-' + id);
         if (effEl) {
           effEl.textContent = (eff >= 0 ? '+' : '') + '$' + Math.abs(eff).toFixed(2);
           effEl.style.color = eff >= 0 ? 'var(--green)' : 'var(--red)';
@@ -2103,24 +1891,24 @@ async function loadDecisions() {
     // Update target state panel — Long + Hedge prominent, others collapsible
     if (data.targetState && data.portfolioGaps !== undefined) {
       panel = document.getElementById('target-panel');
-      const grid  = document.getElementById('target-grid');
-      const adj   = document.getElementById('target-adj');
+      grid  = document.getElementById('target-grid');
+      adj   = document.getElementById('target-adj');
       if (panel) panel.style.display = 'block';
       t    = data.targetState;
-      const gaps = data.portfolioGaps || [];
+      gaps = data.portfolioGaps || [];
 
       function makeTargetCard(key, label, current, target, isPrimary) {
-        const gap     = gaps.find(g => g.objective === key);
-        const cur     = current !== null ? current : (gap ? gap.current : 0);
-        const delta   = gap ? gap.delta : 0;
-        const hasGap  = Math.abs(delta) >= 5;
+        gap     = gaps.find(g => g.objective === key);
+        cur     = current !== null ? current : (gap ? gap.current : 0);
+        delta   = gap ? gap.delta : 0;
+        hasGap  = Math.abs(delta) >= 5;
         // Only highlight problematic dimensions — dim on-target ones
-        const opacity  = hasGap ? '1' : '0.4';
-        const gapClass = !hasGap ? 'ok' : delta > 0 ? 'over' : 'under';
-        const gapText  = !hasGap ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
-        const curColor = delta>10 ? '#f87171' : delta>5 ? 'var(--amber)' : !hasGap ? 'var(--green)' : 'var(--text)';
-        const bdr      = hasGap && isPrimary ? 'border:1px solid rgba(248,113,113,0.3)' : '';
-        const sz       = isPrimary ? 'font-size:16px' : 'font-size:13px';
+        opacity  = hasGap ? '1' : '0.4';
+        gapClass = !hasGap ? 'ok' : delta > 0 ? 'over' : 'under';
+        gapText  = !hasGap ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
+        curColor = delta>10 ? '#f87171' : delta>5 ? 'var(--amber)' : !hasGap ? 'var(--green)' : 'var(--text)';
+        bdr      = hasGap && isPrimary ? 'border:1px solid rgba(248,113,113,0.3)' : '';
+        sz       = isPrimary ? 'font-size:16px' : 'font-size:13px';
         return '<div class="target-item" style="opacity:' + opacity + ';' + bdr + '">' +
           '<div class="target-dim">' + label + (hasGap && isPrimary ? ' ⚠' : '') + '</div>' +
           '<div style="display:flex;align-items:center;gap:4px">' +
@@ -2143,12 +1931,12 @@ async function loadDecisions() {
       if (grid) grid.innerHTML = html;
 
       // Confidence + adjustments
-      const confText = data.targetConfidence ? ' · Confidence: ' + data.targetConfidence : '';
+      confText = data.targetConfidence ? ' · Confidence: ' + data.targetConfidence : '';
       if (adj && data.targetAdjustments) adj.textContent = 'Basis: ' + data.targetAdjustments.join(' · ') + confText;
     }
 
     // Data warning banner — shown when inputs are unreliable
-    const dwEl = document.getElementById('data-warning');
+    dwEl = document.getElementById('data-warning');
     if (dwEl) {
       if (data.dataWarning) {
         dwEl.textContent = '⚠ ' + data.dataWarning;
@@ -2159,7 +1947,7 @@ async function loadDecisions() {
     }
 
     // Primary objective banner — always shown
-    const poEl = document.getElementById('primary-objective');
+    poEl = document.getElementById('primary-objective');
     if (poEl && data.primaryObjective) {
       poEl.textContent = data.primaryObjective;
       poEl.style.display = 'block';
@@ -2167,7 +1955,7 @@ async function loadDecisions() {
 
     // HOLD ALL state
     if (data.holdAll) {
-      const riskLabel = (data.riskState||'BALANCED').replace('_',' ');
+      riskLabel = (data.riskState||'BALANCED').replace('_',' ');
       container.innerHTML =
         '<div class="hold-all-banner">' +
         '<div class="hold-all-title">✅ Portfolio Aligned</div>' +
@@ -2185,7 +1973,7 @@ async function loadDecisions() {
 
     // Update risk state headline
     if (data.riskState) {
-      const bar     = document.getElementById('risk-state-bar');
+      bar     = document.getElementById('risk-state-bar');
       label   = document.getElementById('risk-state-label');
       scoreEl = document.getElementById('risk-score-num');
       factors = document.getElementById('risk-factors');
@@ -2194,7 +1982,7 @@ async function loadDecisions() {
         bar.className = 'risk-state-bar ' + data.riskState;
       }
       if (label) {
-        const subLabel = data.riskSubLabel ? ' — ' + data.riskSubLabel : '';
+        subLabel = data.riskSubLabel ? ' — ' + data.riskSubLabel : '';
         label.textContent = data.riskState.replace('_',' ') + subLabel;
         label.className = 'risk-label ' + data.riskState;
       }
@@ -2204,7 +1992,7 @@ async function loadDecisions() {
 
     // Split into required and suggested
     required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
-    const suggested = (data.suggestedActions || decisions.filter(d=>d.category==='suggested'));
+    suggested = (data.suggestedActions || decisions.filter(d=>d.category==='suggested'));
 
     // Build HTML with Required/Suggested split
     html = '';
@@ -2258,8 +2046,8 @@ async function loadDecisions() {
 
 // ============ DATA LOADERS ============
 async function loadPrices() {
-  const d   = await apiFetch('prices');
-  const btc = d.BTCUSDT, eth = d.ETHUSDT;
+  d   = await apiFetch('prices');
+  btc = d.BTCUSDT, eth = d.ETHUSDT;
   document.getElementById('btc-price').textContent = '$'+btc.toLocaleString('en-US',{maximumFractionDigits:0});
   document.getElementById('eth-price').textContent = '$'+eth.toLocaleString('en-US',{maximumFractionDigits:0});
 }
@@ -2272,7 +2060,7 @@ async function loadWallets() {
   setEl('spot-wallet-sub', spot.assetCount+' assets held');
   setEl('futures-wallet-val', fmtUSD(margin));
   setEl('avail-margin', fmtUSD(avail));
-  const ue = document.getElementById('upnl-val');
+  ue = document.getElementById('upnl-val');
   if(ue){ ue.textContent=(floatPnl>=0?'+':'')+fmtUSD(floatPnl); ue.style.color=floatPnl<0?'var(--red)':'var(--green)'; }
   setEl('perp-upnl', (floatPnl>=0?'+':'')+fmtUSD(floatPnl));
   setEl('realized-pnl', fmtProfit(TOTAL_REALIZED));
@@ -2282,10 +2070,10 @@ async function loadWallets() {
   fc = document.getElementById('floating-pnl-card');
   if(fc) fc.className='pnl-card'+(floatPnl<0?' primary-red':'');
 
-  const net = TOTAL_REALIZED + floatPnl;
-  const ne  = document.getElementById('net-pnl');
+  net = TOTAL_REALIZED + floatPnl;
+  ne  = document.getElementById('net-pnl');
   if(ne){ ne.textContent=fmtProfit(net); ne.className='pnl-value '+cc(net); }
-  const nc = document.getElementById('net-pnl-card');
+  nc = document.getElementById('net-pnl-card');
   if(nc) nc.className='pnl-card '+(net>=0?'primary':'primary-red');
   roi = (net/TOTAL_ALLOCATED)*100;
   setEl('net-roi', (roi>=0?'+':'')+roi.toFixed(2)+'% ROI on $'+TOTAL_ALLOCATED.toLocaleString());
@@ -2295,23 +2083,23 @@ async function loadWallets() {
   var ht = document.getElementById('header-total'); if (ht) ht.textContent = fmtUSD(total);
   free = total - TOTAL_ALLOCATED;
   setEl('free-capital', fmtUSD(Math.max(0,free)));
-  const idlePct = Math.max(0, Math.round((free/total)*100));
+  idlePct = Math.max(0, Math.round((free/total)*100));
   setEl('idle-pct', idlePct+'%');
-  const ib = document.getElementById('idle-bar'); if(ib) ib.style.width=idlePct+'%';
+  ib = document.getElementById('idle-bar'); if(ib) ib.style.width=idlePct+'%';
 
   // Update health panel
-  const hp = document.getElementById('health-panel');
+  hp = document.getElementById('health-panel');
   if (hp) hp.style.display = 'flex';
   setEl('h-binance', fmtUSD(spot.usdtBalance));
   document.getElementById('h-binance-dot').className = 'health-dot ok';
   setEl('h-lastsync', new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
 
-  const longCap=350+100+100+400+300+300+220+249+700+100+100, shortCap=250, totExp=longCap+shortCap;
-  const lPct=Math.round((longCap/totExp)*100), sPct=Math.round((shortCap/totExp)*100);
+  longCap=350+100+100+400+300+300+220+249+700+100+100, shortCap=250, totExp=longCap+shortCap;
+  lPct=Math.round((longCap/totExp)*100), sPct=Math.round((shortCap/totExp)*100);
   setEl('long-exp', lPct+'%'); setEl('short-exp', sPct+'%');
-  const lb=document.getElementById('exp-long-bar'); if(lb) lb.style.width=lPct+'%';
-  const sb=document.getElementById('exp-short-bar'); if(sb) sb.style.width=sPct+'%';
-  const be=document.getElementById('net-bias');
+  lb=document.getElementById('exp-long-bar'); if(lb) lb.style.width=lPct+'%';
+  sb=document.getElementById('exp-short-bar'); if(sb) sb.style.width=sPct+'%';
+  be=document.getElementById('net-bias');
   if(be){ be.textContent=lPct>sPct?'LONG':'SHORT'; be.className='bias-badge '+(lPct>sPct?'bias-long':'bias-short'); }
 }
 
@@ -2350,7 +2138,7 @@ function renderTCBotCard(bot, capital, roi, score, status) {
   direction = inferDirection(bot);
   trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
   dirClass  = direction === 'short' ? 'short' : type === 'signal' ? 'signal' : 'long';
-  const sc        = score >= 75 ? 'score-strong' : score >= 55 ? 'score-stable' : score >= 35 ? 'score-weak' : trades===0 ? 'score-idle' : 'score-critical';
+  sc        = score >= 75 ? 'score-strong' : score >= 55 ? 'score-stable' : score >= 35 ? 'score-weak' : trades===0 ? 'score-idle' : 'score-critical';
 
   return `
     <div class="bot-card ${dirClass}" data-type="${type} ${market}" id="card-${bot.id}">
@@ -2391,15 +2179,15 @@ async function load3CommasBots() {
     return;
   }
   container = document.getElementById('bots-container');
-  const signalContainer = document.getElementById('signal-container');
-  const signalHeader    = document.getElementById('tc-signal-header');
+  signalContainer = document.getElementById('signal-container');
+  signalHeader    = document.getElementById('tc-signal-header');
 
   // Capital comes directly from 3Commas API — no hardcoding needed
   // Separate signal bots from trading bots
-  const signalKeywords = ['signal','rsi','ma cross','bb strategy'];
-  const isSignal = b => signalKeywords.some(k => (b.name||'').toLowerCase().includes(k));
+  signalKeywords = ['signal','rsi','ma cross','bb strategy'];
+  isSignal = b => signalKeywords.some(k => (b.name||'').toLowerCase().includes(k));
   tradingBots = data.bots.filter(b => !isSignal(b));
-  const signalBots  = data.bots.filter(b => isSignal(b));
+  signalBots  = data.bots.filter(b => isSignal(b));
 
   // Render trading bots dynamically
   if (container) {
@@ -2432,7 +2220,7 @@ async function load3CommasBots() {
                                      {label:'Active',cls:'status-active'};
       card = renderTCBotCard(bot, capital, roi, score, status);
       // Add alert banner for idle signal bots
-      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Waiting for signal conditions — 0 executions yet</div>' : '';
+      alertBanner = trades===0 ? '<div class="alert-banner">🚨 Waiting for signal conditions — 0 executions yet</div>' : '';
       return card.slice(0, card.lastIndexOf('<' + '/div>')) + alertBanner + '<' + '/div>';
     }).join('');
   }
@@ -2447,7 +2235,7 @@ async function load3CommasBots() {
 async function loadBinanceBots() {
   data = await apiFetch('binance-bots');
   if(!data.bots) return;
-  const META = {
+  META = {
     'eth-grid-trades':    {si:'score-eth-grid', sti:'status-eth-grid', chg:'change-eth-grid',   roi:0.83,  type:'spot-grid'    },
     'btc-dca-trades':     {si:'score-btc-dca',  sti:'status-btc-dca',  chg:'change-btc-dca',    roi:2.54,  type:'spot-dca'     },
     'bnb-grid-trades':    {si:'score-bnb-grid', sti:'status-bnb-grid', chg:'change-bnb-grid',   roi:0.39,  type:'spot-grid'    },
@@ -2459,10 +2247,10 @@ async function loadBinanceBots() {
     el=document.getElementById(b.id); if(el) el.textContent=b.trades;
     const m=META[b.id]; if(!m) return;
     // 24h change
-    const ce=document.getElementById(m.chg);
+    ce=document.getElementById(m.chg);
     if(ce&&b.change24h!==undefined){ ce.textContent=fmtChange(b.change24h); ce.style.color=b.change24h>=0?'var(--green)':'var(--red)'; }
     // Status
-    const st = b.trades===0 ? {label:'Idle',cls:'status-idle'} :
+    st = b.trades===0 ? {label:'Idle',cls:'status-idle'} :
                m.roi<-1    ? {label:'Underperforming',cls:'status-underperforming'} :
                               {label:'Active',cls:'status-active'};
     setEl(m.sti, st.label, 'status-badge '+st.cls);
@@ -2494,7 +2282,7 @@ function updateTotalTrades() {
 function updateTime() {
   const n=new Date();
   ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const ds=n.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  ds=n.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   document.getElementById('last-updated').textContent='Live · '+ts;
   document.getElementById('sync-time').textContent=ts+' · '+ds;
 }
@@ -2509,14 +2297,14 @@ function filterBots(type,btn) {
 // ============ REFRESH CYCLES ============
 // Main data: every 30s
 // Decisions: every 15 minutes (server-side engine)
-let _decisionInterval;
+_decisionInterval;
 
 // ============================================================
 // BOT MANAGER — Frontend bot registry stored in localStorage
 // Users add/remove bots without any backend changes
 // ============================================================
 
-const LS_KEY = 'alphacontrol_bots';
+LS_KEY = 'alphacontrol_bots';
 
 function getUserBots() {
   try {
@@ -2535,7 +2323,7 @@ function getMergedBotMeta() {
   merged = {};
   // Start with user bots
   userBots.forEach(b => {
-    const key = b.tcId || b.id;
+    key = b.tcId || b.id;
     merged[key] = {
       name:       b.name,
       capital:    parseFloat(b.capital)||0,
@@ -2554,9 +2342,9 @@ function getMergedBotMeta() {
 
 function toggleBotManager() {
   panel = document.getElementById('bot-mgr-panel');
-  const btn   = document.getElementById('mgr-btn');
+  btn   = document.getElementById('mgr-btn');
   if (!panel) return;
-  const open = panel.style.display !== 'none' && panel.style.display !== '';
+  open = panel.style.display !== 'none' && panel.style.display !== '';
   panel.style.display = open ? 'none' : 'block';
   if (btn) { btn.style.borderColor = open ? '' : 'var(--green)'; btn.style.color = open ? '' : 'var(--green)'; }
   if (!open) renderBotManager();
@@ -2585,7 +2373,7 @@ function saveNewBot() {
   symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
   capital = parseFloat(document.getElementById('mgr-capital')?.value);
   direction = document.getElementById('mgr-direction')?.value;
-  const strategy  = document.getElementById('mgr-strategy')?.value;
+  strategy  = document.getElementById('mgr-strategy')?.value;
   venue     = document.getElementById('mgr-venue')?.value;
   market    = document.getElementById('mgr-market')?.value;
   roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
@@ -2597,7 +2385,7 @@ function saveNewBot() {
   }
 
   bots = getUserBots();
-  const newBot = {
+  newBot = {
     id:        'user-' + Date.now(),
     name, symbol, capital, direction, strategy, venue, market, roi,
     tcId:      tcId || null,
@@ -2622,7 +2410,7 @@ function removeUserBot(id) {
 
 function renderBotManager() {
   list    = document.getElementById('mgr-list');
-  const countEl = document.getElementById('mgr-count');
+  countEl = document.getElementById('mgr-count');
   bots    = getUserBots();
   if (countEl) countEl.textContent = bots.length;
   if (!list) return;
@@ -2630,7 +2418,7 @@ function renderBotManager() {
     list.innerHTML = '<div class="mgr-empty"><strong style="color:var(--text)">3Commas bots auto-appear ✅</strong><br><br>Use the + Add Bot button for Binance bots. Binance API does not expose a bot list so capital must be entered once per bot.<' + '/div>';
     return;
   }
-  const colors = { binance:'#f0b90b', '3commas':'var(--teal)' };
+  colors = { binance:'#f0b90b', '3commas':'var(--teal)' };
   list.innerHTML = bots.map(b => `
     <div class="mgr-bot-row">
       <div>
@@ -2651,11 +2439,11 @@ function renderUserBotCards() {
   if (!bots.length) return;
 
   // Group by section
-  const commasBots  = bots.filter(b => b.venue==='3commas');
-  const binanceBots = bots.filter(b => b.venue==='binance');
+  commasBots  = bots.filter(b => b.venue==='3commas');
+  binanceBots = bots.filter(b => b.venue==='binance');
 
   // Inject Binance native bots into binance grid
-  const binanceGrid = document.getElementById('binance-grid');
+  binanceGrid = document.getElementById('binance-grid');
   if (binanceGrid && binanceBots.length) {
     binanceBots.forEach(b => {
       card = createUserBotCard(b);
@@ -2673,21 +2461,21 @@ function renderUserBotCards() {
   }
 
   // Update section counts
-  const binanceCount = document.querySelector('.section-count');
+  binanceCount = document.querySelector('.section-count');
   updateSectionCounts();
 }
 
 function updateSectionCounts() {
   userBots = getUserBots();
-  const binanceExtra  = userBots.filter(b => b.venue==='binance').length;
-  const commasExtra   = userBots.filter(b => b.venue==='3commas').length;
+  binanceExtra  = userBots.filter(b => b.venue==='binance').length;
+  commasExtra   = userBots.filter(b => b.venue==='3commas').length;
   // Update count badges
-  const sections = document.querySelectorAll('.section-header');
+  sections = document.querySelectorAll('.section-header');
   sections.forEach(s => {
     title = s.querySelector('.section-title')?.textContent||'';
-    const badge = s.querySelector('.section-count');
+    badge = s.querySelector('.section-count');
     if (!badge) return;
-    const base = parseInt(badge.dataset.base||badge.textContent)||0;
+    base = parseInt(badge.dataset.base||badge.textContent)||0;
     if (!badge.dataset.base) badge.dataset.base = base;
     if (title.includes('Binance')) badge.textContent = base + binanceExtra;
     if (title.includes('3Commas DCA')) badge.textContent = base + commasExtra;
@@ -2695,9 +2483,9 @@ function updateSectionCounts() {
 }
 
 function createUserBotCard(b) {
-  const div = document.createElement('div');
+  div = document.createElement('div');
   dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
-  const stratTag = b.strategy==='grid'?'tag-grid':b.strategy==='signal'?'tag-signal':'tag-dca';
+  stratTag = b.strategy==='grid'?'tag-grid':b.strategy==='signal'?'tag-signal':'tag-dca';
   venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
   div.className = `bot-card ${dirClass}`;
   div.dataset.type = `${b.strategy} ${b.market} ${b.venue}`;
@@ -2741,9 +2529,9 @@ function createUserBotCard(b) {
 // Scoring function (mirrors worker logic, runs in browser)
 function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
   roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
-  const ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
-  const actScore  = Math.min(100, trades * 8);
-  const conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
+  ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
+  actScore  = Math.min(100, trades * 8);
+  conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
   absChange = Math.abs(change24h||0);
   marketFit = (type==='spot-grid'||type==='futures-grid')
     ? (absChange < 2 ? 80 : absChange < 4 ? 55 : 35)
@@ -2754,7 +2542,7 @@ function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
 function renderHistory(history) {
   panel = document.getElementById('history-panel');
   list  = document.getElementById('history-list');
-  const count = document.getElementById('history-count');
+  count = document.getElementById('history-count');
   if (!panel || !list) return;
   panel.style.display = 'block';
   total = history.reduce((s,h) => s + h.decisions.length, 0);
@@ -2763,7 +2551,7 @@ function renderHistory(history) {
     list.innerHTML = '<div class="history-empty">No history yet</div>';
     return;
   }
-  const COLOR = { pause:'var(--red)', reduce:'var(--amber)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)' };
+  COLOR = { pause:'var(--red)', reduce:'var(--amber)', increase:'var(--green)', hold:'var(--blue)', review:'var(--amber)' };
   list.innerHTML = history.slice(0,10).flatMap(h =>
     h.decisions.map(d => `
       <div class="history-item">
@@ -2783,7 +2571,7 @@ async function refreshDecisions() {
 }
 
 // ============ AUTH ============
-const DASHBOARD_PW = 'Underwood10';
+DASHBOARD_PW = 'Underwood10';
 function checkPw() {
   v=document.getElementById('pw-input').value;
   if(v===DASHBOARD_PW){
@@ -2830,14 +2618,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   } catch(e) {}
   // Restore history from session
   try {
-    const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
+    h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
     if (h.length) renderHistory(h);
   } catch(e) {}
   // Render any user-added bots
   renderUserBotCards();
   // Fetch status immediately on load — fixes advisory mode badge stale state
   fetch('/api/status').then(r=>r.json()).then(d=>{
-    const modeEl = document.getElementById('h-mode');
+    modeEl = document.getElementById('h-mode');
     if (modeEl) {
       modeEl.textContent = d.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode';
       modeEl.style.background = d.advisoryMode ? 'var(--amber-dim)' : 'var(--green-dim)';
@@ -2854,14 +2642,21 @@ function _syncHero(data) {
   const rs = data.riskState;
 
   // Control header
-  const bar = document.getElementById('risk-state-bar');
+  bar = document.getElementById('risk-state-bar');
   if (bar) { bar.className = 'ctrl-header ' + rs; bar.style.display = 'block'; }
 
   const lbl = document.getElementById('risk-state-label');
   if (lbl) { lbl.className = 'ctrl-state ' + rs; lbl.textContent = rs.replace(/_/g,' '); }
 
   const sub = document.getElementById('risk-hero-sublabel');
-  if (sub && data.riskSubLabel) sub.textContent = data.riskSubLabel;
+  if (sub) {
+    const subText = data.riskSubLabel ||
+      (rs === 'SAFE'        ? 'All targets met — no action required' :
+       rs === 'BALANCED'    ? 'Stable — above target long exposure' :
+       rs === 'OVEREXPOSED' ? 'Elevated risk — reducing exposure recommended' :
+       rs === 'HIGH_RISK'   ? 'Defensive mode — optimisations suppressed' : '');
+    if (subText) sub.textContent = subText;
+  }
 
   const obj = document.getElementById('risk-hero-objective');
   if (obj && data.primaryObjective) { obj.textContent = data.primaryObjective; obj.style.display = 'block'; }
@@ -2889,7 +2684,7 @@ function _syncHero(data) {
 
   // Mode badge
   fetch('/api/status').then(function(r){return r.json();}).then(function(s){
-    const m = document.getElementById('h-mode');
+    m = document.getElementById('h-mode');
     if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge ' + (s.advisoryMode ? 'mode-advisory' : 'mode-live'); }
   }).catch(function(){});
 }
@@ -2918,7 +2713,7 @@ renderHistory = function(history) {
   total = history.reduce(function(s,h){return s+(h.decisions||[]).length;},0);
   if (count) count.textContent = total + ' recommendation' + (total!==1?'s':'');
   if (!history.length) { list.innerHTML = '<div class="history-empty">No history yet</div>'; return; }
-  const COLOR = { pause:'var(--amber-hot)', reduce:'var(--red-hot)', increase:'var(--green)', hold:'var(--blue)', reallocate:'var(--purple)' };
+  COLOR = { pause:'var(--amber-hot)', reduce:'var(--red-hot)', increase:'var(--green)', hold:'var(--blue)', reallocate:'var(--purple)' };
   const URGC  = { critical:'var(--red-hot)', high:'var(--amber-hot)', medium:'#60a5fa', low:'var(--muted)' };
   list.innerHTML = history.slice(0,20).flatMap(function(h){
     return (h.decisions||[]).map(function(d){
@@ -2955,7 +2750,7 @@ function checkPw() {
       if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge '+(s.advisoryMode?'mode-advisory':'mode-live'); }
     }).catch(function(){});
   } else {
-    const e = document.getElementById('pw-error');
+    e = document.getElementById('pw-error');
     if (e) e.style.display = 'block';
   }
 }
@@ -2975,13 +2770,14 @@ document.addEventListener('DOMContentLoaded', function() {
     refreshDecisions();
     _decisionInterval = setInterval(refreshDecisions, 60000);
     fetch('/api/status').then(function(r){return r.json();}).then(function(s){
-      const m = document.getElementById('h-mode');
-      if (m) { m.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; m.className = 'mode-badge '+(s.advisoryMode?'mode-advisory':'mode-live'); }
+      var mBadge = document.getElementById('h-mode');
+      if (mBadge) { mBadge.textContent = s.advisoryMode ? 'Advisory Mode' : '⚡ Live Mode'; mBadge.className = 'mode-badge '+(s.advisoryMode?'mode-advisory':'mode-live'); }
     }).catch(function(){});
   }
   try { const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]'); if(h.length) renderHistory(h); } catch(e){}
   renderUserBotCards();
 });
+
 </script>
 </body>
 </html>
