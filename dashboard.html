@@ -305,7 +305,8 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .stat-value{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .stat-efficiency{font-size:9px;color:var(--teal);font-family:'JetBrains Mono',monospace}
-.pnl-bar{margin-top:7px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
+.pnl-bar{margin-top:7px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden;position:relative}
+.pnl-bar::after{content:attr(data-label);position:absolute;right:0;top:-14px;font-size:8px;color:var(--muted);white-space:nowrap}
 .pnl-fill{height:100%;border-radius:1px;transition:width .5s}
 .pnl-fill.positive{background:var(--green)}.pnl-fill.negative{background:var(--red)}
 .alert-banner{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:6px 10px;margin-top:6px;font-size:10px;color:var(--red-hot)}
@@ -431,8 +432,15 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
     <div class="price-item"><span class="price-label">ETH/USD</span><span class="price-value green" id="eth-price">—</span></div>
   </div>
   <div class="header-right">
+    <div style="display:flex;flex-direction:column;align-items:flex-end;margin-right:12px">
+      <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Total Portfolio</div>
+      <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--text)" id="header-total">—</div>
+    </div>
     <div class="last-sync"><span class="live-dot"></span><span id="last-updated">Connecting...</span></div>
-    <div class="mode-badge mode-advisory" id="h-mode">Checking...</div>
+    <div class="tip">
+      <div class="mode-badge mode-advisory" id="h-mode" style="cursor:help">Checking...</div>
+      <span class="tip-box" style="right:0;left:auto;transform:none"><div class="tip-title">Execution Mode</div>Live Mode means the system can execute bot actions (pause, enable) directly. Advisory Mode means the engine recommends actions but cannot execute them automatically. Your current setting: controlled by EXECUTION_ENABLED in Cloudflare.</span>
+    </div>
   </div>
 </header>
 
@@ -713,6 +721,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
   <!-- 3COMMAS BOTS — fully dynamic, rendered by load3CommasBots() -->
   <div class="section-header" id="tc-all-header">
     <span class="section-title">3Commas Bots</span>
+    <span class="tip" style="font-size:10px;color:var(--muted);cursor:help">AI Score <span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">AI Score (0–100)</div>Performance rating per bot. 85+ = strong. 70–84 = stable. 50–69 = monitor. Below 50 = candidate for reallocation. Based on ROI, trades, drawdown and market conditions.</span></span>
     <span class="section-count" id="tc-all-count">—</span>
     <div class="section-line"></div>
   </div>
@@ -738,7 +747,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">ETH / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$400</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$3.31</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$3.31</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+0.83%</span></div>
         <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="eth-grid-trades">—</span></div>
         <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$403.31</span></div>
@@ -753,7 +762,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">BTC / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$7.63</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$7.63</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+2.54%</span></div>
         <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="btc-dca-trades">—</span></div>
         <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$307.63</span></div>
@@ -768,7 +777,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">BNB / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$300</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$1.16</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$1.16</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+0.39%</span></div>
         <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="bnb-grid-trades">—</span></div>
         <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$301.16</span></div>
@@ -782,7 +791,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">SOL / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$220</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$4.02</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$4.02</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+1.83%</span></div>
         <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="sol-grid-trades">—</span></div>
         <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$224.02</span></div>
@@ -796,7 +805,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">XRP / USDT</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Invested</span><span class="stat-value">$249</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value red">-$0.81</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value red">-$0.81</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value red">-0.32%</span></div>
         <div class="stat"><span class="stat-label">Trades</span><span class="stat-value" id="xrp-grid-trades">—</span></div>
         <div class="stat"><span class="stat-label">Balance</span><span class="stat-value">$248.19</span></div>
@@ -811,7 +820,7 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="bot-pair mono">ETHUSDT / Perpetual</div><div class="divider"></div>
       <div class="bot-stats">
         <div class="stat"><span class="stat-label">Margin</span><span class="stat-value">$700</span></div>
-        <div class="stat"><span class="stat-label">Profit</span><span class="stat-value green">+$10.56</span></div>
+        <div class="stat"><span class="stat-label">PnL</span><span class="stat-value green">+$10.56</span></div>
         <div class="stat"><span class="stat-label">ROI</span><span class="stat-value green">+1.51%</span></div>
         <div class="stat"><span class="stat-label">uPnL</span><span class="stat-value amber" id="perp-upnl">—</span></div>
         <div class="stat"><span class="stat-label">Mode</span><span class="stat-value" style="font-size:12px">Cross</span></div>
@@ -846,7 +855,7 @@ const TOTAL_REALIZED  = 34.37;
 
 // ============ HELPERS ============
 function fmtUSD(n)    { const v=parseFloat(n); return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
-function fmtProfit(n) { const v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
+function fmtProfit(n) { v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
 function fmt(n,d=2)   { return parseFloat(n).toFixed(d); }
 function cc(n)        { return parseFloat(n)>=0?'green':'red'; }
 function setEl(id, val, cls) { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(cls!==undefined)e.className=cls; }
@@ -963,7 +972,7 @@ function renderDecisionCard(d, i) {
   const amtColor    = AC[d.actionType] || 'var(--text)';
   const amtDisplay  = d.amount > 0 ? '$' + d.amount.toLocaleString() : '';
   const pctDisplay  = d.amountPct > 0 ? '(' + d.amountPct + '%)' : '';
-  const actionLabel = (d.actionType || 'action').toUpperCase();
+  actionLabel = (d.actionType || 'action').toUpperCase();
   const execBtn = (function() {
     if (!d.executable || !d.targetBotIds || !d.targetBotIds.length) return '';
     return d.targetBotIds.map(function(id) {
@@ -975,8 +984,10 @@ function renderDecisionCard(d, i) {
   const costHtml = d.costOfInaction
     ? '<div class="cost-of-inaction">⚠ ' + d.costOfInaction + '</div>'
     : '';
+  const OBJ_TIPS = {'long_exposure':'% capital betting prices rise. Target: 55% in bear market.','hedge_exposure':'Capital that profits when prices fall — downside protection.','idle_capital':'Capital in bots with 0 trades — not actively working.','bot_efficiency':'Bots scoring below 50/100 — underperforming vs capital deployed.','btc_concentration':'% portfolio correlated to BTC price movements.','grid_allocation':'Capital in grid bots — work best in sideways low-vol markets.','dca_allocation':'DCA bots buy over time to average your entry price.','drawdown_protection':'Open positions currently losing money.','portfolio_balance':'Overall composition vs target allocation.'};
+  const objTip  = (d.objective && OBJ_TIPS[d.objective]) ? ' title="' + OBJ_TIPS[d.objective] + '"' : '';
   const objHtml = d.objective
-    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px">' + d.objective.replace(/_/g,' ') + '</span>'
+    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;cursor:help"' + objTip + '>' + d.objective.replace(/_/g,' ') + '</span>'
     : '';
   const isSuggested = d.category === 'suggested';
   return (
@@ -1007,7 +1018,7 @@ function renderDecisionCard(d, i) {
 
 async function loadDecisions() {
   try {
-    const data = await apiFetch('decisions');
+    data = await apiFetch('decisions');
     const decisions = data.decisions || [];
     const scores    = data.scores    || {};
     const market    = data.marketSnapshot || {};
@@ -1020,11 +1031,11 @@ async function loadDecisions() {
 
     // Update market context from server data
     if (market.regime) {
-      const re = document.getElementById('market-regime');
+      re = document.getElementById('market-regime');
       if (re) { re.textContent = market.regime; re.style.color = market.regime==='Bull'?'var(--green)':market.regime==='Bear'?'var(--red)':'var(--amber)'; }
     }
     if (market.volatility) {
-      const ve = document.getElementById('market-vol');
+      ve = document.getElementById('market-vol');
       if (ve) { ve.textContent = market.volatility; ve.style.color = market.volatility==='High'?'var(--amber)':market.volatility==='Low'?'var(--green)':'var(--text)'; }
     }
     if (market.btcChange24h !== undefined) {
@@ -1091,12 +1102,12 @@ async function loadDecisions() {
       const grid  = document.getElementById('target-grid');
       const adj   = document.getElementById('target-adj');
       if (panel) panel.style.display = 'block';
-      const t    = data.targetState;
+      t    = data.targetState;
       const gaps = data.portfolioGaps || [];
 
       function makeTargetCard(key, label, current, target, isPrimary) {
         const gap     = gaps.find(g => g.objective === key);
-        const cur     = current !== null ? current : (gap ? gap.current : '—');
+        const cur     = current !== null ? current : (gap ? gap.current : 0);
         const delta   = gap ? gap.delta : 0;
         const hasGap  = Math.abs(delta) >= 5;
         // Only highlight problematic dimensions — dim on-target ones
@@ -1118,7 +1129,7 @@ async function loadDecisions() {
       }
 
       // Primary: Long + Hedge
-      let html = makeTargetCard('long_exposure',  'Long Exposure',  data.portfolio?.longPct||0,  t.longPct,  true);
+      html = makeTargetCard('long_exposure',  'Long Exposure',  data.portfolio?.longPct||0,  t.longPct,  true);
       html    += makeTargetCard('hedge_exposure', 'Hedge',          data.portfolio?.shortPct||0, t.shortPct, true);
 
       // Secondary: Grid + DCA (smaller, de-emphasised)
@@ -1171,8 +1182,8 @@ async function loadDecisions() {
     // Update risk state headline
     if (data.riskState) {
       const bar     = document.getElementById('risk-state-bar');
-      const label   = document.getElementById('risk-state-label');
-      const scoreEl = document.getElementById('risk-score-num');
+      label   = document.getElementById('risk-state-label');
+      scoreEl = document.getElementById('risk-score-num');
       const factors = document.getElementById('risk-factors');
       if (bar) {
         bar.style.display = 'flex';
@@ -1188,11 +1199,11 @@ async function loadDecisions() {
     }
 
     // Split into required and suggested
-    const required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
+    required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
     const suggested = (data.suggestedActions || decisions.filter(d=>d.category==='suggested'));
 
     // Build HTML with Required/Suggested split
-    let html = '';
+    html = '';
 
     if (required.length > 0) {
       html += '<div class="decisions-section-label required">🔴 Required Actions (' + required.length + ')</div>';
@@ -1218,7 +1229,7 @@ async function loadDecisions() {
     return; // skip old map below
 
     container.innerHTML = decisions.map((d, i) => {
-      const execBtn = d.executable && d.botIds && d.botIds.length
+      execBtn = d.executable && d.botIds && d.botIds.length
         ? `<button class="dc-execute-btn btn-pause" onclick="executeBotAction(${d.botIds[0]},'disable',this)">⏸ Pause Bot</button>`
         : d.executable
           ? `<button class="dc-execute-btn btn-enable" onclick="executeBotAction(${d.target},'enable',this)">▶ Enable Bot</button>`
@@ -1251,7 +1262,7 @@ async function loadPrices() {
 
 async function loadWallets() {
   const [spot, fut] = await Promise.all([apiFetch('spot-wallet'), apiFetch('futures-wallet')]);
-  const floatPnl = fut.unrealizedPnl, margin = fut.marginBalance, avail = fut.availableBalance;
+  floatPnl = fut.unrealizedPnl, margin = fut.marginBalance, avail = fut.availableBalance;
 
   setEl('spot-wallet-val', fmtUSD(spot.usdtBalance));
   setEl('spot-wallet-sub', spot.assetCount+' assets held');
@@ -1262,9 +1273,9 @@ async function loadWallets() {
   setEl('perp-upnl', (floatPnl>=0?'+':'')+fmtUSD(floatPnl));
   setEl('realized-pnl', fmtProfit(TOTAL_REALIZED));
 
-  const fe = document.getElementById('floating-pnl');
+  fe = document.getElementById('floating-pnl');
   if(fe){ fe.textContent=(floatPnl>=0?'+':'')+fmtUSD(floatPnl); fe.className='pnl-value '+cc(floatPnl); }
-  const fc = document.getElementById('floating-pnl-card');
+  fc = document.getElementById('floating-pnl-card');
   if(fc) fc.className='pnl-card'+(floatPnl<0?' primary-red':'');
 
   const net = TOTAL_REALIZED + floatPnl;
@@ -1275,9 +1286,10 @@ async function loadWallets() {
   const roi = (net/TOTAL_ALLOCATED)*100;
   setEl('net-roi', (roi>=0?'+':'')+roi.toFixed(2)+'% ROI on $'+TOTAL_ALLOCATED.toLocaleString());
 
-  const total = spot.usdtBalance + margin;
+  total = spot.usdtBalance + margin;
   setEl('total-capital', fmtUSD(total));
-  const free = total - TOTAL_ALLOCATED;
+  var ht = document.getElementById('header-total'); if (ht) ht.textContent = fmtUSD(total);
+  free = total - TOTAL_ALLOCATED;
   setEl('free-capital', fmtUSD(Math.max(0,free)));
   const idlePct = Math.max(0, Math.round((free/total)*100));
   setEl('idle-pct', idlePct+'%');
@@ -1310,29 +1322,29 @@ function inferTCBotType(bot) {
 }
 
 function inferTCMarket(bot) {
-  const pair = (bot.pair||'').toUpperCase();
-  const name = (bot.name||'').toLowerCase();
+  pair = (bot.pair||'').toUpperCase();
+  name = (bot.name||'').toLowerCase();
   if (pair.includes('FUTURES') || name.includes('futures') || name.includes('perp')) return 'futures';
   return 'spot';
 }
 
 function inferTCSymbol(bot) {
-  const pair = (bot.pair||'').replace('USDT_','').replace('_USDT','').replace('USDT','');
+  pair = (bot.pair||'').replace('USDT_','').replace('_USDT','').replace('USDT','');
   return (pair || 'BTC') + 'USDT';
 }
 
 function inferDirection(bot) {
-  const name = (bot.name||'').toLowerCase();
+  name = (bot.name||'').toLowerCase();
   if (name.includes('short') || name.includes('hedge') || name.includes('bear')) return 'short';
   return 'long';
 }
 
 function renderTCBotCard(bot, capital, roi, score, status) {
-  const type      = inferTCBotType(bot);
-  const market    = inferTCMarket(bot);
+  type      = inferTCBotType(bot);
+  market    = inferTCMarket(bot);
   const symbol    = inferTCSymbol(bot);
   const direction = inferDirection(bot);
-  const trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
+  trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
   const dirClass  = direction === 'short' ? 'short' : type === 'signal' ? 'signal' : 'long';
   const sc        = score >= 75 ? 'score-strong' : score >= 55 ? 'score-stable' : score >= 35 ? 'score-weak' : trades===0 ? 'score-idle' : 'score-critical';
 
@@ -1366,15 +1378,15 @@ function renderTCBotCard(bot, capital, roi, score, status) {
 }
 
 async function load3CommasBots() {
-  const data = await apiFetch('commas-bots');
+  data = await apiFetch('commas-bots');
   if (data.error) {
-    const container = document.getElementById('bots-container');
+    container = document.getElementById('bots-container');
     if (container) container.innerHTML = '<div style="grid-column:span 3;text-align:center;color:var(--amber);padding:24px;font-size:12px;background:rgba(245,158,11,.06);border-radius:10px;border:1px solid rgba(245,158,11,.2)">⚠️ 3Commas API Error: ' + data.error + '<br><span style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Check that TC_API_KEY and TC_SECRET are correct in Render environment variables</span></div>';
     setEl('h-3commas', 'Error');
     document.getElementById('h-3commas-dot').className = 'health-dot err';
     return;
   }
-  const container = document.getElementById('bots-container');
+  container = document.getElementById('bots-container');
   const signalContainer = document.getElementById('signal-container');
   const signalHeader    = document.getElementById('tc-signal-header');
 
@@ -1382,7 +1394,7 @@ async function load3CommasBots() {
   // Separate signal bots from trading bots
   const signalKeywords = ['signal','rsi','ma cross','bb strategy'];
   const isSignal = b => signalKeywords.some(k => (b.name||'').toLowerCase().includes(k));
-  const tradingBots = data.bots.filter(b => !isSignal(b));
+  tradingBots = data.bots.filter(b => !isSignal(b));
   const signalBots  = data.bots.filter(b => isSignal(b));
 
   // Render trading bots dynamically
@@ -1390,9 +1402,9 @@ async function load3CommasBots() {
     container.innerHTML = tradingBots.map(bot => {
       // Capital comes from API (base + safety orders), no hardcoding needed
       const capital = bot.capital || 100; // API provides this, fallback 100
-      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
-      const roi     = bot.profit ? (bot.profit/capital)*100 : 0;
-      const score   = scoreBot({ roi, trades, drawdownPct:roi<0?Math.abs(roi):0, change24h:0, type:'dca', capital });
+      trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      roi     = bot.profit ? (bot.profit/capital)*100 : 0;
+      score   = scoreBot({ roi, trades, drawdownPct:roi<0?Math.abs(roi):0, change24h:0, type:'dca', capital });
       const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
                       trades===0   ? {label:'Idle',  cls:'status-idle'}   :
                       roi<-1       ? {label:'Underperforming',cls:'status-underperforming'} :
@@ -1407,16 +1419,16 @@ async function load3CommasBots() {
     signalHeader.style.display    = '';
     setEl('tc-signal-count', signalBots.length);
     signalContainer.innerHTML = signalBots.map(bot => {
-      const capital = 100;
-      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
-      const roi     = 0;
-      const score   = scoreBot({ roi, trades, drawdownPct:0, change24h:0, type:'signal' });
-      const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
+      capital = 100;
+      trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      roi     = 0;
+      score   = scoreBot({ roi, trades, drawdownPct:0, change24h:0, type:'signal' });
+      status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
                       trades===0   ? {label:'Waiting',cls:'status-waiting'} :
                                      {label:'Active',cls:'status-active'};
       const card = renderTCBotCard(bot, capital, roi, score, status);
       // Add alert banner for idle signal bots
-      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>' : '';
+      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Waiting for signal conditions — 0 executions yet</div>' : '';
       return card.slice(0, card.lastIndexOf('<' + '/div>')) + alertBanner + '<' + '/div>';
     }).join('');
   }
@@ -1429,7 +1441,7 @@ async function load3CommasBots() {
 }
 
 async function loadBinanceBots() {
-  const data = await apiFetch('binance-bots');
+  data = await apiFetch('binance-bots');
   if(!data.bots) return;
   const META = {
     'eth-grid-trades':    {si:'score-eth-grid', sti:'status-eth-grid', chg:'change-eth-grid',   roi:0.83,  type:'spot-grid'    },
@@ -1453,17 +1465,17 @@ async function loadBinanceBots() {
   });
   // Market context panels from live data
   if (data.market) {
-    const mk = data.market;
-    const re=document.getElementById('market-regime');
+    mk = data.market;
+    re=document.getElementById('market-regime');
     if(re){ re.textContent=mk.regime; re.style.color=mk.regime==='Bull'?'var(--green)':mk.regime==='Bear'?'var(--red)':'var(--amber)'; }
-    const ve=document.getElementById('market-vol');
+    ve=document.getElementById('market-vol');
     if(ve){ ve.textContent=mk.volatility; ve.style.color=mk.volatility==='High'?'var(--amber)':mk.volatility==='Low'?'var(--green)':'var(--text)'; }
-    const me=document.getElementById('btc-move');
+    me=document.getElementById('btc-move');
     if(me){ me.textContent=fmtChange(mk.btcChange24h); me.style.color=mk.btcChange24h>=0?'var(--green)':'var(--red)'; }
-    const bias=mk.btcChange24h>1?'LONG':mk.btcChange24h<-1?'SHORT':'NEUTRAL';
+    bias=mk.btcChange24h>1?'LONG':mk.btcChange24h<-1?'SHORT':'NEUTRAL';
     setEl('signal-bias', bias);
-    const absC=Math.abs(mk.btcChange24h);
-    const suit=mk.regime==='Sideways'&&absC<2?'Excellent for Grid':absC>4?'Good for Breakout':mk.regime==='Bull'?'Good for DCA':'Monitor closely';
+    absC=Math.abs(mk.btcChange24h);
+    suit=mk.regime==='Sideways'&&absC<2?'Excellent for Grid':absC>4?'Good for Breakout':mk.regime==='Bull'?'Good for DCA':'Monitor closely';
     setEl('grid-suit', suit);
   }
   window._binanceTrades = data.totalTrades;
@@ -1471,13 +1483,13 @@ async function loadBinanceBots() {
 }
 
 function updateTotalTrades() {
-  const t=(window._tcTrades||0)+(window._binanceTrades||0);
+  t=(window._tcTrades||0)+(window._binanceTrades||0);
   setEl('total-trades-val', t);
   setEl('total-trades-sub', t+' total trades');
 }
 function updateTime() {
   const n=new Date();
-  const ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const ds=n.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   document.getElementById('last-updated').textContent='Live · '+ts;
   document.getElementById('sync-time').textContent=ts+' · '+ds;
@@ -1516,7 +1528,7 @@ function getMergedBotMeta() {
   // Merge hardcoded defaults with user-added bots
   // User bots take precedence if same ID/symbol
   const userBots = getUserBots();
-  const merged = {};
+  merged = {};
   // Start with user bots
   userBots.forEach(b => {
     const key = b.tcId || b.id;
@@ -1537,7 +1549,7 @@ function getMergedBotMeta() {
 }
 
 function toggleBotManager() {
-  const panel = document.getElementById('bot-mgr-panel');
+  panel = document.getElementById('bot-mgr-panel');
   const btn   = document.getElementById('mgr-btn');
   if (!panel) return;
   const open = panel.style.display !== 'none' && panel.style.display !== '';
@@ -1547,33 +1559,33 @@ function toggleBotManager() {
 }
 
 function showAddBotForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = 'block';
 }
 function toggleAddForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = f.style.display === 'block' ? 'none' : 'block';
 }
 
 function hideAddBotForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = 'none';
   // Clear fields
   ['mgr-name','mgr-symbol','mgr-capital','mgr-roi','mgr-tcid'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value = '';
+    el = document.getElementById(id); if(el) el.value = '';
   });
 }
 
 function saveNewBot() {
-  const name    = document.getElementById('mgr-name')?.value?.trim();
-  const symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
-  const capital = parseFloat(document.getElementById('mgr-capital')?.value);
-  const direction = document.getElementById('mgr-direction')?.value;
+  name    = document.getElementById('mgr-name')?.value?.trim();
+  symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
+  capital = parseFloat(document.getElementById('mgr-capital')?.value);
+  direction = document.getElementById('mgr-direction')?.value;
   const strategy  = document.getElementById('mgr-strategy')?.value;
-  const venue     = document.getElementById('mgr-venue')?.value;
-  const market    = document.getElementById('mgr-market')?.value;
-  const roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
-  const tcId      = document.getElementById('mgr-tcid')?.value?.trim();
+  venue     = document.getElementById('mgr-venue')?.value;
+  market    = document.getElementById('mgr-market')?.value;
+  roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
+  tcId      = document.getElementById('mgr-tcid')?.value?.trim();
 
   if (!name || !symbol || !capital || capital <= 0) {
     showToast('❌ Name, symbol and capital are required', 'error');
@@ -1597,7 +1609,7 @@ function saveNewBot() {
 }
 
 function removeUserBot(id) {
-  const bots = getUserBots().filter(b => b.id !== id);
+  bots = getUserBots().filter(b => b.id !== id);
   saveUserBots(bots);
   renderBotManager();
   renderUserBotCards();
@@ -1607,7 +1619,7 @@ function removeUserBot(id) {
 function renderBotManager() {
   const list    = document.getElementById('mgr-list');
   const countEl = document.getElementById('mgr-count');
-  const bots    = getUserBots();
+  bots    = getUserBots();
   if (countEl) countEl.textContent = bots.length;
   if (!list) return;
   if (!bots.length) {
@@ -1629,7 +1641,7 @@ function renderBotManager() {
 
 function renderUserBotCards() {
   // Inject dynamic bot cards for user-added bots into the correct section
-  const bots = getUserBots();
+  bots = getUserBots();
   // Remove any previously injected dynamic cards
   document.querySelectorAll('.bot-card[data-user-added]').forEach(el => el.remove());
   if (!bots.length) return;
@@ -1642,16 +1654,16 @@ function renderUserBotCards() {
   const binanceGrid = document.getElementById('binance-grid');
   if (binanceGrid && binanceBots.length) {
     binanceBots.forEach(b => {
-      const card = createUserBotCard(b);
+      card = createUserBotCard(b);
       binanceGrid.appendChild(card);
     });
   }
 
   // Inject 3Commas bots into bots-container
-  const botsContainer = document.getElementById('bots-container');
+  botsContainer = document.getElementById('bots-container');
   if (botsContainer && commasBots.length) {
     commasBots.forEach(b => {
-      const card = createUserBotCard(b);
+      card = createUserBotCard(b);
       botsContainer.appendChild(card);
     });
   }
@@ -1662,13 +1674,13 @@ function renderUserBotCards() {
 }
 
 function updateSectionCounts() {
-  const userBots = getUserBots();
+  userBots = getUserBots();
   const binanceExtra  = userBots.filter(b => b.venue==='binance').length;
   const commasExtra   = userBots.filter(b => b.venue==='3commas').length;
   // Update count badges
   const sections = document.querySelectorAll('.section-header');
   sections.forEach(s => {
-    const title = s.querySelector('.section-title')?.textContent||'';
+    title = s.querySelector('.section-title')?.textContent||'';
     const badge = s.querySelector('.section-count');
     if (!badge) return;
     const base = parseInt(badge.dataset.base||badge.textContent)||0;
@@ -1680,9 +1692,9 @@ function updateSectionCounts() {
 
 function createUserBotCard(b) {
   const div = document.createElement('div');
-  const dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
+  dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
   const stratTag = b.strategy==='grid'?'tag-grid':b.strategy==='signal'?'tag-signal':'tag-dca';
-  const venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
+  venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
   div.className = `bot-card ${dirClass}`;
   div.dataset.type = `${b.strategy} ${b.market} ${b.venue}`;
   div.dataset.userAdded = 'true';
@@ -1713,8 +1725,8 @@ function createUserBotCard(b) {
     </div>
   `;
   // Score the bot
-  const score = scoreBot({ roi:b.roi||0, trades:0, drawdownPct:b.roi<0?Math.abs(b.roi):0, change24h:0, type:b.strategy==='grid'?(b.market==='futures'?'futures-grid':'spot-grid'):'spot-dca' });
-  const scoreEl = div.querySelector('.ai-score');
+  score = scoreBot({ roi:b.roi||0, trades:0, drawdownPct:b.roi<0?Math.abs(b.roi):0, change24h:0, type:b.strategy==='grid'?(b.market==='futures'?'futures-grid':'spot-grid'):'spot-dca' });
+  scoreEl = div.querySelector('.ai-score');
   if (scoreEl) {
     scoreEl.textContent = score;
     scoreEl.className = 'ai-score ' + (score>=75?'score-strong':score>=55?'score-stable':score>=35?'score-weak':'score-critical');
@@ -1724,24 +1736,24 @@ function createUserBotCard(b) {
 
 // Scoring function (mirrors worker logic, runs in browser)
 function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
-  const roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
+  roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
   const ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
   const actScore  = Math.min(100, trades * 8);
   const conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
-  const absChange = Math.abs(change24h||0);
-  const marketFit = (type==='spot-grid'||type==='futures-grid')
+  absChange = Math.abs(change24h||0);
+  marketFit = (type==='spot-grid'||type==='futures-grid')
     ? (absChange < 2 ? 80 : absChange < 4 ? 55 : 35)
     : (absChange > 1 ? 75 : 45);
   return Math.round(roiScore*0.30 + ddScore*0.25 + actScore*0.15 + conScore*0.15 + marketFit*0.15);
 }
 
 function renderHistory(history) {
-  const panel = document.getElementById('history-panel');
-  const list  = document.getElementById('history-list');
+  panel = document.getElementById('history-panel');
+  list  = document.getElementById('history-list');
   const count = document.getElementById('history-count');
   if (!panel || !list) return;
   panel.style.display = 'block';
-  const total = history.reduce((s,h) => s + h.decisions.length, 0);
+  total = history.reduce((s,h) => s + h.decisions.length, 0);
   if (count) count.textContent = total + ' recommendation' + (total!==1?'s':'');
   if (!history.length) {
     list.innerHTML = '<div class="history-empty">No history yet</div>';
@@ -1769,13 +1781,13 @@ async function refreshDecisions() {
 // ============ AUTH ============
 const DASHBOARD_PW = 'Underwood10';
 function checkPw() {
-  const v=document.getElementById('pw-input').value;
+  v=document.getElementById('pw-input').value;
   if(v===DASHBOARD_PW){
     document.getElementById('pw-overlay').style.display='none';
     sessionStorage.setItem('bjbots_auth','1');
     // Reveal structural zones immediately — data fills in after
     ['hero-zone','kpi-strip','intel-zone'].forEach(function(id) {
-      const el = document.getElementById(id);
+      el = document.getElementById(id);
       if (!el) return;
       if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
       else el.style.display = 'block';
@@ -1806,6 +1818,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000);
   }
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
+  // Clear old-format history (pre-urgency field) that causes UNDEFINED labels
+  try {
+    var oldH = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
+    var needsClear = oldH.some(function(e){ return (e.decisions||[]).some(function(d){ return d.urgency===undefined&&d.severity===undefined; }); });
+    if (needsClear) sessionStorage.removeItem('alphacontrol_history');
+  } catch(e) {}
   // Restore history from session
   try {
     const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
@@ -1836,12 +1854,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script>
 
 // ============ CONSTANTS ============
-const TOTAL_ALLOCATED = 3169;
-const TOTAL_REALIZED  = 34.37;
+TOTAL_ALLOCATED = 3169;
+TOTAL_REALIZED  = 34.37;
 
 // ============ HELPERS ============
-function fmtUSD(n)    { const v=parseFloat(n); return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
-function fmtProfit(n) { const v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
+function fmtUSD(n)    { v=parseFloat(n); return (v<0?'-$':'$')+Math.abs(v).toFixed(2); }
+function fmtProfit(n) { v=parseFloat(n); return (v>=0?'+$':'-$')+Math.abs(v).toFixed(2); }
 function fmt(n,d=2)   { return parseFloat(n).toFixed(d); }
 function cc(n)        { return parseFloat(n)>=0?'green':'red'; }
 function setEl(id, val, cls) { const e=document.getElementById(id); if(!e)return; e.textContent=val; if(cls!==undefined)e.className=cls; }
@@ -1849,7 +1867,7 @@ function fmtChange(c) { return (c>=0?'+':'')+c.toFixed(2)+'%'; }
 
 // ============ TOAST ============
 function showToast(msg, type='success') {
-  const t = document.getElementById('toast');
+  t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast ' + type + ' show';
   setTimeout(() => t.className='toast', 3500);
@@ -1878,7 +1896,7 @@ async function confirmAction() {
 
 // ============ BOT ACTIONS ============
 async function executeBotAction(botId, action, btnEl) {
-  const actionLabel = action === 'disable' ? 'Pause' : 'Enable';
+  actionLabel = action === 'disable' ? 'Pause' : 'Enable';
   const warningText = action === 'disable'
     ? 'This will pause the bot in 3Commas. Active deals will remain open until their take-profit or stop-loss is hit.'
     : 'This will re-enable the bot in 3Commas. New deals will start according to the bot strategy.';
@@ -1891,8 +1909,8 @@ async function executeBotAction(botId, action, btnEl) {
     async () => {
       if (btnEl) { btnEl.disabled = true; btnEl.classList.add('loading'); btnEl.textContent = '⏳'; }
       try {
-        const res  = await fetch(`/api/bot/${botId}/${action}`, { method: 'POST' });
-        const data = await res.json();
+        res  = await fetch(`/api/bot/${botId}/${action}`, { method: 'POST' });
+        data = await res.json();
         if (!data.success) throw new Error(data.error || 'Action failed');
         showToast(`✅ Bot ${action}d successfully`, 'success');
         // Refresh bot status after action
@@ -1926,7 +1944,7 @@ async function apiFetch(p) { const r=await fetch('/api/'+p); if(!r.ok)throw new 
 function handleExecClick(btn) {
   const act   = btn.getAttribute('data-action');
   const id    = btn.getAttribute('data-id');
-  const label = btn.getAttribute('data-label');
+  label = btn.getAttribute('data-label');
   const amt   = btn.getAttribute('data-amount');
   const cls   = btn.getAttribute('data-cls');
   confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
@@ -1939,7 +1957,7 @@ function buildProjectedBlock(d) {
   const color = isImproving ? 'var(--green)' : 'var(--amber)';
   const bg    = isImproving ? 'rgba(74,222,128,0.06)' : 'rgba(251,191,36,0.06)';
   const bord  = isImproving ? 'rgba(74,222,128,0.2)'  : 'rgba(251,191,36,0.2)';
-  let html = '<div style="margin-top:8px;padding:6px 10px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:6px;font-size:10px">';
+  html = '<div style="margin-top:8px;padding:6px 10px;background:' + bg + ';border:1px solid ' + bord + ';border-radius:6px;font-size:10px">';
   html += '<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:' + color + ';margin-bottom:2px">After this action</div>';
   html += '<div style="color:var(--muted2);line-height:1.5">' + p.summary + '</div>';
   if (p.gapClosed > 0) {
@@ -1958,8 +1976,8 @@ function renderDecisionCard(d, i) {
   const amtColor    = AC[d.actionType] || 'var(--text)';
   const amtDisplay  = d.amount > 0 ? '$' + d.amount.toLocaleString() : '';
   const pctDisplay  = d.amountPct > 0 ? '(' + d.amountPct + '%)' : '';
-  const actionLabel = (d.actionType || 'action').toUpperCase();
-  const execBtn = (function() {
+  actionLabel = (d.actionType || 'action').toUpperCase();
+  execBtn = (function() {
     if (!d.executable || !d.targetBotIds || !d.targetBotIds.length) return '';
     return d.targetBotIds.map(function(id) {
       var act = d.actionType === 'pause' ? 'disable' : 'enable';
@@ -1970,8 +1988,10 @@ function renderDecisionCard(d, i) {
   const costHtml = d.costOfInaction
     ? '<div class="cost-of-inaction">⚠ ' + d.costOfInaction + '</div>'
     : '';
+  const OBJ_TIPS = {'long_exposure':'% capital betting prices rise. Target: 55% in bear market.','hedge_exposure':'Capital that profits when prices fall — downside protection.','idle_capital':'Capital in bots with 0 trades — not actively working.','bot_efficiency':'Bots scoring below 50/100 — underperforming vs capital deployed.','btc_concentration':'% portfolio correlated to BTC price movements.','grid_allocation':'Capital in grid bots — work best in sideways low-vol markets.','dca_allocation':'DCA bots buy over time to average your entry price.','drawdown_protection':'Open positions currently losing money.','portfolio_balance':'Overall composition vs target allocation.'};
+  const objTip  = (d.objective && OBJ_TIPS[d.objective]) ? ' title="' + OBJ_TIPS[d.objective] + '"' : '';
   const objHtml = d.objective
-    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px">' + d.objective.replace(/_/g,' ') + '</span>'
+    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;cursor:help"' + objTip + '>' + d.objective.replace(/_/g,' ') + '</span>'
     : '';
   const isSuggested = d.category === 'suggested';
   return (
@@ -2002,10 +2022,10 @@ function renderDecisionCard(d, i) {
 
 async function loadDecisions() {
   try {
-    const data = await apiFetch('decisions');
+    data = await apiFetch('decisions');
     const decisions = data.decisions || [];
-    const scores    = data.scores    || {};
-    const market    = data.marketSnapshot || {};
+    scores    = data.scores    || {};
+    market    = data.marketSnapshot || {};
 
     // Apply scores to bot cards
     Object.entries(scores).forEach(([id, score]) => {
@@ -2015,25 +2035,25 @@ async function loadDecisions() {
 
     // Update market context from server data
     if (market.regime) {
-      const re = document.getElementById('market-regime');
+      re = document.getElementById('market-regime');
       if (re) { re.textContent = market.regime; re.style.color = market.regime==='Bull'?'var(--green)':market.regime==='Bear'?'var(--red)':'var(--amber)'; }
     }
     if (market.volatility) {
-      const ve = document.getElementById('market-vol');
+      ve = document.getElementById('market-vol');
       if (ve) { ve.textContent = market.volatility; ve.style.color = market.volatility==='High'?'var(--amber)':market.volatility==='Low'?'var(--green)':'var(--text)'; }
     }
     if (market.btcChange24h !== undefined) {
-      const me = document.getElementById('btc-move');
+      me = document.getElementById('btc-move');
       if (me) { me.textContent = fmtChange(market.btcChange24h); me.style.color = market.btcChange24h>=0?'var(--green)':'var(--red)'; }
-      const bias = market.btcChange24h > 1 ? 'LONG' : market.btcChange24h < -1 ? 'SHORT' : 'NEUTRAL';
+      bias = market.btcChange24h > 1 ? 'LONG' : market.btcChange24h < -1 ? 'SHORT' : 'NEUTRAL';
       setEl('signal-bias', bias);
-      const absC = Math.abs(market.btcChange24h);
-      const suit = market.regime==='Sideways'&&absC<2 ? 'Excellent for Grid' : absC>4 ? 'Good for Breakout' : market.regime==='Bull' ? 'Good for DCA' : 'Monitor closely';
+      absC = Math.abs(market.btcChange24h);
+      suit = market.regime==='Sideways'&&absC<2 ? 'Excellent for Grid' : absC>4 ? 'Good for Breakout' : market.regime==='Bull' ? 'Good for DCA' : 'Monitor closely';
       setEl('grid-suit', suit);
     }
 
     // Render decision cards
-    const container = document.getElementById('decisions-container');
+    container = document.getElementById('decisions-container');
     setEl('action-count', decisions.length + ' action' + (decisions.length!==1?'s':''));
 
     // Store decision history in sessionStorage (last 20 snapshots)
@@ -2060,7 +2080,7 @@ async function loadDecisions() {
     setEl('h-decisions', decisions.length + ' actions');
     document.getElementById('h-decisions-dot').className = 'health-dot ok';
     if (data.marketSnapshot) {
-      const mk = data.marketSnapshot;
+      mk = data.marketSnapshot;
       setEl('h-market', mk.regime + ' / ' + mk.volatility);
       document.getElementById('h-market-dot').className = 'health-dot ' + (mk.regime==='Bear'?'warn':'ok');
     }
@@ -2082,16 +2102,16 @@ async function loadDecisions() {
 
     // Update target state panel — Long + Hedge prominent, others collapsible
     if (data.targetState && data.portfolioGaps !== undefined) {
-      const panel = document.getElementById('target-panel');
+      panel = document.getElementById('target-panel');
       const grid  = document.getElementById('target-grid');
       const adj   = document.getElementById('target-adj');
       if (panel) panel.style.display = 'block';
-      const t    = data.targetState;
+      t    = data.targetState;
       const gaps = data.portfolioGaps || [];
 
       function makeTargetCard(key, label, current, target, isPrimary) {
         const gap     = gaps.find(g => g.objective === key);
-        const cur     = current !== null ? current : (gap ? gap.current : '—');
+        const cur     = current !== null ? current : (gap ? gap.current : 0);
         const delta   = gap ? gap.delta : 0;
         const hasGap  = Math.abs(delta) >= 5;
         // Only highlight problematic dimensions — dim on-target ones
@@ -2113,7 +2133,7 @@ async function loadDecisions() {
       }
 
       // Primary: Long + Hedge
-      let html = makeTargetCard('long_exposure',  'Long Exposure',  data.portfolio?.longPct||0,  t.longPct,  true);
+      html = makeTargetCard('long_exposure',  'Long Exposure',  data.portfolio?.longPct||0,  t.longPct,  true);
       html    += makeTargetCard('hedge_exposure', 'Hedge',          data.portfolio?.shortPct||0, t.shortPct, true);
 
       // Secondary: Grid + DCA (smaller, de-emphasised)
@@ -2166,9 +2186,9 @@ async function loadDecisions() {
     // Update risk state headline
     if (data.riskState) {
       const bar     = document.getElementById('risk-state-bar');
-      const label   = document.getElementById('risk-state-label');
-      const scoreEl = document.getElementById('risk-score-num');
-      const factors = document.getElementById('risk-factors');
+      label   = document.getElementById('risk-state-label');
+      scoreEl = document.getElementById('risk-score-num');
+      factors = document.getElementById('risk-factors');
       if (bar) {
         bar.style.display = 'flex';
         bar.className = 'risk-state-bar ' + data.riskState;
@@ -2183,11 +2203,11 @@ async function loadDecisions() {
     }
 
     // Split into required and suggested
-    const required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
+    required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
     const suggested = (data.suggestedActions || decisions.filter(d=>d.category==='suggested'));
 
     // Build HTML with Required/Suggested split
-    let html = '';
+    html = '';
 
     if (required.length > 0) {
       html += '<div class="decisions-section-label required">🔴 Required Actions (' + required.length + ')</div>';
@@ -2213,7 +2233,7 @@ async function loadDecisions() {
     return; // skip old map below
 
     container.innerHTML = decisions.map((d, i) => {
-      const execBtn = d.executable && d.botIds && d.botIds.length
+      execBtn = d.executable && d.botIds && d.botIds.length
         ? `<button class="dc-execute-btn btn-pause" onclick="executeBotAction(${d.botIds[0]},'disable',this)">⏸ Pause Bot</button>`
         : d.executable
           ? `<button class="dc-execute-btn btn-enable" onclick="executeBotAction(${d.target},'enable',this)">▶ Enable Bot</button>`
@@ -2246,7 +2266,7 @@ async function loadPrices() {
 
 async function loadWallets() {
   const [spot, fut] = await Promise.all([apiFetch('spot-wallet'), apiFetch('futures-wallet')]);
-  const floatPnl = fut.unrealizedPnl, margin = fut.marginBalance, avail = fut.availableBalance;
+  floatPnl = fut.unrealizedPnl, margin = fut.marginBalance, avail = fut.availableBalance;
 
   setEl('spot-wallet-val', fmtUSD(spot.usdtBalance));
   setEl('spot-wallet-sub', spot.assetCount+' assets held');
@@ -2257,9 +2277,9 @@ async function loadWallets() {
   setEl('perp-upnl', (floatPnl>=0?'+':'')+fmtUSD(floatPnl));
   setEl('realized-pnl', fmtProfit(TOTAL_REALIZED));
 
-  const fe = document.getElementById('floating-pnl');
+  fe = document.getElementById('floating-pnl');
   if(fe){ fe.textContent=(floatPnl>=0?'+':'')+fmtUSD(floatPnl); fe.className='pnl-value '+cc(floatPnl); }
-  const fc = document.getElementById('floating-pnl-card');
+  fc = document.getElementById('floating-pnl-card');
   if(fc) fc.className='pnl-card'+(floatPnl<0?' primary-red':'');
 
   const net = TOTAL_REALIZED + floatPnl;
@@ -2267,12 +2287,13 @@ async function loadWallets() {
   if(ne){ ne.textContent=fmtProfit(net); ne.className='pnl-value '+cc(net); }
   const nc = document.getElementById('net-pnl-card');
   if(nc) nc.className='pnl-card '+(net>=0?'primary':'primary-red');
-  const roi = (net/TOTAL_ALLOCATED)*100;
+  roi = (net/TOTAL_ALLOCATED)*100;
   setEl('net-roi', (roi>=0?'+':'')+roi.toFixed(2)+'% ROI on $'+TOTAL_ALLOCATED.toLocaleString());
 
-  const total = spot.usdtBalance + margin;
+  total = spot.usdtBalance + margin;
   setEl('total-capital', fmtUSD(total));
-  const free = total - TOTAL_ALLOCATED;
+  var ht = document.getElementById('header-total'); if (ht) ht.textContent = fmtUSD(total);
+  free = total - TOTAL_ALLOCATED;
   setEl('free-capital', fmtUSD(Math.max(0,free)));
   const idlePct = Math.max(0, Math.round((free/total)*100));
   setEl('idle-pct', idlePct+'%');
@@ -2296,8 +2317,8 @@ async function loadWallets() {
 
 // 3Commas bot type inference from pair/name
 function inferTCBotType(bot) {
-  const name = (bot.name||'').toLowerCase();
-  const pair = (bot.pair||'').toUpperCase();
+  name = (bot.name||'').toLowerCase();
+  pair = (bot.pair||'').toUpperCase();
   if (name.includes('signal') || name.includes('rsi') || name.includes('ma cross') || name.includes('bb')) return 'signal';
   if (name.includes('hedge') || name.includes('short')) return 'short';
   if (name.includes('break') || name.includes('breakout')) return 'breakout';
@@ -2305,30 +2326,30 @@ function inferTCBotType(bot) {
 }
 
 function inferTCMarket(bot) {
-  const pair = (bot.pair||'').toUpperCase();
-  const name = (bot.name||'').toLowerCase();
+  pair = (bot.pair||'').toUpperCase();
+  name = (bot.name||'').toLowerCase();
   if (pair.includes('FUTURES') || name.includes('futures') || name.includes('perp')) return 'futures';
   return 'spot';
 }
 
 function inferTCSymbol(bot) {
-  const pair = (bot.pair||'').replace('USDT_','').replace('_USDT','').replace('USDT','');
+  pair = (bot.pair||'').replace('USDT_','').replace('_USDT','').replace('USDT','');
   return (pair || 'BTC') + 'USDT';
 }
 
 function inferDirection(bot) {
-  const name = (bot.name||'').toLowerCase();
+  name = (bot.name||'').toLowerCase();
   if (name.includes('short') || name.includes('hedge') || name.includes('bear')) return 'short';
   return 'long';
 }
 
 function renderTCBotCard(bot, capital, roi, score, status) {
-  const type      = inferTCBotType(bot);
-  const market    = inferTCMarket(bot);
-  const symbol    = inferTCSymbol(bot);
-  const direction = inferDirection(bot);
-  const trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
-  const dirClass  = direction === 'short' ? 'short' : type === 'signal' ? 'signal' : 'long';
+  type      = inferTCBotType(bot);
+  market    = inferTCMarket(bot);
+  symbol    = inferTCSymbol(bot);
+  direction = inferDirection(bot);
+  trades    = (bot.completedDeals||0) + (bot.activeDeals||0);
+  dirClass  = direction === 'short' ? 'short' : type === 'signal' ? 'signal' : 'long';
   const sc        = score >= 75 ? 'score-strong' : score >= 55 ? 'score-stable' : score >= 35 ? 'score-weak' : trades===0 ? 'score-idle' : 'score-critical';
 
   return `
@@ -2361,15 +2382,15 @@ function renderTCBotCard(bot, capital, roi, score, status) {
 }
 
 async function load3CommasBots() {
-  const data = await apiFetch('commas-bots');
+  data = await apiFetch('commas-bots');
   if (data.error) {
-    const container = document.getElementById('bots-container');
+    container = document.getElementById('bots-container');
     if (container) container.innerHTML = '<div style="grid-column:span 3;text-align:center;color:var(--amber);padding:24px;font-size:12px;background:rgba(245,158,11,.06);border-radius:10px;border:1px solid rgba(245,158,11,.2)">⚠️ 3Commas API Error: ' + data.error + '<br><span style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Check that TC_API_KEY and TC_SECRET are correct in Render environment variables</span></div>';
     setEl('h-3commas', 'Error');
     document.getElementById('h-3commas-dot').className = 'health-dot err';
     return;
   }
-  const container = document.getElementById('bots-container');
+  container = document.getElementById('bots-container');
   const signalContainer = document.getElementById('signal-container');
   const signalHeader    = document.getElementById('tc-signal-header');
 
@@ -2377,18 +2398,18 @@ async function load3CommasBots() {
   // Separate signal bots from trading bots
   const signalKeywords = ['signal','rsi','ma cross','bb strategy'];
   const isSignal = b => signalKeywords.some(k => (b.name||'').toLowerCase().includes(k));
-  const tradingBots = data.bots.filter(b => !isSignal(b));
+  tradingBots = data.bots.filter(b => !isSignal(b));
   const signalBots  = data.bots.filter(b => isSignal(b));
 
   // Render trading bots dynamically
   if (container) {
     container.innerHTML = tradingBots.map(bot => {
       // Capital comes from API (base + safety orders), no hardcoding needed
-      const capital = bot.capital || 100; // API provides this, fallback 100
-      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
-      const roi     = bot.profit ? (bot.profit/capital)*100 : 0;
-      const score   = scoreBot({ roi, trades, drawdownPct:roi<0?Math.abs(roi):0, change24h:0, type:'dca', capital });
-      const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
+      capital = bot.capital || 100; // API provides this, fallback 100
+      trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      roi     = bot.profit ? (bot.profit/capital)*100 : 0;
+      score   = scoreBot({ roi, trades, drawdownPct:roi<0?Math.abs(roi):0, change24h:0, type:'dca', capital });
+      status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
                       trades===0   ? {label:'Idle',  cls:'status-idle'}   :
                       roi<-1       ? {label:'Underperforming',cls:'status-underperforming'} :
                                      {label:'Active',cls:'status-active'};
@@ -2402,16 +2423,16 @@ async function load3CommasBots() {
     signalHeader.style.display    = '';
     setEl('tc-signal-count', signalBots.length);
     signalContainer.innerHTML = signalBots.map(bot => {
-      const capital = 100;
-      const trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
-      const roi     = 0;
-      const score   = scoreBot({ roi, trades, drawdownPct:0, change24h:0, type:'signal' });
-      const status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
+      capital = 100;
+      trades  = (bot.completedDeals||0) + (bot.activeDeals||0);
+      roi     = 0;
+      score   = scoreBot({ roi, trades, drawdownPct:0, change24h:0, type:'signal' });
+      status  = !bot.enabled ? {label:'Paused',cls:'status-paused'} :
                       trades===0   ? {label:'Waiting',cls:'status-waiting'} :
                                      {label:'Active',cls:'status-active'};
-      const card = renderTCBotCard(bot, capital, roi, score, status);
+      card = renderTCBotCard(bot, capital, roi, score, status);
       // Add alert banner for idle signal bots
-      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Signal performance declining — 0 executions detected</div>' : '';
+      const alertBanner = trades===0 ? '<div class="alert-banner">🚨 Waiting for signal conditions — 0 executions yet</div>' : '';
       return card.slice(0, card.lastIndexOf('<' + '/div>')) + alertBanner + '<' + '/div>';
     }).join('');
   }
@@ -2424,7 +2445,7 @@ async function load3CommasBots() {
 }
 
 async function loadBinanceBots() {
-  const data = await apiFetch('binance-bots');
+  data = await apiFetch('binance-bots');
   if(!data.bots) return;
   const META = {
     'eth-grid-trades':    {si:'score-eth-grid', sti:'status-eth-grid', chg:'change-eth-grid',   roi:0.83,  type:'spot-grid'    },
@@ -2435,7 +2456,7 @@ async function loadBinanceBots() {
     'ethusdt-perp-trades':{si:'score-eth-perp', sti:'status-eth-perp', chg:'change-eth-perp',   roi:1.51,  type:'futures-grid' }
   };
   data.bots.forEach(b => {
-    const el=document.getElementById(b.id); if(el) el.textContent=b.trades;
+    el=document.getElementById(b.id); if(el) el.textContent=b.trades;
     const m=META[b.id]; if(!m) return;
     // 24h change
     const ce=document.getElementById(m.chg);
@@ -2448,17 +2469,17 @@ async function loadBinanceBots() {
   });
   // Market context panels from live data
   if (data.market) {
-    const mk = data.market;
-    const re=document.getElementById('market-regime');
+    mk = data.market;
+    re=document.getElementById('market-regime');
     if(re){ re.textContent=mk.regime; re.style.color=mk.regime==='Bull'?'var(--green)':mk.regime==='Bear'?'var(--red)':'var(--amber)'; }
-    const ve=document.getElementById('market-vol');
+    ve=document.getElementById('market-vol');
     if(ve){ ve.textContent=mk.volatility; ve.style.color=mk.volatility==='High'?'var(--amber)':mk.volatility==='Low'?'var(--green)':'var(--text)'; }
-    const me=document.getElementById('btc-move');
+    me=document.getElementById('btc-move');
     if(me){ me.textContent=fmtChange(mk.btcChange24h); me.style.color=mk.btcChange24h>=0?'var(--green)':'var(--red)'; }
-    const bias=mk.btcChange24h>1?'LONG':mk.btcChange24h<-1?'SHORT':'NEUTRAL';
+    bias=mk.btcChange24h>1?'LONG':mk.btcChange24h<-1?'SHORT':'NEUTRAL';
     setEl('signal-bias', bias);
-    const absC=Math.abs(mk.btcChange24h);
-    const suit=mk.regime==='Sideways'&&absC<2?'Excellent for Grid':absC>4?'Good for Breakout':mk.regime==='Bull'?'Good for DCA':'Monitor closely';
+    absC=Math.abs(mk.btcChange24h);
+    suit=mk.regime==='Sideways'&&absC<2?'Excellent for Grid':absC>4?'Good for Breakout':mk.regime==='Bull'?'Good for DCA':'Monitor closely';
     setEl('grid-suit', suit);
   }
   window._binanceTrades = data.totalTrades;
@@ -2466,13 +2487,13 @@ async function loadBinanceBots() {
 }
 
 function updateTotalTrades() {
-  const t=(window._tcTrades||0)+(window._binanceTrades||0);
+  t=(window._tcTrades||0)+(window._binanceTrades||0);
   setEl('total-trades-val', t);
   setEl('total-trades-sub', t+' total trades');
 }
 function updateTime() {
   const n=new Date();
-  const ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  ts=n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const ds=n.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
   document.getElementById('last-updated').textContent='Live · '+ts;
   document.getElementById('sync-time').textContent=ts+' · '+ds;
@@ -2510,8 +2531,8 @@ function saveUserBots(bots) {
 function getMergedBotMeta() {
   // Merge hardcoded defaults with user-added bots
   // User bots take precedence if same ID/symbol
-  const userBots = getUserBots();
-  const merged = {};
+  userBots = getUserBots();
+  merged = {};
   // Start with user bots
   userBots.forEach(b => {
     const key = b.tcId || b.id;
@@ -2532,7 +2553,7 @@ function getMergedBotMeta() {
 }
 
 function toggleBotManager() {
-  const panel = document.getElementById('bot-mgr-panel');
+  panel = document.getElementById('bot-mgr-panel');
   const btn   = document.getElementById('mgr-btn');
   if (!panel) return;
   const open = panel.style.display !== 'none' && panel.style.display !== '';
@@ -2542,40 +2563,40 @@ function toggleBotManager() {
 }
 
 function showAddBotForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = 'block';
 }
 function toggleAddForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = f.style.display === 'block' ? 'none' : 'block';
 }
 
 function hideAddBotForm() {
-  const f = document.getElementById('add-bot-form');
+  f = document.getElementById('add-bot-form');
   if (f) f.style.display = 'none';
   // Clear fields
   ['mgr-name','mgr-symbol','mgr-capital','mgr-roi','mgr-tcid'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value = '';
+    el = document.getElementById(id); if(el) el.value = '';
   });
 }
 
 function saveNewBot() {
-  const name    = document.getElementById('mgr-name')?.value?.trim();
-  const symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
-  const capital = parseFloat(document.getElementById('mgr-capital')?.value);
-  const direction = document.getElementById('mgr-direction')?.value;
+  name    = document.getElementById('mgr-name')?.value?.trim();
+  symbol  = document.getElementById('mgr-symbol')?.value?.trim().toUpperCase();
+  capital = parseFloat(document.getElementById('mgr-capital')?.value);
+  direction = document.getElementById('mgr-direction')?.value;
   const strategy  = document.getElementById('mgr-strategy')?.value;
-  const venue     = document.getElementById('mgr-venue')?.value;
-  const market    = document.getElementById('mgr-market')?.value;
-  const roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
-  const tcId      = document.getElementById('mgr-tcid')?.value?.trim();
+  venue     = document.getElementById('mgr-venue')?.value;
+  market    = document.getElementById('mgr-market')?.value;
+  roi       = parseFloat(document.getElementById('mgr-roi')?.value)||0;
+  tcId      = document.getElementById('mgr-tcid')?.value?.trim();
 
   if (!name || !symbol || !capital || capital <= 0) {
     showToast('❌ Name, symbol and capital are required', 'error');
     return;
   }
 
-  const bots = getUserBots();
+  bots = getUserBots();
   const newBot = {
     id:        'user-' + Date.now(),
     name, symbol, capital, direction, strategy, venue, market, roi,
@@ -2592,7 +2613,7 @@ function saveNewBot() {
 }
 
 function removeUserBot(id) {
-  const bots = getUserBots().filter(b => b.id !== id);
+  bots = getUserBots().filter(b => b.id !== id);
   saveUserBots(bots);
   renderBotManager();
   renderUserBotCards();
@@ -2600,9 +2621,9 @@ function removeUserBot(id) {
 }
 
 function renderBotManager() {
-  const list    = document.getElementById('mgr-list');
+  list    = document.getElementById('mgr-list');
   const countEl = document.getElementById('mgr-count');
-  const bots    = getUserBots();
+  bots    = getUserBots();
   if (countEl) countEl.textContent = bots.length;
   if (!list) return;
   if (!bots.length) {
@@ -2624,7 +2645,7 @@ function renderBotManager() {
 
 function renderUserBotCards() {
   // Inject dynamic bot cards for user-added bots into the correct section
-  const bots = getUserBots();
+  bots = getUserBots();
   // Remove any previously injected dynamic cards
   document.querySelectorAll('.bot-card[data-user-added]').forEach(el => el.remove());
   if (!bots.length) return;
@@ -2637,16 +2658,16 @@ function renderUserBotCards() {
   const binanceGrid = document.getElementById('binance-grid');
   if (binanceGrid && binanceBots.length) {
     binanceBots.forEach(b => {
-      const card = createUserBotCard(b);
+      card = createUserBotCard(b);
       binanceGrid.appendChild(card);
     });
   }
 
   // Inject 3Commas bots into bots-container
-  const botsContainer = document.getElementById('bots-container');
+  botsContainer = document.getElementById('bots-container');
   if (botsContainer && commasBots.length) {
     commasBots.forEach(b => {
-      const card = createUserBotCard(b);
+      card = createUserBotCard(b);
       botsContainer.appendChild(card);
     });
   }
@@ -2657,13 +2678,13 @@ function renderUserBotCards() {
 }
 
 function updateSectionCounts() {
-  const userBots = getUserBots();
+  userBots = getUserBots();
   const binanceExtra  = userBots.filter(b => b.venue==='binance').length;
   const commasExtra   = userBots.filter(b => b.venue==='3commas').length;
   // Update count badges
   const sections = document.querySelectorAll('.section-header');
   sections.forEach(s => {
-    const title = s.querySelector('.section-title')?.textContent||'';
+    title = s.querySelector('.section-title')?.textContent||'';
     const badge = s.querySelector('.section-count');
     if (!badge) return;
     const base = parseInt(badge.dataset.base||badge.textContent)||0;
@@ -2675,9 +2696,9 @@ function updateSectionCounts() {
 
 function createUserBotCard(b) {
   const div = document.createElement('div');
-  const dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
+  dirClass = b.direction==='short'?'short':b.strategy==='signal'?'signal':b.strategy==='grid'?'grid':'long';
   const stratTag = b.strategy==='grid'?'tag-grid':b.strategy==='signal'?'tag-signal':'tag-dca';
-  const venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
+  venueColor = b.venue==='binance'?'#f0b90b':'var(--teal)';
   div.className = `bot-card ${dirClass}`;
   div.dataset.type = `${b.strategy} ${b.market} ${b.venue}`;
   div.dataset.userAdded = 'true';
@@ -2708,8 +2729,8 @@ function createUserBotCard(b) {
     </div>
   `;
   // Score the bot
-  const score = scoreBot({ roi:b.roi||0, trades:0, drawdownPct:b.roi<0?Math.abs(b.roi):0, change24h:0, type:b.strategy==='grid'?(b.market==='futures'?'futures-grid':'spot-grid'):'spot-dca' });
-  const scoreEl = div.querySelector('.ai-score');
+  score = scoreBot({ roi:b.roi||0, trades:0, drawdownPct:b.roi<0?Math.abs(b.roi):0, change24h:0, type:b.strategy==='grid'?(b.market==='futures'?'futures-grid':'spot-grid'):'spot-dca' });
+  scoreEl = div.querySelector('.ai-score');
   if (scoreEl) {
     scoreEl.textContent = score;
     scoreEl.className = 'ai-score ' + (score>=75?'score-strong':score>=55?'score-stable':score>=35?'score-weak':'score-critical');
@@ -2719,24 +2740,24 @@ function createUserBotCard(b) {
 
 // Scoring function (mirrors worker logic, runs in browser)
 function scoreBot({ roi, trades, drawdownPct, change24h, type }) {
-  const roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
+  roiScore  = Math.min(100, Math.max(0, 50 + roi * 15));
   const ddScore   = Math.min(100, Math.max(0, 100 - drawdownPct * 4));
   const actScore  = Math.min(100, trades * 8);
   const conScore  = trades > 5 ? 80 : trades > 0 ? 40 + trades*8 : 15;
-  const absChange = Math.abs(change24h||0);
-  const marketFit = (type==='spot-grid'||type==='futures-grid')
+  absChange = Math.abs(change24h||0);
+  marketFit = (type==='spot-grid'||type==='futures-grid')
     ? (absChange < 2 ? 80 : absChange < 4 ? 55 : 35)
     : (absChange > 1 ? 75 : 45);
   return Math.round(roiScore*0.30 + ddScore*0.25 + actScore*0.15 + conScore*0.15 + marketFit*0.15);
 }
 
 function renderHistory(history) {
-  const panel = document.getElementById('history-panel');
-  const list  = document.getElementById('history-list');
+  panel = document.getElementById('history-panel');
+  list  = document.getElementById('history-list');
   const count = document.getElementById('history-count');
   if (!panel || !list) return;
   panel.style.display = 'block';
-  const total = history.reduce((s,h) => s + h.decisions.length, 0);
+  total = history.reduce((s,h) => s + h.decisions.length, 0);
   if (count) count.textContent = total + ' recommendation' + (total!==1?'s':'');
   if (!history.length) {
     list.innerHTML = '<div class="history-empty">No history yet</div>';
@@ -2764,13 +2785,13 @@ async function refreshDecisions() {
 // ============ AUTH ============
 const DASHBOARD_PW = 'Underwood10';
 function checkPw() {
-  const v=document.getElementById('pw-input').value;
+  v=document.getElementById('pw-input').value;
   if(v===DASHBOARD_PW){
     document.getElementById('pw-overlay').style.display='none';
     sessionStorage.setItem('bjbots_auth','1');
     // Reveal structural zones immediately — data fills in after
     ['hero-zone','kpi-strip','intel-zone'].forEach(function(id) {
-      const el = document.getElementById(id);
+      el = document.getElementById(id);
       if (!el) return;
       if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
       else el.style.display = 'block';
@@ -2801,6 +2822,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000);
   }
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
+  // Clear old-format history (pre-urgency field) that causes UNDEFINED labels
+  try {
+    var oldH = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
+    var needsClear = oldH.some(function(e){ return (e.decisions||[]).some(function(d){ return d.urgency===undefined&&d.severity===undefined; }); });
+    if (needsClear) sessionStorage.removeItem('alphacontrol_history');
+  } catch(e) {}
   // Restore history from session
   try {
     const h = JSON.parse(sessionStorage.getItem('alphacontrol_history')||'[]');
@@ -2842,7 +2869,7 @@ function _syncHero(data) {
   const sc = document.getElementById('risk-score-num');
   if (sc) { sc.textContent = data.riskScore || '—'; sc.className = 'ctrl-score-num ' + rs; }
 
-  const fac = document.getElementById('risk-factors');
+  fac = document.getElementById('risk-factors');
   if (fac && data.riskFactors && data.riskFactors.length) { fac.textContent = data.riskFactors.join(' · '); fac.style.display = 'block'; }
 
   // Confidence anchor
@@ -2854,7 +2881,7 @@ function _syncHero(data) {
 
   // Show supporting zones
   ['kpi-strip','intel-zone','health-panel'].forEach(function(id) {
-    const el = document.getElementById(id);
+    el = document.getElementById(id);
     if (!el) return;
     if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
     else el.style.display = 'flex';
@@ -2873,7 +2900,7 @@ loadDecisions = async function() {
   await __origLoadDecisions();
   // After original runs, fetch decisions data and sync hero
   try {
-    const data = await fetch('/api/decisions').then(r=>r.json());
+    data = await fetch('/api/decisions').then(r=>r.json());
     if (data && !data.error) _syncHero(data);
   } catch(e) {}
 };
@@ -2883,12 +2910,12 @@ loadDecisions = async function() {
 // History fix
 const __origHistory = renderHistory;
 renderHistory = function(history) {
-  const list = document.getElementById('history-list');
+  list = document.getElementById('history-list');
   const count = document.getElementById('history-count');
-  const panel = document.getElementById('history-panel');
+  panel = document.getElementById('history-panel');
   if (!list) return;
   if (panel) panel.style.display = 'block';
-  const total = history.reduce(function(s,h){return s+(h.decisions||[]).length;},0);
+  total = history.reduce(function(s,h){return s+(h.decisions||[]).length;},0);
   if (count) count.textContent = total + ' recommendation' + (total!==1?'s':'');
   if (!history.length) { list.innerHTML = '<div class="history-empty">No history yet</div>'; return; }
   const COLOR = { pause:'var(--amber-hot)', reduce:'var(--red-hot)', increase:'var(--green)', hold:'var(--blue)', reallocate:'var(--purple)' };
@@ -2897,7 +2924,7 @@ renderHistory = function(history) {
     return (h.decisions||[]).map(function(d){
       const at = (d.actionType||d.type||'action').toLowerCase();
       const ug = (d.urgency||d.severity||'').toLowerCase();
-      const txt = (d.text||'').length>75 ? d.text.slice(0,75)+'…' : (d.text||'');
+      txt = (d.text||'').length>75 ? d.text.slice(0,75)+'…' : (d.text||'');
       return '<div class="history-item">' +
         '<span class="history-time">'+(h.time||'—')+'</span>' +
         '<span class="history-action" style="color:'+(COLOR[at]||'var(--muted)')+'">'+at.toUpperCase()+'</span>' +
@@ -2910,13 +2937,13 @@ renderHistory = function(history) {
 
 // Reveal zones immediately on login
 function checkPw() {
-  const v = document.getElementById('pw-input').value;
+  v = document.getElementById('pw-input').value;
   if (v === DASHBOARD_PW) {
     document.getElementById('pw-overlay').style.display = 'none';
     sessionStorage.setItem('bjbots_auth','1');
     // Reveal immediately — data fills in after
     ['kpi-strip','intel-zone'].forEach(function(id){
-      const el = document.getElementById(id);
+      el = document.getElementById(id);
       if (el) el.style.display = 'grid';
     });
     refreshAll();
@@ -2941,7 +2968,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sessionStorage.getItem('bjbots_auth')==='1') {
     document.getElementById('pw-overlay').style.display = 'none';
     ['kpi-strip','intel-zone'].forEach(function(id){
-      const el = document.getElementById(id);
+      el = document.getElementById(id);
       if (el) el.style.display = 'grid';
     });
     refreshAll();
