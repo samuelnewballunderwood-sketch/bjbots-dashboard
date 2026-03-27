@@ -241,6 +241,91 @@ main{padding:24px 32px;max-width:1400px;margin:0 auto}
 .mgr-show-form{margin-bottom:12px}
 .mgr-form-wrap{background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:14px;display:none}
 
+
+/* RISK STATE HEADLINE */
+.risk-state-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-radius:12px;margin-bottom:16px;border:1px solid;font-family:'Syne',sans-serif}
+.risk-state-bar.SAFE{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3)}
+.risk-state-bar.BALANCED{background:rgba(99,179,237,.08);border-color:rgba(99,179,237,.3)}
+.risk-state-bar.OVEREXPOSED{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3)}
+.risk-state-bar.HIGH_RISK{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4)}
+.risk-label{font-size:22px;font-weight:900;letter-spacing:1px}
+.risk-label.SAFE{color:var(--green)}
+.risk-label.BALANCED{color:#63b3ed}
+.risk-label.OVEREXPOSED{color:var(--amber)}
+.risk-label.HIGH_RISK{color:var(--red);animation:pulse-red 2s infinite}
+@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.6}}
+.risk-score-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.risk-score-num{font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.risk-score-num.SAFE{color:var(--green)}
+.risk-score-num.BALANCED{color:#63b3ed}
+.risk-score-num.OVEREXPOSED{color:var(--amber)}
+.risk-score-num.HIGH_RISK{color:var(--red)}
+.risk-score-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.risk-factors{font-size:11px;color:var(--muted);max-width:60%}
+.risk-mode-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.risk-mode-badge.HIGH_RISK{background:rgba(239,68,68,.2);color:var(--red)}
+.risk-mode-badge.other{background:rgba(34,197,94,.1);color:var(--green)}
+/* REQUIRED vs SUGGESTED split */
+.decisions-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin:12px 0 6px 0;display:flex;align-items:center;gap:8px}
+.decisions-section-label.required{color:var(--red)}
+.decisions-section-label.suggested{color:var(--muted)}
+.decisions-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+/* Suggested cards are visually subordinate — clearly optional */
+.decision-card.suggested-card{opacity:.75;border-left-style:dashed !important}
+.decision-card.suggested-card:hover{opacity:1;transition:opacity .2s}
+/* Suggested section wrapper — extra de-emphasis */
+.suggested-section-wrap{background:rgba(0,0,0,.15);border-radius:10px;padding:10px;margin-top:4px}
+/* URGENCY indicators */
+.urgency-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:2px 6px;border-radius:4px}
+.urgency-badge.critical{background:rgba(239,68,68,.2);color:var(--red)}
+.urgency-badge.high{background:rgba(245,158,11,.2);color:var(--amber)}
+.urgency-badge.medium{background:rgba(99,179,237,.15);color:#63b3ed}
+.urgency-badge.low{background:rgba(156,163,175,.15);color:var(--muted)}
+/* AMOUNT display */
+.dc-amount{font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--text);margin:4px 0}
+.dc-amount.reduce{color:var(--red)}
+.dc-amount.increase{color:var(--green)}
+.dc-amount.reallocate{color:var(--purple)}
+.dc-amount.pause{color:var(--amber)}
+.dc-amount.hold{color:var(--muted)}
+/* TIMEFRAME */
+.dc-timeframe{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+/* IMPACT */
+.dc-impact{font-size:10px;color:var(--muted);margin-top:4px;font-style:italic}
+/* HIGH RISK mode suppression notice */
+.high-risk-notice{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:12px;color:var(--red)}
+
+
+/* TARGET STATE PANEL */
+.target-panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:none}
+.target-panel-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+.target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.target-item{background:var(--bg3);border-radius:8px;padding:8px 10px}
+.target-dim{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.target-current{font-size:15px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.target-arrow{font-size:11px;color:var(--muted);margin:0 2px}
+.target-goal{font-size:13px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace}
+.target-gap{font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.target-gap.over{color:var(--red)}
+.target-gap.under{color:var(--amber)}
+.target-gap.ok{color:var(--green)}
+.target-adj{font-size:10px;color:var(--muted);margin-top:8px;font-style:italic;border-top:1px solid var(--border);padding-top:6px}
+/* CRITICAL — visually dominant, pinned */
+.decision-card.critical-card{border-left-width:4px !important;background:rgba(239,68,68,.05);animation:critical-pulse 2.5s infinite}
+@keyframes critical-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 0 3px rgba(239,68,68,.2)}}
+.critical-pin{font-size:9px;background:var(--red);color:#fff;padding:2px 6px;border-radius:3px;font-weight:800;letter-spacing:.5px;animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+/* COST OF INACTION */
+.cost-of-inaction{font-size:10px;color:var(--red);background:rgba(239,68,68,.08);border-radius:4px;padding:3px 7px;margin-top:4px;display:inline-block}
+/* HOLD ALL state — reward state, feels earned */
+.hold-all-banner{background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(34,197,94,.04));border:1px solid rgba(34,197,94,.35);border-radius:12px;padding:20px 24px;text-align:center;margin:8px 0;box-shadow:0 0 20px rgba(34,197,94,.08)}
+.hold-all-title{font-size:20px;font-weight:900;color:var(--green);margin-bottom:6px;letter-spacing:.5px}
+.hold-all-sub{font-size:12px;color:var(--muted)}
+
+
+/* PRIMARY OBJECTIVE */
+#primary-objective::before { content:'▶ Objective: '; color:var(--purple); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+
 </style>
 </head>
 <body>
@@ -717,6 +802,65 @@ function statusFromScore(s, trades, enabled) {
 async function apiFetch(p) { const r=await fetch('/api/'+p); if(!r.ok)throw new Error(r.status); return r.json(); }
 
 // ============ DECISION ENGINE (calls server-side) ============
+function handleExecClick(btn) {
+  const act   = btn.getAttribute('data-action');
+  const id    = btn.getAttribute('data-id');
+  const label = btn.getAttribute('data-label');
+  const amt   = btn.getAttribute('data-amount');
+  const cls   = btn.getAttribute('data-cls');
+  confirmAction(act, id, label, 'Expected impact: $' + amt, cls);
+}
+
+function renderDecisionCard(d, i) {
+  const UC = { critical:'var(--red)', high:'var(--amber)', medium:'#63b3ed', low:'var(--muted)' };
+  const AC = { reduce:'var(--red)', increase:'var(--green)', reallocate:'var(--purple)', pause:'var(--amber)', hold:'var(--muted)' };
+  const isCritical  = d.urgency === 'critical';
+  const borderColor = UC[d.urgency] || 'var(--border)';
+  const amtColor    = AC[d.actionType] || 'var(--text)';
+  const amtDisplay  = d.amount > 0 ? '$' + d.amount.toLocaleString() : '';
+  const pctDisplay  = d.amountPct > 0 ? '(' + d.amountPct + '%)' : '';
+  const actionLabel = (d.actionType || 'action').toUpperCase();
+  const execBtn = (function() {
+    if (!d.executable || !d.targetBotIds || !d.targetBotIds.length) return '';
+    return d.targetBotIds.map(function(id) {
+      var act = d.actionType === 'pause' ? 'disable' : 'enable';
+      var cls = d.actionType === 'pause' ? 'pause' : 'confirm';
+      return '<button class="exec-btn" data-act="' + act + '" data-id="' + id + '" data-cls="btn-' + cls + '" data-amt="' + (d.amount||0) + '" onclick="handleExecBtn(this)" style="margin-top:6px;font-size:10px">Execute: ' + actionLabel + ' Bot ' + id + '</button>';
+    }).join('');
+  })();
+  const costHtml = d.costOfInaction
+    ? '<div class="cost-of-inaction">⚠ ' + d.costOfInaction + '</div>'
+    : '';
+  const objHtml = d.objective
+    ? '<span style="font-size:9px;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px">' + d.objective.replace(/_/g,' ') + '</span>'
+    : '';
+  const isSuggested = d.category === 'suggested';
+  return (
+    '<div class="decision-card ' + (isCritical?'critical-card':'') + (isSuggested?' suggested-card':'') + '" style="border-left:' + (isCritical?'4':'3') + 'px solid ' + borderColor + ';margin-bottom:8px">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+    '<div style="flex:1">' +
+    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">' +
+    '<span class="dc-action" style="color:' + amtColor + '">' + actionLabel + '</span>' +
+    '<span class="urgency-badge ' + d.urgency + '">' + d.urgency.toUpperCase() + '</span>' +
+    (isCritical ? '<span class="critical-pin">CRITICAL</span>' : '') +
+    (d.timeframe ? '<span class="dc-timeframe">⏱ ' + d.timeframe + '</span>' : '') +
+    (d.category==='required' ? '<span style="font-size:9px;background:rgba(239,68,68,.15);color:var(--red);padding:1px 5px;border-radius:3px;font-weight:700">REQUIRED</span>' : '') +
+    objHtml +
+    '</div>' +
+    '<div class="dc-text" style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px">' + d.text + '</div>' +
+    (amtDisplay ? '<div class="dc-amount ' + d.actionType + '" style="color:' + amtColor + '">' + amtDisplay + ' ' + pctDisplay + '</div>' : '') +
+    '<div class="dc-reason">' + d.reason + '</div>' +
+    (d.expectedImpact ? '<div class="dc-impact">→ ' + d.expectedImpact + '</div>' : '') +
+    costHtml +
+    execBtn +
+    '</div>' +
+    '<div style="text-align:right;flex-shrink:0">' +
+    '<div class="dc-conf" style="color:' + (UC[d.urgency]||'var(--muted)') + '">Confidence: ' + d.confidence + '%</div>' +
+    (d.category!=='required'?'<div style="font-size:10px;color:var(--muted)">Manual action</div>':'') +
+    '</div></div></div>'
+  );
+}
+
 async function loadDecisions() {
   try {
     const data = await apiFetch('decisions');
@@ -802,6 +946,119 @@ async function loadDecisions() {
         }
       });
     }
+
+    // Update target state panel — Long + Hedge prominent, others collapsible
+    if (data.targetState && data.portfolioGaps !== undefined) {
+      const panel = document.getElementById('target-panel');
+      const grid  = document.getElementById('target-grid');
+      const adj   = document.getElementById('target-adj');
+      if (panel) panel.style.display = 'block';
+      const t    = data.targetState;
+      const gaps = data.portfolioGaps || [];
+
+      function makeTargetCard(key, label, current, target, isPrimary) {
+        const gap      = gaps.find(g => g.objective === key);
+        const cur      = current !== null ? current : (gap ? gap.current : '—');
+        const delta    = gap ? gap.delta : 0;
+        const gapClass = Math.abs(delta) < 5 ? 'ok' : delta > 0 ? 'over' : 'under';
+        const gapText  = Math.abs(delta) < 5 ? '✓ On target' : (delta > 0 ? '▲ +' : '▼ ') + Math.abs(delta) + 'pp ($' + (gap?gap.usd:0) + ')';
+        const curColor = Math.abs(delta)>10 ? 'var(--amber)' : Math.abs(delta)>5 ? '#63b3ed' : 'var(--text)';
+        const size     = isPrimary ? 'font-size:18px' : 'font-size:14px';
+        return '<div class="target-item" style="' + (isPrimary?'border:1px solid var(--border2)':'opacity:.75') + '">' +
+          '<div class="target-dim">' + label + (isPrimary?' <span style="color:var(--purple);font-size:8px">PRIMARY</span>':'') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:4px">' +
+          '<span class="target-current" style="color:' + curColor + ';' + size + '">' + cur + '%</span>' +
+          '<span class="target-arrow">→</span>' +
+          '<span class="target-goal" style="' + size + '">' + target + '%</span>' +
+          '</div>' +
+          '<div class="target-gap ' + gapClass + '">' + gapText + '</div>' +
+          '</div>';
+      }
+
+      // Primary: Long + Hedge
+      let html = makeTargetCard('long_exposure',  'Long Exposure',  data.portfolio?.longPct||0,  t.longPct,  true);
+      html    += makeTargetCard('hedge_exposure', 'Hedge',          data.portfolio?.shortPct||0, t.shortPct, true);
+
+      // Secondary: Grid + DCA (smaller, de-emphasised)
+      html += makeTargetCard('grid_allocation', 'Grid', null, t.gridPct, false);
+      html += makeTargetCard('dca_allocation',  'DCA',  null, t.dcaPct,  false);
+
+      if (grid) grid.innerHTML = html;
+
+      // Confidence + adjustments
+      const confText = data.targetConfidence ? ' · Confidence: ' + data.targetConfidence : '';
+      if (adj && data.targetAdjustments) adj.textContent = 'Basis: ' + data.targetAdjustments.join(' · ') + confText;
+    }
+
+    // Primary objective banner — always shown
+    const poEl = document.getElementById('primary-objective');
+    if (poEl && data.primaryObjective) {
+      poEl.textContent = data.primaryObjective;
+      poEl.style.display = 'block';
+    }
+
+    // HOLD ALL state
+    if (data.holdAll) {
+      const riskLabel = (data.riskState||'BALANCED').replace('_',' ');
+      container.innerHTML =
+        '<div class="hold-all-banner">' +
+        '<div class="hold-all-title">✅ Portfolio Aligned</div>' +
+        '<div class="hold-all-sub" style="margin-bottom:8px">All positions are within target parameters. No action required.</div>' +
+        '<div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;font-size:11px;color:var(--muted)">' +
+        '<span>📊 Risk State: <strong style="color:var(--green)">' + riskLabel + '</strong></span>' +
+        '<span>🎯 All gaps within 5% of targets</span>' +
+        '<span>💰 Capital deployed efficiently</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:8px">Monitor and hold — the system will alert when action is required.</div>' +
+        '</div>';
+      setEl('action-count', '0 actions');
+      return;
+    }
+
+    // Update risk state headline
+    if (data.riskState) {
+      const bar     = document.getElementById('risk-state-bar');
+      const label   = document.getElementById('risk-state-label');
+      const scoreEl = document.getElementById('risk-score-num');
+      const factors = document.getElementById('risk-factors');
+      if (bar) {
+        bar.style.display = 'flex';
+        bar.className = 'risk-state-bar ' + data.riskState;
+      }
+      if (label) { label.textContent = data.riskState.replace('_',' '); label.className = 'risk-label ' + data.riskState; }
+      if (scoreEl) { scoreEl.textContent = data.riskScore; scoreEl.className = 'risk-score-num ' + data.riskState; }
+      if (factors && data.riskFactors) factors.textContent = data.riskFactors.length ? data.riskFactors.join(' · ') : 'No elevated risk factors detected';
+    }
+
+    // Split into required and suggested
+    const required  = (data.requiredActions  || decisions.filter(d=>d.category==='required'));
+    const suggested = (data.suggestedActions || decisions.filter(d=>d.category==='suggested'));
+
+    // Build HTML with Required/Suggested split
+    let html = '';
+
+    if (required.length > 0) {
+      html += '<div class="decisions-section-label required">🔴 Required Actions (' + required.length + ')</div>';
+      html += required.map((d,i) => renderDecisionCard(d, i)).join('');
+    }
+
+    if (data.highRiskMode) {
+      html += '<div class="high-risk-notice">⚠️ System is in HIGH RISK mode — optimisation suggestions suppressed. Resolve required actions first.</div>';
+    }
+
+    if (suggested.length > 0) {
+      html += '<div class="decisions-section-label suggested">💡 Suggested Optimisations (' + suggested.length + ')</div>';
+      html += '<div class="suggested-section-wrap">';
+      html += suggested.map((d,i) => renderDecisionCard(d, i + required.length)).join('');
+      html += '</div>';
+    }
+
+    if (!required.length && !suggested.length) {
+      html = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:13px">No actions required — portfolio within normal parameters</div>';
+    }
+
+    container.innerHTML = html;
+    return; // skip old map below
 
     container.innerHTML = decisions.map((d, i) => {
       const execBtn = d.executable && d.botIds && d.botIds.length
