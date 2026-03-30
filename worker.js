@@ -1344,6 +1344,94 @@ function buildLivePortfolio(tcBots, bnBots, recon) {
   };
 }
 
+// ── TRADE HISTORY ENGINE ─────────────────────────────────────────────────
+// Pulls full lifetime trade counts from 3Commas and Binance
+// Cached for 10 minutes to avoid hammering APIs
+let _tradeHistoryCache = null;
+let _tradeHistoryCacheTime = 0;
+const TRADE_HISTORY_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function getTradeHistory(env) {
+  try {
+    const now = Date.now();
+    if (_tradeHistoryCache && (now - _tradeHistoryCacheTime) < TRADE_HISTORY_TTL) {
+      return json({ ..._tradeHistoryCache, cached: true });
+    }
+
+    // ── 3Commas: full deal history ──────────────────────────────────────
+    const tcSummary = await fetch('https://tc-proxy-eu.onrender.com/deals/summary')
+      .then(r => r.json())
+      .catch(() => ({ completedDeals: 0, activeDeals: 0, totalOrders: 0, totalProfit: 0 }));
+
+    // ── Binance: full trade history per pair ────────────────────────────
+    const pairs = ['BTCUSDT','ETHUSDT','SOLUSDT','XRPUSDT','BNBUSDT'];
+    let bnTotalTrades = 0;
+    const bnByPair = {};
+
+    await Promise.all(pairs.map(async (sym) => {
+      try {
+        let fromId = null;
+        let pairTotal = 0;
+        let keepGoing = true;
+        let iterations = 0;
+        while (keepGoing && iterations < 20) { // cap at 20k trades per pair
+          iterations++;
+          const ts  = Date.now();
+          const q   = fromId
+            ? `symbol=${sym}&limit=1000&fromId=${fromId}&timestamp=${ts}&recvWindow=10000`
+            : `symbol=${sym}&limit=1000&timestamp=${ts}&recvWindow=10000`;
+          const sig = await hmacSign(env.BINANCE_SECRET, q);
+          const res = await fetch(
+            `https://api.binance.com/api/v3/myTrades?${q}&signature=${sig}`,
+            { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
+          );
+          const trades = await res.json();
+          if (!Array.isArray(trades) || trades.length === 0) { keepGoing = false; break; }
+          pairTotal += trades.length;
+          if (trades.length < 1000) { keepGoing = false; }
+          else { fromId = trades[trades.length - 1].id + 1; }
+        }
+        bnByPair[sym] = pairTotal;
+        bnTotalTrades += pairTotal;
+      } catch(e) { bnByPair[sym] = 0; }
+    }));
+
+    // Also get futures trades
+    let futuresTrades = 0;
+    try {
+      const ts  = Date.now();
+      const q   = `symbol=ETHUSDT&limit=1000&timestamp=${ts}&recvWindow=10000`;
+      const sig = await hmacSign(env.BINANCE_SECRET, q);
+      const res = await fetch(
+        `https://fapi.binance.com/fapi/v1/userTrades?${q}&signature=${sig}`,
+        { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
+      );
+      const trades = await res.json();
+      futuresTrades = Array.isArray(trades) ? trades.length : 0;
+    } catch(e) {}
+
+    const grandTotal = tcSummary.completedDeals + tcSummary.activeDeals + bnTotalTrades + futuresTrades;
+
+    _tradeHistoryCache = {
+      tcDeals:        tcSummary.completedDeals + tcSummary.activeDeals,
+      tcCompletedDeals: tcSummary.completedDeals,
+      tcActiveDeals:  tcSummary.activeDeals,
+      tcTotalOrders:  tcSummary.totalOrders,
+      tcProfit:       tcSummary.totalProfit,
+      bnTrades:       bnTotalTrades,
+      bnByPair,
+      futuresTrades,
+      grandTotal,
+      updatedAt:      new Date().toISOString(),
+    };
+    _tradeHistoryCacheTime = now;
+
+    return json({ ..._tradeHistoryCache, cached: false });
+  } catch(e) {
+    return json({ error: e.message }, 500);
+  }
+}
+
 // ── ALGO BOT ENDPOINTS ───────────────────────────────────────
 // Returns actual invested capital per bot from Binance
 // Requires Read permission on API key
@@ -1462,12 +1550,21 @@ export default {
     if(request.method==='OPTIONS') return new Response(null,{headers:CORS});
     try{
       if(path==='/api/reconciliation')  return await getReconciliation(env);
+      if(path==='/api/trade-history')   return await getTradeHistory(env);
       if(path==='/api/my-ip') {
         try {
           const r = await fetch('https://api.ipify.org?format=json');
           const d = await r.json();
-          return json({ ip: d.ip, note: 'This is the outbound IP of your Cloudflare Worker' });
+          return json({ cloudflareWorkerIp: d.ip, note: 'IPv6 — Cloudflare Worker outbound IP' });
         } catch(e) { return json({ error: e.message }); }
+      }
+      if(path==='/api/render-ip') {
+        try {
+          // Ask the Render proxy to fetch its own outbound IP
+          const r = await fetch('https://tc-proxy-h2pp.onrender.com/my-ip');
+          const d = await r.json();
+          return json({ renderIp: d.ip, note: 'This is the Render proxy outbound IPv4' });
+        } catch(e) { return json({ error: e.message, note: 'Render proxy may not have /my-ip endpoint yet' }); }
       }
       if(path==='/api/algo-spot')      return await getAlgoSpotBots(env);
       if(path==='/api/algo-futures')   return await getAlgoFutureBots(env);

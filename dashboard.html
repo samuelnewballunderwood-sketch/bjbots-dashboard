@@ -758,10 +758,10 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
     <div class="kpi-value" id="allocated-capital">$3,169</div>
     <div class="kpi-sub">Across 12 bots</div>
   </div>
-  <div class="kpi">
-    <div class="kpi-label">Trades <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Trades</div>Buy/sell executions across all bots. Low trade count with high capital = warning sign.</span></span></div>
+  <div class="kpi" id="trades-kpi" style="cursor:pointer" title="Click to load full lifetime trade history">
+    <div class="kpi-label">Trades <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Trades</div>Lifetime buy/sell executions across all bots — 3Commas deal cycles + Binance trade history. Click to refresh.</span></span></div>
     <div class="kpi-value" id="total-trades-val">—</div>
-    <div class="kpi-sub" id="total-trades-sub">All bots combined</div>
+    <div class="kpi-sub" id="total-trades-sub">Loading...</div>
   </div>
 </div>
 
@@ -832,11 +832,12 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
       <div class="recon-total-row"><span class="recon-total-lbl">Binance Total</span><span class="recon-total-val" id="rc-binance-total">—</span></div>
     </div>
     <div class="recon-block">
-      <div class="recon-block-title">Bot Allocations</div>
-      <div class="recon-row"><span class="recon-lbl">3Commas bots</span><span class="recon-val highlight" id="rc-tc-capital">—</span></div>
-      <div class="recon-row"><span class="recon-lbl">Binance native</span><span class="recon-val highlight" id="rc-bn-capital">—</span></div>
-      <div class="recon-row"><span class="recon-lbl">Total allocated</span><span class="recon-val" id="rc-allocated">—</span></div>
-      <div class="recon-row"><span class="recon-lbl">Unallocated</span><span class="recon-val" id="rc-unallocated">—</span></div>
+      <div class="recon-block-title">Capital Deployment</div>
+      <div class="recon-row"><span class="recon-lbl">In bot orders</span><span class="recon-val highlight" id="rc-bn-capital">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Futures margin</span><span class="recon-val highlight" id="rc-allocated">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Free / undeployed</span><span class="recon-val" id="rc-unallocated">—</span></div>
+      <div class="recon-row" style="opacity:.6"><span class="recon-lbl" style="font-style:italic">3Commas managed</span><span class="recon-val" id="rc-tc-capital" style="color:var(--muted)">—</span></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px;font-style:italic">3Commas runs within Binance capital — not additive</div>
       <div class="recon-total-row"><span class="recon-total-lbl">Difference</span><span class="recon-total-val" id="rc-difference">—</span></div>
     </div>
     <div class="recon-block">
@@ -2915,6 +2916,7 @@ function checkPw() {
     });
     refreshAll();
     refreshDecisions();
+    setTimeout(loadTradeHistory, 3000); // load after initial data settles
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000); // 15 min
   } else {
     document.getElementById('pw-error').style.display='block';
@@ -2931,11 +2933,35 @@ if(sessionStorage.getItem('bjbots_auth')==='1'){
 setInterval(()=>{if(sessionStorage.getItem('bjbots_auth')==='1')refreshAll();},30000);
 setInterval(updateTime,1000);
 
+// Load full lifetime trade history — cached 10 mins
+async function loadTradeHistory() {
+  try {
+    var el  = document.getElementById('total-trades-val');
+    var sub = document.getElementById('total-trades-sub');
+    if (sub) sub.textContent = 'Loading...';
+    var data = await apiFetch('trade-history');
+    if (data && !data.error) {
+      var total = (data.grandTotal || 0).toLocaleString();
+      if (el) el.textContent = total;
+      if (sub) {
+        var parts = [];
+        if (data.tcDeals)  parts.push(data.tcDeals.toLocaleString() + ' 3Commas deals');
+        if (data.bnTrades) parts.push(data.bnTrades.toLocaleString() + ' Binance trades');
+        sub.textContent = parts.join(' · ') || 'All bots combined';
+      }
+    } else if (sub) { sub.textContent = 'All bots combined'; }
+  } catch(e) {
+    var sub2 = document.getElementById('total-trades-sub');
+    if (sub2) sub2.textContent = 'All bots combined';
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   if(sessionStorage.getItem('bjbots_auth')==='1'){
     document.getElementById('pw-overlay').style.display='none';
     refreshAll();
     refreshDecisions();
+    setTimeout(loadTradeHistory, 3000);
     _decisionInterval = setInterval(refreshDecisions, 15 * 60 * 1000);
   }
   document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
@@ -3020,9 +3046,9 @@ function _syncReconciliation(r) {
   // Bot allocations
   set('rc-tc-capital',   fmtUSD2(r.tcCapital));
   set('rc-bn-capital',   fmtUSD2(r.bnCapital));
-  set('rc-allocated',    fmtUSD2(r.allocatedCapital));
-  const unallocated = (r.binanceTotal || 0) - (r.allocatedCapital || 0);
-  set('rc-unallocated',  fmtUSD2(Math.max(0, unallocated)));
+  set('rc-allocated',    fmtUSD2(r.futuresTotal));
+  const unallocated = Math.max(0, (r.spotFree || 0) - (r.spotEarn || 0));
+  set('rc-unallocated',  fmtUSD2(unallocated));
 
   const diff = r.difference || 0;
   const diffEl = document.getElementById('rc-difference');
@@ -3194,6 +3220,9 @@ document.addEventListener('DOMContentLoaded', function() {
   updateModeBadge();
   const inp = document.getElementById('pw-input');
   if (inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPw(); });
+  // Click trades KPI to force refresh
+  var tKpi = document.getElementById('trades-kpi');
+  if (tKpi) tKpi.addEventListener('click', function() { loadTradeHistory(); });
   if (sessionStorage.getItem('bjbots_auth')==='1') {
     document.getElementById('pw-overlay').style.display = 'none';
     ['kpi-strip','intel-zone'].forEach(function(id){
@@ -3202,6 +3231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     refreshAll();
     refreshDecisions();
+    setTimeout(loadTradeHistory, 3000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     fetch('/api/status').then(function(r){return r.json();}).then(function(s){
       var mBadge = document.getElementById('h-mode');
