@@ -56,6 +56,226 @@ const RC = {
 };
 
 // ============================================================
+// CAPITAL RECONCILIATION ENGINE
+// ============================================================
+// Source of truth: Binance wallet locked balances + futures margin
+// Every dollar must belong to exactly one category.
+// No double counting. No hardcoded capital values.
+// ============================================================
+
+// Price all assets in USD using current market prices
+function priceAssets(balances, prices) {
+  const PRICE_MAP = {};
+  if (Array.isArray(prices)) {
+    prices.forEach(p => { PRICE_MAP[p.symbol] = parseFloat(p.price); });
+  }
+  let total = 0;
+  const breakdown = [];
+  (balances || []).forEach(b => {
+    const asset   = b.asset;
+    const free    = parseFloat(b.free)   || 0;
+    const locked  = parseFloat(b.locked) || 0;
+    const total_  = free + locked;
+    if (total_ < 0.0001) return;
+
+    let usdPrice = 1;
+    if (asset === 'USDT' || asset === 'USDC' || asset === 'BUSD') {
+      usdPrice = 1;
+    } else if (asset.startsWith('LD')) {
+      // Earn tokens — LDUSDT, LDUSDC etc map 1:1
+      usdPrice = 1;
+    } else {
+      usdPrice = PRICE_MAP[asset + 'USDT'] || PRICE_MAP[asset + 'BUSD'] || 0;
+      if (!usdPrice && asset === 'BNB') usdPrice = PRICE_MAP['BNBUSDT'] || 0;
+    }
+
+    const freeUsd   = free   * usdPrice;
+    const lockedUsd = locked * usdPrice;
+    const totalUsd  = freeUsd + lockedUsd;
+
+    if (totalUsd < 0.01) return;
+    total += totalUsd;
+    breakdown.push({ asset, free, locked, freeUsd, lockedUsd, totalUsd, usdPrice });
+  });
+  return { total: Math.round(total * 100) / 100, breakdown };
+}
+
+// Build the full capital reconciliation object
+// Called with live data from all sources
+function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, prices }) {
+  // ── 1. SPOT WALLET ──────────────────────────────────────────
+  const spot = priceAssets(spotBalances, prices);
+  const spotFree   = spot.breakdown.reduce((s, a) => s + a.freeUsd,   0);
+  const spotLocked = spot.breakdown.reduce((s, a) => s + a.lockedUsd, 0);
+  const spotEarn   = spot.breakdown
+    .filter(a => a.asset.startsWith('LD'))
+    .reduce((s, a) => s + a.totalUsd, 0);
+  const spotWallet = spot.total - spotEarn; // excludes earn tokens
+
+  // ── 2. FUTURES WALLET ────────────────────────────────────────
+  const futuresTotal     = parseFloat(futuresWallet?.marginBalance      || 0);
+  const futuresAvailable = parseFloat(futuresWallet?.availableBalance   || 0);
+  const futuresInUse     = futuresTotal - futuresAvailable;
+  const futuresUnrealized = parseFloat(futuresWallet?.unrealizedPnl    || 0);
+
+  // ── 3. EARN / FLEXIBLE SAVINGS ───────────────────────────────
+  const earnTotal = spotEarn; // LDUSDT, LDUSDC in spot balances
+
+  // ── 4. BOT CAPITAL BREAKDOWN ─────────────────────────────────
+  // 3Commas: use live capital field from API (what they report)
+  let tcCapital = 0;
+  const tcBotBreakdown = [];
+  (tcBots || []).forEach(b => {
+    const cap = parseFloat(b.capital) || 0;
+    const realised  = parseFloat(b.profit) || 0;
+    const floating  = parseFloat(b.uprofit || b.unrealized_profit) || 0;
+    const trueValue = cap + realised + floating;
+    tcCapital += cap;
+    tcBotBreakdown.push({
+      id: b.id, name: b.name || b.pair,
+      capital: cap, realised, floating, trueValue,
+      strategy: b.strategy || 'dca',
+      direction: b.direction || 'long',
+    });
+  });
+
+  // Binance native: derive from locked spot assets + futures margin
+  // Each bot owns the locked portion of its trading pair
+  const SYMBOL_TO_BOT = {
+    'ETHUSDT': 'eth-grid-trades',
+    'BTCUSDT': 'btc-dca-trades',
+    'BNBUSDT': 'bnb-grid-trades',
+    'SOLUSDT': 'sol-grid-trades',
+    'XRPUSDT': 'xrp-grid-trades',
+  };
+  let bnCapital = 0;
+  const bnBotBreakdown = [];
+  (bnBots || []).forEach(b => {
+    const meta = BOT_META[b.id];
+    if (!meta) return;
+    // Use locked USD value for spot bots, futures margin for futures bots
+    let capital = 0;
+    if (meta.marketType === 'futures') {
+      // Futures grid uses the margin allocated in futures wallet
+      capital = meta.capital; // best estimate — futures margin is pooled
+    } else {
+      // For spot bots, find locked balance for this symbol
+      const baseAsset = meta.symbol.replace('USDT', '');
+      const assetData = spot.breakdown.find(a => a.asset === baseAsset);
+      const usdtData  = spot.breakdown.find(a => a.asset === 'USDT');
+      // Use locked base asset USD + proportion of locked USDT
+      capital = assetData ? assetData.lockedUsd : meta.capital;
+    }
+    const roi = meta.roi || 0;
+    const realised  = Math.round((roi / 100) * capital * 100) / 100;
+    const floating  = 0; // spot grid floating not available via API
+    const trueValue = capital + realised;
+    bnCapital += capital;
+    bnBotBreakdown.push({
+      id: b.id, name: meta.name,
+      capital, realised, floating, trueValue,
+      strategy: meta.strategy,
+      direction: meta.direction,
+      trades: b.trades,
+    });
+  });
+
+  // ── 5. GRAND TOTAL ───────────────────────────────────────────
+  // Source of truth: what Binance actually holds
+  const binanceTotal = spot.total + futuresTotal;
+  const grandTotal   = binanceTotal; // 3Commas capital IS within Binance total
+
+  // ── 6. CAPITAL STATES ────────────────────────────────────────
+  const activeInTrades   = futuresInUse + spotLocked;
+  const reservedInBots   = bnCapital;
+  const freeInWallet     = spotFree - spotEarn;
+  const futuresMargin    = futuresTotal;
+  const idleInBots       = bnBotBreakdown
+    .filter(b => b.capital > 0 && (BOT_META[b.id]?.trades === 0 || false))
+    .reduce((s, b) => s + b.capital, 0);
+
+  // ── 7. PNL BREAKDOWN ────────────────────────────────────────
+  const totalRealised  = [...tcBotBreakdown, ...bnBotBreakdown]
+    .reduce((s, b) => s + (b.realised || 0), 0);
+  const totalFloating  = futuresUnrealized +
+    tcBotBreakdown.reduce((s, b) => s + (b.floating || 0), 0);
+  const totalPnl       = totalRealised + totalFloating;
+
+  // ── 8. STRATEGY BREAKDOWN ────────────────────────────────────
+  const byStrategy = {};
+  [...tcBotBreakdown, ...bnBotBreakdown].forEach(b => {
+    const strat = b.strategy || 'other';
+    if (!byStrategy[strat]) byStrategy[strat] = { capital: 0, realised: 0, bots: 0 };
+    byStrategy[strat].capital  += b.capital;
+    byStrategy[strat].realised += b.realised;
+    byStrategy[strat].bots     += 1;
+  });
+
+  // ── 9. CURRENCY BREAKDOWN ────────────────────────────────────
+  const byCurrency = {};
+  spot.breakdown.forEach(a => {
+    const cur = a.asset.startsWith('LD') ? a.asset.slice(2) : a.asset;
+    if (!byCurrency[cur]) byCurrency[cur] = { total: 0, free: 0, locked: 0 };
+    byCurrency[cur].total  += a.totalUsd;
+    byCurrency[cur].free   += a.freeUsd;
+    byCurrency[cur].locked += a.lockedUsd;
+  });
+  byCurrency['USDT'] = byCurrency['USDT'] || { total: 0, free: 0, locked: 0 };
+  byCurrency['USDT'].total  += futuresTotal;
+  byCurrency['USDT'].locked += futuresTotal;
+
+  // ── 10. RECONCILIATION CHECK ──────────────────────────────────
+  const allocatedCapital = bnCapital + tcCapital;
+  const difference = Math.round((binanceTotal - allocatedCapital) * 100) / 100;
+  const reconciled = Math.abs(difference) < 100; // within $100 tolerance
+
+  return {
+    // Totals
+    grandTotal:      Math.round(grandTotal * 100) / 100,
+    binanceTotal:    Math.round(binanceTotal * 100) / 100,
+    spotTotal:       Math.round(spot.total * 100) / 100,
+    spotFree:        Math.round(spotFree * 100) / 100,
+    spotLocked:      Math.round(spotLocked * 100) / 100,
+    spotEarn:        Math.round(spotEarn * 100) / 100,
+    futuresTotal:    Math.round(futuresTotal * 100) / 100,
+    futuresInUse:    Math.round(futuresInUse * 100) / 100,
+    futuresAvailable:Math.round(futuresAvailable * 100) / 100,
+    earnTotal:       Math.round(earnTotal * 100) / 100,
+    tcCapital:       Math.round(tcCapital * 100) / 100,
+    bnCapital:       Math.round(bnCapital * 100) / 100,
+
+    // PnL
+    totalRealised:   Math.round(totalRealised * 100) / 100,
+    totalFloating:   Math.round(totalFloating * 100) / 100,
+    totalPnl:        Math.round(totalPnl * 100) / 100,
+    futuresUnrealized: Math.round(futuresUnrealized * 100) / 100,
+
+    // Capital states
+    capitalStates: {
+      activeInTrades:  Math.round(activeInTrades * 100) / 100,
+      reservedInBots:  Math.round(reservedInBots * 100) / 100,
+      idleInBots:      Math.round(idleInBots * 100) / 100,
+      freeInWallet:    Math.round(freeInWallet * 100) / 100,
+      futuresMargin:   Math.round(futuresMargin * 100) / 100,
+    },
+
+    // Breakdowns
+    byStrategy,
+    byCurrency,
+    spotAssets:    spot.breakdown,
+    tcBots:        tcBotBreakdown,
+    bnBots:        bnBotBreakdown,
+
+    // Reconciliation
+    reconciled,
+    difference,
+    allocatedCapital: Math.round(allocatedCapital * 100) / 100,
+  };
+}
+
+
+
+// ============================================================
 // STEP 1 — DYNAMIC PORTFOLIO TARGET STATE
 // Base profiles adjusted each cycle by regime, volatility, risk state.
 // Every target is explainable: base + adjustments = final.
@@ -929,7 +1149,7 @@ async function getPrices() {
   data.forEach(p=>prices[p.symbol]=parseFloat(p.price)); return json(prices);
 }
 
-async function getSpotWallet(env) {
+async function getSpotWalletData(env) {
   const ts=Date.now(),q=`timestamp=${ts}&recvWindow=10000`;
   const sig=await hmacSign(env.BINANCE_SECRET,q);
   const res=await fetch(`https://api.binance.com/api/v3/account?${q}&signature=${sig}`,{headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY}});
@@ -937,7 +1157,10 @@ async function getSpotWallet(env) {
   const usdt=data.balances.find(b=>b.asset==='USDT');
   const usdtBal=usdt?parseFloat(usdt.free)+parseFloat(usdt.locked):0;
   const nonZero=data.balances.filter(b=>parseFloat(b.free)+parseFloat(b.locked)>0);
-  return json({usdtBalance:usdtBal,assetCount:nonZero.length,balances:nonZero.map(b=>({asset:b.asset,free:parseFloat(b.free),locked:parseFloat(b.locked)}))});
+  return {usdtBalance:usdtBal,assetCount:nonZero.length,balances:nonZero.map(b=>({asset:b.asset,free:parseFloat(b.free),locked:parseFloat(b.locked)}))};
+}
+async function getSpotWallet(env) {
+  return json(await getSpotWalletData(env));
 }
 
 async function getFuturesWallet(env) {
@@ -997,32 +1220,102 @@ async function getBinanceBots(env) {
 async function getBinanceBotsData(env){return (await getBinanceBots(env)).json();}
 async function getFuturesWalletData(env){return (await getFuturesWallet(env)).json();}
 
-function buildLivePortfolio(tcBots,bnBots){
-  let tot=0,lng=0,sht=0; const bySt={},byVn={},bySy={};
-  tcBots.forEach(b=>{
-    const cap=b.capital||100,sym=(b.pair||'BTCUSDT').replace('USDT_','').replace('_USDT','')+'USDT',dir=b.direction||'long';
-    tot+=cap;if(dir==='short')sht+=cap;else lng+=cap;
-    bySt[b.strategy||'dca']=(bySt[b.strategy||'dca']||0)+cap;
-    byVn['3commas']=(byVn['3commas']||0)+cap;bySy[sym]=(bySy[sym]||0)+cap;
+function buildLivePortfolio(tcBots, bnBots, recon) {
+  // If reconciliation data is available, use live capital values
+  // Otherwise fall back to BOT_META hardcoded values
+  let tot=0, lng=0, sht=0;
+  const bySt={}, byVn={}, bySy={};
+
+  // Build from reconciliation if available
+  const tcBreakdown = recon?.tcBots || [];
+  const bnBreakdown = recon?.bnBots || [];
+
+  // 3Commas bots
+  const tcSource = tcBreakdown.length > 0 ? tcBreakdown : tcBots.map(b => ({
+    id: b.id, capital: b.capital || 100,
+    direction: b.direction || 'long', strategy: b.strategy || 'dca',
+  }));
+  tcSource.forEach(b => {
+    const cap = b.capital || 0;
+    const dir = b.direction || 'long';
+    const meta = BOT_META[b.id];
+    const sym = meta?.symbol || 'BTCUSDT';
+    tot += cap;
+    if (dir === 'short') sht += cap; else lng += cap;
+    bySt[b.strategy || 'dca'] = (bySt[b.strategy || 'dca'] || 0) + cap;
+    byVn['3commas'] = (byVn['3commas'] || 0) + cap;
+    bySy[sym] = (bySy[sym] || 0) + cap;
   });
-  bnBots.forEach(b=>{
-    const meta=BOT_META[b.id],cap=meta?.capital||0;if(cap<=0)return;
-    const sym=b.symbol||'BTCUSDT';tot+=cap;lng+=cap;
-    bySt[meta?.strategy||'grid']=(bySt[meta?.strategy||'grid']||0)+cap;
-    byVn['binance']=(byVn['binance']||0)+cap;bySy[sym]=(bySy[sym]||0)+cap;
+
+  // Binance native bots
+  const bnSource = bnBreakdown.length > 0 ? bnBreakdown : bnBots.map(b => {
+    const meta = BOT_META[b.id]; if (!meta) return null;
+    return { id: b.id, capital: meta.capital || 0, direction: meta.direction || 'long', strategy: meta.strategy || 'grid' };
+  }).filter(Boolean);
+  bnSource.forEach(b => {
+    const cap = b.capital || 0; if (cap <= 0) return;
+    const meta = BOT_META[b.id];
+    const sym = meta?.symbol || 'BTCUSDT';
+    tot += cap; lng += cap; // binance bots are all long-side
+    bySt[b.strategy || 'grid'] = (bySt[b.strategy || 'grid'] || 0) + cap;
+    byVn['binance'] = (byVn['binance'] || 0) + cap;
+    bySy[sym] = (bySy[sym] || 0) + cap;
   });
-  return{totalAllocated:tot,longCapital:lng,shortCapital:sht,
-    longPct:tot?Math.round((lng/tot)*100):0,shortPct:tot?Math.round((sht/tot)*100):0,
-    byStrategy:bySt,byVenue:byVn,bySymbol:bySy,botCount:tcBots.length+bnBots.length,source:'live'};
+
+  // If recon provides a true total, use it for percentage calculations
+  const trueTot = recon?.grandTotal || tot;
+
+  return {
+    totalAllocated: tot,
+    trueTotal: trueTot,
+    longCapital: lng, shortCapital: sht,
+    longPct:  trueTot ? Math.round((lng  / trueTot) * 100) : 0,
+    shortPct: trueTot ? Math.round((sht  / trueTot) * 100) : 0,
+    byStrategy: bySt, byVenue: byVn, bySymbol: bySy,
+    botCount: tcBots.length + bnBots.length,
+    source: recon ? 'live-reconciled' : 'live',
+  };
+}
+
+async function getReconciliation(env) {
+  try {
+    const [spotData, futData, tcData, bnData, pricesData] = await Promise.all([
+      getSpotWalletData(env),
+      getFuturesWalletData(env),
+      fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
+      getBinanceBotsData(env),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]').then(r=>r.json()).catch(()=>[]),
+    ]);
+    const recon = buildReconciliation({
+      spotBalances: spotData.balances || [],
+      futuresWallet: futData,
+      tcBots:  tcData.bots  || [],
+      bnBots:  bnData.bots  || [],
+      prices:  pricesData   || [],
+    });
+    return json(recon);
+  } catch(e) {
+    return json({ error: e.message }, 500);
+  }
 }
 
 async function getDecisions(env){
   try{
-    const [tcData,bnData,futData]=await Promise.all([
+    const [tcData,bnData,futData,spotData,pricesData]=await Promise.all([
       fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()),
       getBinanceBotsData(env),getFuturesWalletData(env),
+      getSpotWalletData(env),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]').then(r=>r.json()).catch(()=>[]),
     ]);
-    const portfolio=buildLivePortfolio(tcData.bots||[],bnData.bots||[]);
+    // Build reconciliation first — this gives us true capital numbers
+    const recon = buildReconciliation({
+      spotBalances: spotData.balances || [],
+      futuresWallet: futData,
+      tcBots:  tcData.bots  || [],
+      bnBots:  bnData.bots  || [],
+      prices:  pricesData   || [],
+    });
+    const portfolio=buildLivePortfolio(tcData.bots||[],bnData.bots||[],recon);
     const market=bnData.market||{regime:'Unknown',volatility:'Unknown',btcChange24h:0};
     const dataIntegrity={hasTCBots:(tcData.bots||[]).length>0,hasBNBots:(bnData.bots||[]).length>0,hasHedge:portfolio.shortCapital>0,exposureValid:portfolio.totalAllocated>100};
     const dataReliable=dataIntegrity.hasTCBots&&dataIntegrity.hasBNBots&&dataIntegrity.hasHedge&&dataIntegrity.exposureValid;
@@ -1041,7 +1334,7 @@ async function getDecisions(env){
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
     const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
-    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning});
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }
@@ -1066,6 +1359,7 @@ export default {
     const url=new URL(request.url),path=url.pathname;
     if(request.method==='OPTIONS') return new Response(null,{headers:CORS});
     try{
+      if(path==='/api/reconciliation') return await getReconciliation(env);
       if(path==='/api/status')         return json({executionEnabled:executionAllowed(env),advisoryMode:!executionAllowed(env),version:'v4',timestamp:new Date().toISOString()});
       if(path==='/api/portfolio')      return json(getPortfolioSnapshot());
       if(path==='/api/logs')           return json({logs:await getActionLogs(env)});

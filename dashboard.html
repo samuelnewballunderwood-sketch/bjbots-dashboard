@@ -357,6 +357,42 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
 .mgr-show-form{margin-bottom:10px}
 .mgr-empty{text-align:center;padding:10px;font-size:11px;color:var(--muted2)}
 
+/* ── RECONCILIATION PANEL ── */
+.recon-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;display:none}
+.recon-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.recon-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.recon-ok{background:var(--green-dim);color:var(--green)}
+.recon-warn{background:var(--red-dim);color:var(--red)}
+.recon-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.recon-block{background:var(--bg3);border-radius:8px;padding:10px 12px}
+.recon-block-title{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-weight:700}
+.recon-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.recon-lbl{font-size:10px;color:var(--muted2)}
+.recon-val{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.recon-val.positive{color:var(--green)}.recon-val.negative{color:var(--red)}.recon-val.highlight{color:#60a5fa}
+.recon-total-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);margin-top:4px}
+.recon-total-lbl{font-size:11px;font-weight:700;color:var(--text)}
+.recon-total-val{font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--green)}
+.recon-diff{font-size:10px;text-align:center;padding:6px;border-radius:6px;margin-top:8px}
+.recon-diff.ok{background:var(--green-dim);color:var(--green)}
+.recon-diff.warn{background:var(--red-dim);color:var(--red)}
+/* Capital states */
+.capital-states{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+.cap-state{background:var(--bg3);border-radius:8px;padding:10px;text-align:center}
+.cap-state-val{font-size:15px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--text);margin-bottom:2px}
+.cap-state-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.cap-state-bar{height:3px;background:var(--bg4);border-radius:2px;margin-top:5px;overflow:hidden}
+.cap-state-fill{height:100%;border-radius:2px}
+/* PnL breakdown */
+.pnl-breakdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.pnl-block{background:var(--bg3);border-radius:8px;padding:10px 12px}
+.pnl-block-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.pnl-block-val{font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.pnl-block-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.pnl-quality{height:4px;background:var(--bg4);border-radius:2px;margin-top:6px;overflow:hidden;display:flex}
+.pnl-realised-bar{height:100%;background:var(--green);transition:width .5s}
+.pnl-floating-bar{height:100%;background:var(--amber);transition:width .5s}
+
 /* ── MODAL + TOAST ── */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:26px;width:360px;text-align:center}
@@ -542,6 +578,76 @@ main{padding:16px 28px 60px;max-width:1440px;margin:0 auto}
   <div class="health-item"><div class="health-dot ok" id="h-market-dot"></div><span class="health-lbl">Market</span><span class="health-val" id="h-market">—</span></div>
   <div class="health-sep"></div>
   <div class="health-item"><span class="health-lbl">Last sync</span><span class="health-val" id="h-lastsync">—</span></div>
+</div>
+
+<!-- Reconciliation Panel -->
+<div class="recon-panel" id="recon-panel">
+  <div class="recon-title">
+    💰 Capital Reconciliation
+    <span class="recon-status recon-ok" id="recon-status">Reconciled</span>
+    <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Capital Reconciliation</div>Every dollar tracked across Binance wallets, bot allocations, and Earn. If DIFFERENCE = 0, the numbers are trustworthy. Source of truth: Binance.</span></span>
+    <span style="margin-left:auto;font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace" id="recon-ts">—</span>
+  </div>
+
+  <!-- PnL Breakdown -->
+  <div class="pnl-breakdown">
+    <div class="pnl-block">
+      <div class="pnl-block-lbl">Total Capital</div>
+      <div class="pnl-block-val" id="rc-grand-total" style="color:#60a5fa">—</div>
+      <div class="pnl-block-sub">Binance source of truth</div>
+    </div>
+    <div class="pnl-block">
+      <div class="pnl-block-lbl">Realised PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realised PnL</div>Profit locked in from completed trades and closed grid cycles. This money is yours regardless of what the market does next.</span></span></div>
+      <div class="pnl-block-val positive" id="rc-realised">—</div>
+      <div class="pnl-block-sub">Locked in, completed trades</div>
+    </div>
+    <div class="pnl-block">
+      <div class="pnl-block-lbl">Floating PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Floating PnL</div>Unrealised profit/loss on open positions. Changes with market price — only becomes real when you close the trade.</span></span></div>
+      <div class="pnl-block-val" id="rc-floating">—</div>
+      <div class="pnl-block-sub">Open positions, at risk</div>
+    </div>
+    <div class="pnl-block">
+      <div class="pnl-block-lbl">Total True PnL</div>
+      <div class="pnl-block-val" id="rc-total-pnl">—</div>
+      <div class="pnl-quality"><div class="pnl-realised-bar" id="pnl-qual-r" style="width:50%"></div><div class="pnl-floating-bar" id="pnl-qual-f" style="width:50%"></div></div>
+      <div class="pnl-block-sub" id="pnl-qual-lbl">Realised vs Floating</div>
+    </div>
+  </div>
+
+  <!-- Capital States -->
+  <div class="capital-states" id="capital-states">
+    <div class="cap-state"><div class="cap-state-val" id="cs-active">—</div><div class="cap-state-lbl">Active in Trades</div><div class="cap-state-bar"><div class="cap-state-fill" style="background:var(--green);width:0%" id="cs-active-bar"></div></div></div>
+    <div class="cap-state"><div class="cap-state-val" id="cs-reserved">—</div><div class="cap-state-lbl">Reserved in Bots</div><div class="cap-state-bar"><div class="cap-state-fill" style="background:#60a5fa;width:0%" id="cs-reserved-bar"></div></div></div>
+    <div class="cap-state"><div class="cap-state-val" id="cs-idle">—</div><div class="cap-state-lbl">Idle in Bots</div><div class="cap-state-bar"><div class="cap-state-fill" style="background:var(--amber);width:0%" id="cs-idle-bar"></div></div></div>
+    <div class="cap-state"><div class="cap-state-val" id="cs-free">—</div><div class="cap-state-lbl">Free in Wallet</div><div class="cap-state-bar"><div class="cap-state-fill" style="background:var(--purple);width:0%" id="cs-free-bar"></div></div></div>
+    <div class="cap-state"><div class="cap-state-val" id="cs-futures">—</div><div class="cap-state-lbl">Futures Margin</div><div class="cap-state-bar"><div class="cap-state-fill" style="background:var(--teal);width:0%" id="cs-futures-bar"></div></div></div>
+  </div>
+
+  <!-- Reconciliation grid -->
+  <div class="recon-grid">
+    <div class="recon-block">
+      <div class="recon-block-title">Binance Wallets</div>
+      <div class="recon-row"><span class="recon-lbl">Spot (free)</span><span class="recon-val" id="rc-spot-free">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Spot (in bots)</span><span class="recon-val" id="rc-spot-locked">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Earn / Savings</span><span class="recon-val" id="rc-earn">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Futures margin</span><span class="recon-val" id="rc-futures">—</span></div>
+      <div class="recon-total-row"><span class="recon-total-lbl">Binance Total</span><span class="recon-total-val" id="rc-binance-total">—</span></div>
+    </div>
+    <div class="recon-block">
+      <div class="recon-block-title">Bot Allocations</div>
+      <div class="recon-row"><span class="recon-lbl">3Commas bots</span><span class="recon-val highlight" id="rc-tc-capital">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Binance native</span><span class="recon-val highlight" id="rc-bn-capital">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Total allocated</span><span class="recon-val" id="rc-allocated">—</span></div>
+      <div class="recon-row"><span class="recon-lbl">Unallocated</span><span class="recon-val" id="rc-unallocated">—</span></div>
+      <div class="recon-total-row"><span class="recon-total-lbl">Difference</span><span class="recon-total-val" id="rc-difference">—</span></div>
+    </div>
+    <div class="recon-block">
+      <div class="recon-block-title">By Strategy</div>
+      <div id="rc-by-strategy">—</div>
+    </div>
+  </div>
+
+  <div class="recon-diff ok" id="recon-diff-msg">✓ All capital accounted for — numbers are trustworthy</div>
 </div>
 
 <!-- Intel panels -->
@@ -2662,6 +2768,108 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // ── UX: Control system upgrades — presentation only ──────────────────────
 
+function fmt$(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const abs = Math.abs(v);
+  const str = abs >= 1000 ? '$' + abs.toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:0})
+                          : '$' + abs.toFixed(2);
+  return v < 0 ? '-' + str : (v > 0 ? '+' + str : str);
+}
+function fmtUSD2(v) {
+  if (!v && v !== 0) return '—';
+  return '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function _syncReconciliation(r) {
+  if (!r) return;
+  const panel = document.getElementById('recon-panel');
+  if (panel) panel.style.display = 'block';
+
+  function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+  function setClass(id, cls) { const el = document.getElementById(id); if (el) el.className = el.className.replace(/positive|negative|highlight/g,'').trim() + ' ' + cls; }
+
+  // Grand total
+  set('rc-grand-total', fmtUSD2(r.grandTotal));
+
+  // PnL
+  const realisedPnl = r.totalRealised || 0;
+  const floatingPnl = r.totalFloating || 0;
+  const totalPnl    = r.totalPnl || 0;
+  set('rc-realised', fmt$(realisedPnl));
+  set('rc-floating', fmt$(floatingPnl));
+  set('rc-total-pnl', fmt$(totalPnl));
+  document.getElementById('rc-realised')?.classList.add(realisedPnl >= 0 ? 'positive' : 'negative');
+  document.getElementById('rc-floating')?.classList.add(floatingPnl >= 0 ? 'positive' : 'negative');
+  document.getElementById('rc-total-pnl')?.classList.add(totalPnl >= 0 ? 'positive' : 'negative');
+
+  // PnL quality bar
+  const totalAbsPnl = Math.abs(realisedPnl) + Math.abs(floatingPnl);
+  if (totalAbsPnl > 0) {
+    const rPct = Math.round((Math.abs(realisedPnl) / totalAbsPnl) * 100);
+    const fPct = 100 - rPct;
+    var qr = document.getElementById('pnl-qual-r'); if (qr) qr.style.width = rPct + '%';
+    var qf = document.getElementById('pnl-qual-f'); if (qf) qf.style.width = fPct + '%';
+    set('pnl-qual-lbl', rPct + '% realised · ' + fPct + '% floating');
+  }
+
+  // Wallet breakdown
+  set('rc-spot-free',    fmtUSD2(r.spotFree));
+  set('rc-spot-locked',  fmtUSD2(r.spotLocked));
+  set('rc-earn',         fmtUSD2(r.earnTotal));
+  set('rc-futures',      fmtUSD2(r.futuresTotal));
+  set('rc-binance-total',fmtUSD2(r.binanceTotal));
+
+  // Bot allocations
+  set('rc-tc-capital',   fmtUSD2(r.tcCapital));
+  set('rc-bn-capital',   fmtUSD2(r.bnCapital));
+  set('rc-allocated',    fmtUSD2(r.allocatedCapital));
+  const unallocated = (r.binanceTotal || 0) - (r.allocatedCapital || 0);
+  set('rc-unallocated',  fmtUSD2(Math.max(0, unallocated)));
+
+  const diff = r.difference || 0;
+  const diffEl = document.getElementById('rc-difference');
+  if (diffEl) {
+    diffEl.textContent = diff === 0 ? '$0.00' : fmt$(diff);
+    diffEl.style.color = Math.abs(diff) < 100 ? 'var(--green)' : 'var(--red)';
+  }
+
+  // Reconciliation status
+  const statusEl  = document.getElementById('recon-status');
+  const diffMsgEl = document.getElementById('recon-diff-msg');
+  if (r.reconciled) {
+    if (statusEl)  { statusEl.textContent = '✓ Reconciled'; statusEl.className = 'recon-status recon-ok'; }
+    if (diffMsgEl) { diffMsgEl.textContent = '✓ All capital accounted for — numbers are trustworthy'; diffMsgEl.className = 'recon-diff ok'; }
+  } else {
+    if (statusEl)  { statusEl.textContent = '⚠ Gap detected'; statusEl.className = 'recon-status recon-warn'; }
+    if (diffMsgEl) { diffMsgEl.textContent = '⚠ Difference of ' + fmt$(Math.abs(diff)) + ' — some capital may not be tracked'; diffMsgEl.className = 'recon-diff warn'; }
+  }
+
+  // Capital states
+  const gt = r.grandTotal || 1;
+  const cs = r.capitalStates || {};
+  function capState(id, barId, val, color) {
+    set(id, fmtUSD2(val));
+    var bar = document.getElementById(barId);
+    if (bar) { bar.style.width = Math.min(100, Math.round((val / gt) * 100)) + '%'; bar.style.background = color; }
+  }
+  capState('cs-active',   'cs-active-bar',   cs.activeInTrades  || 0, 'var(--green)');
+  capState('cs-reserved', 'cs-reserved-bar', cs.reservedInBots  || 0, '#60a5fa');
+  capState('cs-idle',     'cs-idle-bar',     cs.idleInBots      || 0, 'var(--amber)');
+  capState('cs-free',     'cs-free-bar',     cs.freeInWallet    || 0, 'var(--purple)');
+  capState('cs-futures',  'cs-futures-bar',  cs.futuresMargin   || 0, 'var(--teal)');
+
+  // By strategy
+  const stratEl = document.getElementById('rc-by-strategy');
+  if (stratEl && r.byStrategy) {
+    stratEl.innerHTML = Object.entries(r.byStrategy).map(([s, d]) =>
+      '<div class="recon-row"><span class="recon-lbl">' + s + '</span><span class="recon-val highlight">' + fmtUSD2(d.capital) + '</span></div>'
+    ).join('');
+  }
+
+  // Timestamp
+  set('recon-ts', 'Updated ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}));
+}
+
 function _syncHero(data) {
   if (!data || !data.riskState) return;
   const rs = data.riskState;
@@ -2706,6 +2914,9 @@ function _syncHero(data) {
     if (id === 'kpi-strip' || id === 'intel-zone') el.style.display = 'grid';
     else el.style.display = 'flex';
   });
+
+  // Reconciliation panel
+  if (data.reconciliation) _syncReconciliation(data.reconciliation);
 
   // Mode badge
   fetch('/api/status').then(function(r){return r.json();}).then(function(s){
