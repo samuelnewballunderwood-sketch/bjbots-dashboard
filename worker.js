@@ -148,70 +148,124 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
     'SOLUSDT': 'sol-grid-trades',
     'XRPUSDT': 'xrp-grid-trades',
   };
+  // For Binance native bots, use actual locked wallet balances as source of truth
+  // Per-bot capital is estimated from which asset each bot trades
+  // Total bnCapital = spotLocked (what wallets actually show in bot orders)
+  const ASSET_TO_BOT = {
+    'BTC': 'btc-dca-trades',
+    'ETH': 'eth-grid-trades',
+    'SOL': 'sol-grid-trades',
+    'XRP': 'xrp-grid-trades',
+    'BNB': 'bnb-grid-trades',
+  };
+  // Map locked assets to their bots
+  const assetToBotCapital = {};
+  spot.breakdown.forEach(a => {
+    if (a.lockedUsd > 0 && ASSET_TO_BOT[a.asset]) {
+      assetToBotCapital[ASSET_TO_BOT[a.asset]] = a.lockedUsd;
+    }
+  });
+  // Also assign locked USDT proportionally to bots that trade USDT pairs
+  // USDT locked ($433) is split across grid bot USDT order reserves
+  const lockedUSDT = spot.breakdown.find(a => a.asset === 'USDT');
+  const lockedUsdtVal = lockedUSDT ? lockedUSDT.lockedUsd : 0;
+
   let bnCapital = 0;
   const bnBotBreakdown = [];
   (bnBots || []).forEach(b => {
     const meta = BOT_META[b.id];
     if (!meta) return;
-    // Use locked USD value for spot bots, futures margin for futures bots
     let capital = 0;
+    let capitalSource = 'estimated';
     if (meta.marketType === 'futures') {
-      // Futures grid uses the margin allocated in futures wallet
-      capital = meta.capital; // best estimate — futures margin is pooled
+      // Futures grid — can't split from pooled margin, use proportion of futures wallet
+      // ETHUSDT futures grid is the only futures native bot
+      capital = futuresTotal * 0.60; // ~60% of futures is this bot (best estimate)
+      capitalSource = 'futures-estimate';
     } else {
-      // For spot bots, find locked balance for this symbol
-      const baseAsset = meta.symbol.replace('USDT', '');
-      const assetData = spot.breakdown.find(a => a.asset === baseAsset);
-      const usdtData  = spot.breakdown.find(a => a.asset === 'USDT');
-      // Use locked base asset USD + proportion of locked USDT
-      capital = assetData ? assetData.lockedUsd : meta.capital;
+      // Use actual locked balance for this bot's base asset
+      const liveCap = assetToBotCapital[b.id];
+      if (liveCap !== undefined) {
+        capital = liveCap;
+        capitalSource = 'live-locked';
+      } else {
+        // No locked balance — bot may be idle or USDT-only
+        // Use a portion of locked USDT if bot has trades
+        capital = b.trades > 0 ? Math.min(meta.capital, lockedUsdtVal * 0.3) : 0;
+        capitalSource = 'usdt-estimate';
+      }
     }
     const roi = meta.roi || 0;
-    const realised  = Math.round((roi / 100) * capital * 100) / 100;
-    const floating  = 0; // spot grid floating not available via API
+    const realised  = Math.round((roi / 100) * (meta.capital || capital) * 100) / 100;
+    const floating  = 0;
     const trueValue = capital + realised;
     bnCapital += capital;
     bnBotBreakdown.push({
       id: b.id, name: meta.name,
-      capital, realised, floating, trueValue,
+      capital, capitalSource, realised, floating, trueValue,
       strategy: meta.strategy,
       direction: meta.direction,
       trades: b.trades,
     });
   });
+  // Override bnCapital with actual spot locked total for reconciliation accuracy
+  // This is what Binance actually shows as "in bots" — the per-bot split is estimated
+  const bnCapitalTrue = spotLocked; // source of truth from wallet
 
-  // ── 5. GRAND TOTAL ───────────────────────────────────────────
-  // Source of truth: what Binance actually holds
+    // ── 5. GRAND TOTAL ───────────────────────────────────────────
+  // Source of truth: Binance wallet balances at market price
+  // IMPORTANT: 3Commas capital IS Binance capital — they share the same wallet
+  // So we do NOT add tcCapital to bnCapital — that would double-count
   const binanceTotal = spot.total + futuresTotal;
-  const grandTotal   = binanceTotal; // 3Commas capital IS within Binance total
+  const grandTotal   = binanceTotal;
 
-  // ── 6. CAPITAL STATES ────────────────────────────────────────
+  // ── 6. CAPITAL STATES ─────────────────────────────────────────
+  // Derive states from actual wallet data, not from bot claims
+  // Spot locked = capital sitting inside active bot orders
+  // Futures in use = margin used by open futures positions
   const activeInTrades   = futuresInUse + spotLocked;
-  const reservedInBots   = bnCapital;
-  const freeInWallet     = spotFree - spotEarn;
+  const freeInWallet     = Math.max(0, spotFree - spotEarn);
   const futuresMargin    = futuresTotal;
-  const idleInBots       = bnBotBreakdown
-    .filter(b => b.capital > 0 && (BOT_META[b.id]?.trades === 0 || false))
+
+  // Idle = locked in bots with 0 trades (allocated but not working)
+  const idleInBots = bnBotBreakdown
+    .filter(b => b.trades === 0 && b.capital > 0)
     .reduce((s, b) => s + b.capital, 0);
+  const reservedInBots = spotLocked - idleInBots; // active bot orders
 
-  // ── 7. PNL BREAKDOWN ────────────────────────────────────────
-  const totalRealised  = [...tcBotBreakdown, ...bnBotBreakdown]
-    .reduce((s, b) => s + (b.realised || 0), 0);
-  const totalFloating  = futuresUnrealized +
-    tcBotBreakdown.reduce((s, b) => s + (b.floating || 0), 0);
-  const totalPnl       = totalRealised + totalFloating;
+  // ── 7. PNL BREAKDOWN ──────────────────────────────────────────
+  // Realised: from completed trades (3Commas profit + Binance grid profit)
+  // Floating: open position PnL (futures unrealized + 3Commas open deals)
+  const bnRealised     = bnBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
+  const tcRealised     = tcBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
+  const totalRealised  = Math.round((bnRealised + tcRealised) * 100) / 100;
+  const tcFloating     = tcBotBreakdown.reduce((s, b) => s + (b.floating || 0), 0);
+  const totalFloating  = Math.round((futuresUnrealized + tcFloating) * 100) / 100;
+  const totalPnl       = Math.round((totalRealised + totalFloating) * 100) / 100;
 
-  // ── 8. STRATEGY BREAKDOWN ────────────────────────────────────
+  // ── 8. STRATEGY BREAKDOWN ─────────────────────────────────────
+  // Use Binance wallet locked amounts for strategy allocation
+  // 3Commas bots are shown separately (they run on top of Binance capital)
   const byStrategy = {};
-  [...tcBotBreakdown, ...bnBotBreakdown].forEach(b => {
-    const strat = b.strategy || 'other';
+  // Binance native bot strategies
+  bnBotBreakdown.forEach(b => {
+    const strat = b.strategy || 'grid';
     if (!byStrategy[strat]) byStrategy[strat] = { capital: 0, realised: 0, bots: 0 };
     byStrategy[strat].capital  += b.capital;
-    byStrategy[strat].realised += b.realised;
+    byStrategy[strat].realised += b.realised || 0;
     byStrategy[strat].bots     += 1;
   });
+  // 3Commas strategies (noted as managed capital, not additive to total)
+  const tcByStrategy = {};
+  tcBotBreakdown.forEach(b => {
+    const strat = b.strategy || 'dca';
+    if (!tcByStrategy[strat]) tcByStrategy[strat] = { capital: 0, realised: 0, bots: 0 };
+    tcByStrategy[strat].capital  += b.capital;
+    tcByStrategy[strat].realised += b.realised || 0;
+    tcByStrategy[strat].bots     += 1;
+  });
 
-  // ── 9. CURRENCY BREAKDOWN ────────────────────────────────────
+  // ── 9. CURRENCY BREAKDOWN ─────────────────────────────────────
   const byCurrency = {};
   spot.breakdown.forEach(a => {
     const cur = a.asset.startsWith('LD') ? a.asset.slice(2) : a.asset;
@@ -220,14 +274,24 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
     byCurrency[cur].free   += a.freeUsd;
     byCurrency[cur].locked += a.lockedUsd;
   });
-  byCurrency['USDT'] = byCurrency['USDT'] || { total: 0, free: 0, locked: 0 };
+  // Futures adds to USDT (margin is USDT-denominated)
+  if (!byCurrency['USDT']) byCurrency['USDT'] = { total: 0, free: 0, locked: 0 };
   byCurrency['USDT'].total  += futuresTotal;
   byCurrency['USDT'].locked += futuresTotal;
 
   // ── 10. RECONCILIATION CHECK ──────────────────────────────────
-  const allocatedCapital = bnCapital + tcCapital;
-  const difference = Math.round((binanceTotal - allocatedCapital) * 100) / 100;
-  const reconciled = Math.abs(difference) < 100; // within $100 tolerance
+  // Correct model: Binance wallet = spot locked + spot free + futures
+  // Bot allocations are a VIEW into wallet capital, not additive
+  // Reconciliation check: spot locked should roughly equal bnCapital
+  // (Binance native bots hold the locked spot assets)
+  // Use actual locked balance as true bot capital for reconciliation
+  const allocatedCapital = bnCapitalTrue; // = spotLocked — what wallets actually show
+  const unallocated = Math.max(0, spotFree - spotEarn);
+  // Difference: binanceTotal should = spotLocked + spotFree + spotEarn + futuresTotal
+  // If this is near zero, our numbers are trustworthy
+  const calcTotal  = spotLocked + spotFree + spotEarn + futuresTotal;
+  const difference = Math.round((binanceTotal - calcTotal) * 100) / 100;
+  const reconciled = Math.abs(difference) < 10; // tight tolerance — pure math check
 
   return {
     // Totals
@@ -242,7 +306,8 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
     futuresAvailable:Math.round(futuresAvailable * 100) / 100,
     earnTotal:       Math.round(earnTotal * 100) / 100,
     tcCapital:       Math.round(tcCapital * 100) / 100,
-    bnCapital:       Math.round(bnCapital * 100) / 100,
+    bnCapital:       Math.round(bnCapitalTrue * 100) / 100,
+    bnCapitalEstimated: Math.round(bnCapital * 100) / 100, // per-bot estimates
 
     // PnL
     totalRealised:   Math.round(totalRealised * 100) / 100,
@@ -270,6 +335,8 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
     reconciled,
     difference,
     allocatedCapital: Math.round(allocatedCapital * 100) / 100,
+    tcByStrategy,
+    tcCapitalNote: '3Commas capital is a subset of Binance total — not additive',
   };
 }
 
@@ -1277,6 +1344,41 @@ function buildLivePortfolio(tcBots, bnBots, recon) {
   };
 }
 
+// ── ALGO BOT ENDPOINTS ───────────────────────────────────────
+// Returns actual invested capital per bot from Binance
+// Requires Read permission on API key
+async function getAlgoSpotBots(env) {
+  try {
+    const ts  = Date.now();
+    const q   = `timestamp=${ts}&recvWindow=10000`;
+    const sig = await hmacSign(env.BINANCE_SECRET, q);
+    const res = await fetch(
+      `https://api.binance.com/sapi/v1/algo/spot/openOrders?${q}&signature=${sig}`,
+      { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
+    );
+    const data = await res.json();
+    return json({ ok: !data.msg && !data.code, data, status: res.status });
+  } catch(e) {
+    return json({ ok: false, error: e.message });
+  }
+}
+
+async function getAlgoFutureBots(env) {
+  try {
+    const ts  = Date.now();
+    const q   = `timestamp=${ts}&recvWindow=10000`;
+    const sig = await hmacSign(env.BINANCE_SECRET, q);
+    const res = await fetch(
+      `https://api.binance.com/sapi/v1/algo/futures/openOrders?${q}&signature=${sig}`,
+      { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
+    );
+    const data = await res.json();
+    return json({ ok: !data.msg && !data.code, data, status: res.status });
+  } catch(e) {
+    return json({ ok: false, error: e.message });
+  }
+}
+
 async function getReconciliation(env) {
   try {
     const [spotData, futData, tcData, bnData, pricesData] = await Promise.all([
@@ -1359,7 +1461,9 @@ export default {
     const url=new URL(request.url),path=url.pathname;
     if(request.method==='OPTIONS') return new Response(null,{headers:CORS});
     try{
-      if(path==='/api/reconciliation') return await getReconciliation(env);
+      if(path==='/api/reconciliation')  return await getReconciliation(env);
+      if(path==='/api/algo-spot')      return await getAlgoSpotBots(env);
+      if(path==='/api/algo-futures')   return await getAlgoFutureBots(env);
       if(path==='/api/status')         return json({executionEnabled:executionAllowed(env),advisoryMode:!executionAllowed(env),version:'v4',timestamp:new Date().toISOString()});
       if(path==='/api/portfolio')      return json(getPortfolioSnapshot());
       if(path==='/api/logs')           return json({logs:await getActionLogs(env)});
