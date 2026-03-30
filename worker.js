@@ -1462,6 +1462,13 @@ export default {
     if(request.method==='OPTIONS') return new Response(null,{headers:CORS});
     try{
       if(path==='/api/reconciliation')  return await getReconciliation(env);
+      if(path==='/api/my-ip') {
+        try {
+          const r = await fetch('https://api.ipify.org?format=json');
+          const d = await r.json();
+          return json({ ip: d.ip, note: 'This is the outbound IP of your Cloudflare Worker' });
+        } catch(e) { return json({ error: e.message }); }
+      }
       if(path==='/api/algo-spot')      return await getAlgoSpotBots(env);
       if(path==='/api/algo-futures')   return await getAlgoFutureBots(env);
       if(path==='/api/status')         return json({executionEnabled:executionAllowed(env),advisoryMode:!executionAllowed(env),version:'v4',timestamp:new Date().toISOString()});
