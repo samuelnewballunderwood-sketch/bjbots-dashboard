@@ -1359,7 +1359,7 @@ async function getTradeHistory(env) {
     }
 
     // ── 3Commas: full deal history ──────────────────────────────────────
-    const tcSummary = await fetch('https://tc-proxy-eu.onrender.com/deals/summary')
+    const tcSummary = await fetch('https://tc-proxy-h2pp.onrender.com/deals/summary')
       .then(r => r.json())
       .catch(() => ({ completedDeals: 0, activeDeals: 0, totalOrders: 0, totalProfit: 0 }));
 
