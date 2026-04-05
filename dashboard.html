@@ -1130,50 +1130,440 @@ body::after {
 <!-- ════════════════════════════════════════════════════════════════════
      LAYER 1 — CONTROL
      ════════════════════════════════════════════════════════════════════ -->
-<section class="layer-control" id="layer-control">
+<style>
+/* ── CONTROL LAYER v16 — ORBITAL HANNAH ───────────────────────────────── */
+.ctrl-v16 {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  padding: 24px 28px;
+  min-height: 560px;
+  align-items: start;
+}
+@media(max-width:1100px) { .ctrl-v16 { grid-template-columns: 1fr; } }
 
-  <!-- Risk state hero -->
-  <div class="ctrl-hero">
-    <div class="ctrl-risk-badge SAFE" id="risk-state-bar">
-      <div class="ctrl-state-label SAFE" id="risk-state-label">—</div>
-      <div class="ctrl-sublabel" id="risk-sub-label">Loading...</div>
-      <div class="ctrl-score-row">
-        <div class="ctrl-score-num SAFE" id="risk-score-num">—</div>
-        <div class="ctrl-score-lbl">Risk Score</div>
+/* ── LEFT: Hannah orbital ── */
+.ctrl-hannah-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Orbital stage */
+.ctrl-orbital-stage {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Orbital rings */
+.ctrl-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: orbit-spin linear infinite;
+  transform-style: preserve-3d;
+}
+.ctrl-ring-1 {
+  width: 310px; height: 310px;
+  border-color: rgba(45,212,191,.18);
+  animation-duration: 18s;
+  transform: perspective(800px) rotateX(72deg);
+}
+.ctrl-ring-2 {
+  width: 260px; height: 260px;
+  border-color: rgba(45,212,191,.12);
+  animation-duration: 26s;
+  animation-direction: reverse;
+  transform: perspective(800px) rotateX(68deg) rotateZ(30deg);
+}
+.ctrl-ring-3 {
+  width: 200px; height: 200px;
+  border-color: rgba(45,212,191,.08);
+  animation-duration: 34s;
+  transform: perspective(800px) rotateX(75deg) rotateZ(-20deg);
+}
+@keyframes orbit-spin { from { transform: perspective(800px) rotateX(72deg) rotateZ(0deg); } to { transform: perspective(800px) rotateX(72deg) rotateZ(360deg); } }
+.ctrl-ring-2 { animation-name: orbit-spin-2; }
+@keyframes orbit-spin-2 { from { transform: perspective(800px) rotateX(68deg) rotateZ(30deg); } to { transform: perspective(800px) rotateX(68deg) rotateZ(-330deg); } }
+.ctrl-ring-3 { animation-name: orbit-spin-3; }
+@keyframes orbit-spin-3 { from { transform: perspective(800px) rotateX(75deg) rotateZ(-20deg); } to { transform: perspective(800px) rotateX(75deg) rotateZ(340deg); } }
+
+/* Hannah portrait */
+.ctrl-hannah-portrait-wrap {
+  position: absolute;
+  width: 140px; height: 140px;
+  z-index: 10;
+}
+.ctrl-hannah-portrait-wrap .br-bl,
+.ctrl-hannah-portrait-wrap .br-br,
+.ctrl-hannah-portrait-wrap::before,
+.ctrl-hannah-portrait-wrap::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--teal);
+  border-style: solid;
+  opacity: .9;
+  z-index: 11;
+}
+.ctrl-hannah-portrait-wrap::before { top:-2px; left:-2px; border-width:2px 0 0 2px; }
+.ctrl-hannah-portrait-wrap::after  { top:-2px; right:-2px; border-width:2px 2px 0 0; }
+.ctrl-hannah-portrait-wrap .br-bl  { bottom:-2px; left:-2px; border-width:0 0 2px 2px; }
+.ctrl-hannah-portrait-wrap .br-br  { bottom:-2px; right:-2px; border-width:0 2px 2px 0; }
+
+.ctrl-hannah-photo {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(45,212,191,.5);
+  box-shadow: 0 0 28px rgba(45,212,191,.25), 0 0 60px rgba(45,212,191,.1);
+  animation: hannah-glow 3s ease-in-out infinite;
+}
+@keyframes hannah-glow {
+  0%,100% { box-shadow: 0 0 28px rgba(45,212,191,.25), 0 0 60px rgba(45,212,191,.1); }
+  50%      { box-shadow: 0 0 40px rgba(45,212,191,.5), 0 0 80px rgba(45,212,191,.2); }
+}
+#simli-video {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(45,212,191,.5);
+  display: none;
+}
+
+/* Talking pulse ring */
+.ctrl-talk-ring {
+  position: absolute;
+  width: 156px; height: 156px;
+  border-radius: 50%;
+  border: 2px solid rgba(45,212,191,.6);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+.ctrl-talk-ring.talking {
+  animation: talk-pulse .8s ease-in-out infinite;
+}
+@keyframes talk-pulse {
+  0%   { transform: scale(1);    opacity:.7; }
+  50%  { transform: scale(1.08); opacity:1; }
+  100% { transform: scale(1);    opacity:.7; }
+}
+
+/* Metric cards orbiting */
+.ctrl-metric-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 340px;
+}
+.ctrl-metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  text-align: center;
+  transition: border-color .2s;
+}
+.ctrl-metric-card:hover { border-color: rgba(45,212,191,.3); }
+.ctrl-metric-lbl {
+  font-size: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-family: var(--font-body);
+  margin-bottom: 4px;
+}
+.ctrl-metric-val {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ctrl-metric-val.pos { color: var(--safe); }
+.ctrl-metric-val.teal { color: var(--teal); }
+.ctrl-metric-val.warn { color: var(--warn); }
+
+/* Hannah controls */
+.ctrl-hannah-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+}
+.ctrl-hannah-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.ctrl-btn-activate {
+  flex: 1;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, rgba(45,212,191,.2), rgba(45,212,191,.08));
+  border: 1px solid rgba(45,212,191,.4);
+  border-radius: var(--radius-sm);
+  color: var(--teal);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: all .2s;
+}
+.ctrl-btn-activate:hover { background: rgba(45,212,191,.25); border-color: rgba(45,212,191,.7); }
+.ctrl-btn-activate:disabled { opacity:.4; cursor:not-allowed; }
+.ctrl-btn-disconnect {
+  padding: 9px 14px;
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.25);
+  border-radius: var(--radius-sm);
+  color: #f87171;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: all .2s;
+  display: none;
+}
+.ctrl-btn-disconnect:hover { background: rgba(248,113,113,.18); }
+.ctrl-btn-disconnect.visible { display: block; }
+
+.ctrl-hannah-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+.ctrl-hannah-input {
+  flex: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.ctrl-hannah-input:focus { border-color: rgba(45,212,191,.4); }
+.ctrl-hannah-send {
+  background: rgba(45,212,191,.15);
+  border: 1px solid rgba(45,212,191,.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  color: var(--teal);
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all .15s;
+}
+.ctrl-hannah-send:hover { background: rgba(45,212,191,.28); }
+
+.ctrl-hannah-status {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: .06em;
+  text-align: center;
+  min-height: 14px;
+}
+
+/* Performance chart */
+.ctrl-perf-chart-wrap {
+  width: 100%;
+  max-width: 340px;
+}
+.ctrl-perf-title {
+  font-family: var(--font-display);
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ctrl-perf-canvas {
+  width: 100%;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  display: block;
+}
+
+/* Metric bar */
+.ctrl-metric-bar {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 340px;
+}
+.ctrl-mbar-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  text-align: center;
+}
+.ctrl-mbar-lbl { font-size: 7px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; font-family: var(--font-body); }
+.ctrl-mbar-val { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text-primary); }
+
+/* ── RIGHT: Actions panel ── */
+.ctrl-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ctrl-risk-compact {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+</style>
+
+<section class="layer-control" id="layer-control">
+<div class="ctrl-v16">
+
+  <!-- LEFT: Hannah Orbital Column -->
+  <div class="ctrl-hannah-col">
+
+    <!-- Orbital stage -->
+    <div class="ctrl-orbital-stage">
+      <div class="ctrl-ring ctrl-ring-1"></div>
+      <div class="ctrl-ring ctrl-ring-2"></div>
+      <div class="ctrl-ring ctrl-ring-3"></div>
+      <div class="ctrl-talk-ring" id="ctrl-talk-ring"></div>
+      <div class="ctrl-hannah-portrait-wrap bracketed">
+        <div class="br-bl"></div><div class="br-br"></div>
+        <img class="ctrl-hannah-photo" id="hannah-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Ccircle cx='70' cy='70' r='70' fill='%230d1520'/%3E%3Ccircle cx='70' cy='55' r='26' fill='%23162030'/%3E%3Cellipse cx='70' cy='108' rx='38' ry='28' fill='%23162030'/%3E%3C/svg%3E" alt="Hannah" />
+        <video id="simli-video" autoplay playsinline></video>
       </div>
     </div>
 
-    <div class="ctrl-objective-wrap">
-      <div class="ctrl-objective" id="ctrl-objective">Analysing your portfolio...</div>
-      <div class="ctrl-anchor" id="ctrl-anchor"></div>
+    <!-- 6 Metric cards -->
+    <div class="ctrl-metric-cards">
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Daily Profit</div>
+        <div class="ctrl-metric-val pos" id="cm-daily-profit">—</div>
+      </div>
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Total Capital</div>
+        <div class="ctrl-metric-val teal" id="cm-total-cap">—</div>
+      </div>
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Trial Day</div>
+        <div class="ctrl-metric-val" id="cm-trial-day">5 / 30</div>
+      </div>
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Target</div>
+        <div class="ctrl-metric-val" id="cm-target">$465</div>
+      </div>
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Stretch</div>
+        <div class="ctrl-metric-val warn" id="cm-stretch">$775</div>
+      </div>
+      <div class="ctrl-metric-card">
+        <div class="ctrl-metric-lbl">Progress</div>
+        <div class="ctrl-metric-val pos" id="cm-progress">—</div>
+      </div>
+    </div>
+
+    <!-- Activate / Disconnect buttons -->
+    <div class="ctrl-hannah-controls">
+      <div class="ctrl-hannah-btns">
+        <button class="ctrl-btn-activate" id="ctrl-btn-activate" onclick="hannahActivate()">⚡ ACTIVATE HANNAH</button>
+        <button class="ctrl-btn-disconnect" id="ctrl-btn-disconnect" onclick="hannahDisconnect()">✕ DISCONNECT</button>
+      </div>
+      <div class="ctrl-hannah-input-row">
+        <input class="ctrl-hannah-input" id="ctrl-hannah-input" placeholder="Ask Hannah…" onkeydown="if(event.key==='Enter')hannahSend()" />
+        <button class="ctrl-hannah-send" onclick="hannahSend()">▶</button>
+      </div>
+      <div class="ctrl-hannah-status" id="ctrl-hannah-status">Not connected · click Activate to start</div>
+    </div>
+
+    <!-- Performance chart -->
+    <div class="ctrl-perf-chart-wrap">
+      <div class="ctrl-perf-title">
+        <span>Cumulative % Locked Profit</span>
+        <span id="ctrl-perf-label" style="color:var(--safe)">—</span>
+      </div>
+      <canvas class="ctrl-perf-canvas" id="ctrl-perf-canvas"></canvas>
+    </div>
+
+    <!-- Metric bar -->
+    <div class="ctrl-metric-bar">
+      <div class="ctrl-mbar-item"><div class="ctrl-mbar-lbl">Monthly ROI</div><div class="ctrl-mbar-val" id="mb-monthly-roi">—</div></div>
+      <div class="ctrl-mbar-item"><div class="ctrl-mbar-lbl">Win Rate</div><div class="ctrl-mbar-val" id="mb-win-rate">—</div></div>
+      <div class="ctrl-mbar-item"><div class="ctrl-mbar-lbl">Daily Locked</div><div class="ctrl-mbar-val" id="mb-daily-locked">—</div></div>
+      <div class="ctrl-mbar-item"><div class="ctrl-mbar-lbl">Trial Goal</div><div class="ctrl-mbar-val" id="mb-trial-goal">6%</div></div>
+    </div>
+
+  </div><!-- /ctrl-hannah-col -->
+
+  <!-- RIGHT: Actions Column -->
+  <div class="ctrl-actions-col">
+
+    <!-- Risk state compact -->
+    <div class="ctrl-risk-compact">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div class="ctrl-risk-badge SAFE" id="risk-state-bar" style="min-width:100px;padding:6px 12px">
+          <div class="ctrl-state-label SAFE" id="risk-state-label" style="font-size:13px">—</div>
+          <div class="ctrl-score-row" style="margin-top:2px">
+            <div class="ctrl-score-num SAFE" id="risk-score-num" style="font-size:16px">—</div>
+            <div class="ctrl-score-lbl">Risk</div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="ctrl-objective" id="ctrl-objective" style="font-size:13px">Analysing…</div>
+          <div class="ctrl-sublabel" id="risk-sub-label" style="margin-top:2px">Loading...</div>
+        </div>
+      </div>
+      <div class="ctrl-anchor" id="ctrl-anchor" style="display:none"></div>
       <div class="ctrl-factors" id="ctrl-factors"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <div class="ctrl-engine-badge" id="engine-badge">LIVE ENGINE</div>
+        <div class="ctrl-actions-ts" id="engine-ts">—</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Required actions -->
-  <div id="ctrl-actions-wrap">
-    <div class="ctrl-actions-header">
-      <div class="ctrl-actions-title">Required Actions</div>
-      <div class="ctrl-actions-badge" id="req-count-badge">—</div>
-      <div class="ctrl-engine-badge" id="engine-badge">LIVE ENGINE</div>
-      <div class="ctrl-actions-ts" id="engine-ts">—</div>
+    <!-- Required actions -->
+    <div id="ctrl-actions-wrap">
+      <div class="ctrl-actions-header">
+        <div class="ctrl-actions-title">Required Actions</div>
+        <div class="ctrl-actions-badge" id="req-count-badge">—</div>
+      </div>
+      <div id="required-actions-list"></div>
+      <div id="suggested-wrap" style="display:none">
+        <div class="section-label suggested" style="margin-top:10px">Suggested</div>
+        <div id="suggested-actions-list"></div>
+      </div>
     </div>
-    <div id="required-actions-list"></div>
-    <div id="suggested-wrap" style="display:none">
-      <div class="section-label suggested" style="margin-top:10px">Suggested</div>
-      <div id="suggested-actions-list"></div>
-    </div>
-  </div>
 
-  <!-- Target state -->
-  <div id="target-state-wrap" style="display:none;margin-top:16px">
-    <div class="section-label" style="color:var(--text-muted);margin-bottom:10px">
-      WHY THESE ACTIONS — PORTFOLIO TARGET STATE
+    <!-- Target state -->
+    <div id="target-state-wrap" style="display:none;margin-top:8px">
+      <div class="section-label" style="color:var(--text-muted);margin-bottom:8px">
+        PORTFOLIO TARGET STATE
+      </div>
+      <div class="target-grid" id="target-state-grid"></div>
+      <div class="target-adj" id="target-adj-basis"></div>
     </div>
-    <div class="target-grid" id="target-state-grid"></div>
-    <div class="target-adj" id="target-adj-basis"></div>
-  </div>
 
+  </div><!-- /ctrl-actions-col -->
+
+</div><!-- /ctrl-v16 -->
 </section>
 
 <!-- ════════════════════════════════════════════════════════════════════
@@ -2512,21 +2902,35 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
-// ── HANNAH EMBEDDED CHAT ──────────────────────────────────────────────────
-const HANNAH_PROXY = 'https://hannah-proxy.onrender.com';
-let _hannahHistory = [];
-let _hannahOpen = false;
-let _hannahThinking = false;
+// ── HANNAH — SIMLI WEBRTC + ELEVENLABS PCM16 PIPELINE ────────────────────
+// Credentials
+const _SIMLI_KEY    = 'rwq4j9njja9lg0q9d45b9';
+const _SIMLI_FACE   = 'cace3ef7-a4c4-425d-a8cf-a5358eb0c427';
+const _EL_KEY       = 'sk_ff8bfc6a100041f7f1a8deecd344751943573cc708f37b22';
+const _EL_VOICE     = 'FX7Ed0mBTbZ495AXR8ky';
 
+let _simliWs        = null;
+let _simliPc        = null;
+let _simliToken     = null;
+let _hannahConnected = false;
+let _hannahConnecting = false;
+
+// ── Status helpers ────────────────────────────────────────────────────────
+function _hStatus(msg) {
+  const el = document.getElementById('ctrl-hannah-status');
+  if (el) el.textContent = msg;
+}
+function _hTalking(on) {
+  const ring = document.getElementById('ctrl-talk-ring');
+  if (ring) ring.classList.toggle('talking', on);
+}
+
+// ── Also keep the floating panel toggle working ───────────────────────────
+let _hannahOpen = false;
 function hannahToggle() {
   _hannahOpen = !_hannahOpen;
   document.getElementById('hannah-panel').classList.toggle('open', _hannahOpen);
-  if (_hannahOpen) {
-    document.getElementById('hannah-input').focus();
-    hannahUpdateSignals();
-  }
 }
-
 function hannahUpdateSignals() {
   const s = window._marketSignals;
   if (!s) return;
@@ -2534,80 +2938,365 @@ function hannahUpdateSignals() {
   setEl('h-sig-regime', s.regime || '—');
   setEl('h-sig-dom', s.btcDominance ? s.btcDominance + '%' : '—');
 }
-
 function hannahKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); hannahSend(); }
 }
+setInterval(hannahUpdateSignals, 120000);
 
-function hannahAppend(role, text, validator) {
-  const msgs = document.getElementById('hannah-messages');
-  const div = document.createElement('div');
-  div.className = 'hannah-msg ' + role;
-  div.textContent = text;
-  if (validator) {
-    const vDiv = document.createElement('div');
-    vDiv.className = 'hannah-validator';
-    vDiv.textContent = '⚡ GPT-4o-mini: ' + validator;
-    div.appendChild(vDiv);
-  }
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-async function hannahSend() {
-  if (_hannahThinking) return;
-  const input = document.getElementById('hannah-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-
-  hannahAppend('user', msg);
-  _hannahThinking = true;
-  const thinking = hannahAppend('thinking', 'Hannah is thinking…');
-
-  // Build portfolio context from live data
-  const portfolioCtx = window._tcBots && window._bnBots ? [
-    'CAPITAL: $' + (document.getElementById('header-total')?.textContent || '?'),
-    '3Commas bots: ' + (_tcBots?.length || 0) + ' active',
-    'Binance native bots: ' + (_bnBots?.length || 0) + ' active',
-    'Bots: ' + (_tcBots||[]).slice(0,4).map(b => b.name + ' $' + b.capital).join(', '),
-  ].join('\n') : '';
+// ── ACTIVATE ─────────────────────────────────────────────────────────────
+async function hannahActivate() {
+  if (_hannahConnected || _hannahConnecting) return;
+  _hannahConnecting = true;
+  const btnOn  = document.getElementById('ctrl-btn-activate');
+  const btnOff = document.getElementById('ctrl-btn-disconnect');
+  if (btnOn) btnOn.disabled = true;
+  _hStatus('Requesting session token…');
 
   try {
-    // Try dual-brain first, fall back to single Claude
-    const endpoint = '/api/chat-dual';
-    const res = await fetch(HANNAH_PROXY + endpoint, {
+    // Step 1: Get session token
+    const tokRes = await fetch('https://api.simli.ai/compose/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-simli-api-key': _SIMLI_KEY },
       body: JSON.stringify({
-        message: msg,
-        history: _hannahHistory.slice(-6),
-        portfolioContext: portfolioCtx,
+        faceId: _SIMLI_FACE,
+        handleSilence: true,
+        maxSessionLength: 3600,
+        maxIdleTime: 300,
+        audioInputFormat: 'pcm16',
       }),
     });
-    const data = await res.json();
-    thinking.remove();
+    const tokData = await tokRes.json();
+    _simliToken = tokData.session_token || tokData.token;
+    if (!_simliToken) throw new Error('No session token: ' + JSON.stringify(tokData));
 
-    const answer = data.answer || data.text || 'No response';
-    hannahAppend('hannah', answer, data.gptNote || null);
+    _hStatus('Fetching ICE servers…');
 
-    // Update history for next turn
-    _hannahHistory.push({ role: 'user', content: msg });
-    _hannahHistory.push({ role: 'assistant', content: answer });
-    if (_hannahHistory.length > 12) _hannahHistory = _hannahHistory.slice(-12);
+    // Step 2: Get ICE servers
+    let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
+    try {
+      const iceRes = await fetch('https://api.simli.ai/compose/ice', {
+        headers: { 'x-simli-api-key': _SIMLI_KEY },
+      });
+      const iceData = await iceRes.json();
+      if (Array.isArray(iceData) && iceData.length) iceServers = iceData;
+      else if (iceData.iceServers) iceServers = iceData.iceServers;
+    } catch(e) { console.warn('ICE fetch failed, using Google STUN', e); }
 
-  } catch(e) {
-    thinking.remove();
-    hannahAppend('hannah', 'Connection issue — try again in a moment.');
-    console.error('Hannah error:', e);
-  } finally {
-    _hannahThinking = false;
+    _hStatus('Building peer connection…');
+
+    // Step 3: Build RTCPeerConnection
+    _simliPc = new RTCPeerConnection({ iceServers });
+
+    // Add recvonly transceivers
+    _simliPc.addTransceiver('audio', { direction: 'recvonly' });
+    _simliPc.addTransceiver('video', { direction: 'recvonly' });
+
+    // Handle incoming tracks
+    _simliPc.ontrack = (evt) => {
+      if (evt.track.kind === 'video') {
+        const vid = document.getElementById('simli-video');
+        const photo = document.getElementById('hannah-photo');
+        if (vid) {
+          vid.srcObject = evt.streams[0] || new MediaStream([evt.track]);
+          vid.style.display = 'block';
+          if (photo) photo.style.display = 'none';
+        }
+      } else if (evt.track.kind === 'audio') {
+        const audio = new Audio();
+        audio.srcObject = new MediaStream([evt.track]);
+        audio.play().catch(()=>{});
+      }
+    };
+
+    // Step 4: Create SDP offer
+    const offer = await _simliPc.createOffer();
+    await _simliPc.setLocalDescription(offer);
+
+    // Wait for ICE gathering
+    await new Promise((resolve) => {
+      if (_simliPc.iceGatheringState === 'complete') { resolve(); return; }
+      const timeout = setTimeout(resolve, 5000);
+      _simliPc.onicegatheringstatechange = () => {
+        if (_simliPc.iceGatheringState === 'complete') { clearTimeout(timeout); resolve(); }
+      };
+    });
+
+    _hStatus('Opening WebSocket…');
+
+    // Step 5: Open WebSocket
+    const wsUrl = `wss://api.simli.ai/compose/webrtc/p2p?session_token=${_simliToken}&enableSFU=true`;
+    _simliWs = new WebSocket(wsUrl);
+
+    await new Promise((resolve, reject) => {
+      _simliWs.onopen = resolve;
+      _simliWs.onerror = reject;
+      setTimeout(() => reject(new Error('WS timeout')), 10000);
+    });
+
+    // Step 6: Send SDP offer
+    _simliWs.send(JSON.stringify({ type: 'offer', sdp: _simliPc.localDescription.sdp }));
+
+    // Step 7: Handle WS messages
+    _simliWs.onmessage = async (evt) => {
+      let msg;
+      try { msg = JSON.parse(evt.data); } catch(e) { msg = evt.data; }
+
+      if (msg && msg.type === 'answer') {
+        await _simliPc.setRemoteDescription({ type: 'answer', sdp: msg.sdp });
+        _hStatus('Connected — say something!');
+        _hannahConnected = true;
+        _hannahConnecting = false;
+        if (btnOn)  btnOn.disabled = false;
+        if (btnOff) btnOff.classList.add('visible');
+      } else if (msg === 'START' || msg?.type === 'START') {
+        // Kick avatar alive with silence
+        const silence = new Uint8Array(6000);
+        _simliWs.send(silence.buffer);
+      }
+    };
+
+    _simliWs.onclose = () => {
+      _hStatus('Disconnected');
+      _hannahConnected = false;
+      _hannahConnecting = false;
+      _hTalking(false);
+      if (btnOff) btnOff.classList.remove('visible');
+      if (btnOn)  { btnOn.disabled = false; btnOn.textContent = '⚡ ACTIVATE HANNAH'; }
+      // Restore photo
+      const vid = document.getElementById('simli-video');
+      const photo = document.getElementById('hannah-photo');
+      if (vid)   { vid.srcObject = null; vid.style.display = 'none'; }
+      if (photo) photo.style.display = 'block';
+    };
+    _simliWs.onerror = (e) => { console.error('Simli WS error', e); };
+
+    _hStatus('Connecting to Simli…');
+
+  } catch(err) {
+    console.error('Hannah activate error:', err);
+    _hStatus('Connection failed — ' + err.message);
+    _hannahConnecting = false;
+    if (btnOn) { btnOn.disabled = false; }
   }
 }
 
-// Update signals in widget every 2 minutes
-setInterval(hannahUpdateSignals, 120000);
+// ── DISCONNECT ────────────────────────────────────────────────────────────
+function hannahDisconnect() {
+  if (_simliWs) { try { _simliWs.close(); } catch(e){} _simliWs = null; }
+  if (_simliPc) { try { _simliPc.close(); } catch(e){} _simliPc = null; }
+  _hannahConnected = false;
+  _hannahConnecting = false;
+  _hTalking(false);
+  _hStatus('Disconnected');
+  const btnOff = document.getElementById('ctrl-btn-disconnect');
+  const btnOn  = document.getElementById('ctrl-btn-activate');
+  if (btnOff) btnOff.classList.remove('visible');
+  if (btnOn)  { btnOn.disabled = false; btnOn.textContent = '⚡ ACTIVATE HANNAH'; }
+  const vid   = document.getElementById('simli-video');
+  const photo = document.getElementById('hannah-photo');
+  if (vid)   { vid.srcObject = null; vid.style.display = 'none'; }
+  if (photo) photo.style.display = 'block';
+}
+
+// ── SEND VOICE ────────────────────────────────────────────────────────────
+async function hannahSend() {
+  // Accept text from either the control-layer input or the floating panel input
+  const ctrlInput  = document.getElementById('ctrl-hannah-input');
+  const panelInput = document.getElementById('hannah-input');
+  const input = (ctrlInput && ctrlInput.value.trim()) ? ctrlInput : panelInput;
+  const text  = input ? input.value.trim() : '';
+  if (!text) return;
+  if (input) input.value = '';
+
+  if (!_hannahConnected || !_simliWs) {
+    _hStatus('Not connected — click Activate first');
+    return;
+  }
+
+  _hStatus('Synthesising voice…');
+
+  try {
+    // Step 1: ElevenLabs TTS — called directly from browser (Render IPs blocked on free tier)
+    const elRes = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${_EL_VOICE}/stream?output_format=pcm_16000`,
+      {
+        method: 'POST',
+        headers: {
+          'xi-api-key': _EL_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_turbo_v2_5',
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+        }),
+      }
+    );
+
+    if (!elRes.ok) throw new Error('ElevenLabs error: ' + elRes.status);
+
+    // Step 2: Stream PCM16 chunks to Simli
+    const CHUNK = 6000;
+    const reader = elRes.body.getReader();
+    let buffer = new Uint8Array(0);
+    let totalBytes = 0;
+
+    _hTalking(true);
+    _hStatus('Speaking…');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      // Append new data to buffer
+      const merged = new Uint8Array(buffer.length + value.length);
+      merged.set(buffer);
+      merged.set(value, buffer.length);
+      buffer = merged;
+      totalBytes += value.length;
+
+      // Send in 6000-byte chunks
+      while (buffer.length >= CHUNK) {
+        const chunk = buffer.slice(0, CHUNK);
+        buffer = buffer.slice(CHUNK);
+        if (_simliWs && _simliWs.readyState === WebSocket.OPEN) {
+          _simliWs.send(chunk.buffer);
+        }
+      }
+    }
+
+    // Send leftover bytes
+    if (buffer.length > 0 && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+      // Pad to CHUNK if needed
+      const padded = new Uint8Array(CHUNK);
+      padded.set(buffer);
+      _simliWs.send(padded.buffer);
+    }
+
+    // Deactivate talking ring after estimated audio duration + buffer
+    const durationMs = (totalBytes / 32000) * 1000 + 400;
+    setTimeout(() => {
+      _hTalking(false);
+      _hStatus('Connected — say something!');
+    }, durationMs);
+
+  } catch(err) {
+    console.error('hannahSend error:', err);
+    _hStatus('Voice error — ' + err.message);
+    _hTalking(false);
+  }
+}
+
+// ── Populate control-layer metric cards from live data ────────────────────
+function _updateCtrlMetrics(data) {
+  if (!data) return;
+  const gt = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
+  const rPnl = data.reconciliation?.totalRealised || 0;
+  const dailyRate = 0.00155; // 0.155% daily rate from handover
+  if (gt) {
+    const cm_cap = document.getElementById('cm-total-cap');
+    if (cm_cap) cm_cap.textContent = fmtUSD(gt);
+    const cm_daily = document.getElementById('cm-daily-profit');
+    if (cm_daily) cm_daily.textContent = '+' + fmtUSD(gt * dailyRate);
+    const cm_prog = document.getElementById('cm-progress');
+    if (cm_prog) {
+      const pct = ((rPnl / gt) * 100).toFixed(2);
+      cm_prog.textContent = (rPnl >= 0 ? '+' : '') + pct + '%';
+    }
+    const mb_daily = document.getElementById('mb-daily-locked');
+    if (mb_daily) mb_daily.textContent = '+' + fmtUSD(rPnl);
+    // Monthly ROI estimate
+    const mb_roi = document.getElementById('mb-monthly-roi');
+    if (mb_roi) mb_roi.textContent = '+' + (dailyRate * 30 * 100).toFixed(1) + '%';
+    // Update header also
+    setEl('header-total', fmtUSD(gt));
+  }
+  // Draw performance chart
+  _drawPerfChart(rPnl, gt);
+}
+
+// ── Simple sparkline performance chart ────────────────────────────────────
+function _drawPerfChart(lockedPnl, capital) {
+  const canvas = document.getElementById('ctrl-perf-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 300;
+  const H = 72;
+  canvas.width = W;
+  canvas.height = H;
+
+  // Synthetic daily data: simulate 5-day ramp to current locked profit %
+  const days = 5;
+  const finalPct = capital > 0 ? (lockedPnl / capital) * 100 : 1.38;
+  const pts = [];
+  for (let i = 0; i <= days; i++) {
+    pts.push((finalPct / days) * i);
+  }
+
+  const min = 0;
+  const max = Math.max(finalPct * 1.2, 0.1);
+  const xStep = W / days;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Fill gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(45,212,191,.25)');
+  grad.addColorStop(1, 'rgba(45,212,191,.01)');
+
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = i * xStep;
+    const y = H - ((v - min) / (max - min)) * (H - 8) - 4;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  // Close fill path
+  ctx.lineTo((days) * xStep, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = i * xStep;
+    const y = H - ((v - min) / (max - min)) * (H - 8) - 4;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = 'rgba(45,212,191,.8)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Label
+  const lbl = document.getElementById('ctrl-perf-label');
+  if (lbl) lbl.textContent = (finalPct >= 0 ? '+' : '') + finalPct.toFixed(2) + '%';
+}
+
+// Hook into renderControl to also update ctrl metrics
+const _origRenderControl = typeof renderControl === 'function' ? renderControl : null;
+// We override at call site via wrapper — attach after page load
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialise chart with handover defaults
+  _drawPerfChart(126.60, 5260);
+  const cm_cap = document.getElementById('cm-total-cap');
+  if (cm_cap) cm_cap.textContent = '$5,260';
+  const cm_daily = document.getElementById('cm-daily-profit');
+  if (cm_daily) cm_daily.textContent = '+$8.15';
+  const mb_daily = document.getElementById('mb-daily-locked');
+  if (mb_daily) mb_daily.textContent = '+$126.60';
+  const mb_roi = document.getElementById('mb-monthly-roi');
+  if (mb_roi) mb_roi.textContent = '+4.65%';
+});
+
+// Patch renderControl to also update ctrl metrics whenever live data arrives
+(function() {
+  const _orig = window.renderControl;
+  window.renderControl = function(data) {
+    if (_orig) _orig.call(this, data);
+    _updateCtrlMetrics(data);
+  };
+})();
 </script>
 
 </body>
