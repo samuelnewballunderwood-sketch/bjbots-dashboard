@@ -1968,7 +1968,7 @@ function renderBnBotCard(b) {
     + '<div class="stat"><span class="stat-label">Locked Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + fmtPnl(profit) + '</span></div>'
     + '<div class="stat"><span class="stat-label">Trades</span><span class="stat-value">' + trades + '</span></div>'
     + '</div>'
-    + '<div class="pnl-bar"><div class="pnl-fill ' + (roi>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(roi)*5) + '%"></div></div>'
+    + '<div class="pnl-bar"><div class="pnl-fill ' + (profit>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(profit/Math.max(capital,1)*100)) + '%"></div></div>'
     + (eff.recommendation ? '<div class="bot-sys-rec"><div class="bot-sys-rec-lbl">System</div><div class="bot-sys-rec-txt">' + eff.recommendation + '</div></div>' : '')
     + '</div>';
 }
