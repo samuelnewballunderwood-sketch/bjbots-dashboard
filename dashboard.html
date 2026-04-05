@@ -120,7 +120,7 @@ body::after {
   position: sticky; top: 0; z-index: 200;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px;
-  height: 52px;
+  height: 72px;
   background: rgba(5,6,8,.92);
   border-bottom: 1px solid var(--border-dim);
   backdrop-filter: blur(20px);
@@ -129,7 +129,7 @@ body::after {
   display: flex; align-items: center;
 }
 .ac-logo-img {
-  height: 38px;
+  height: 64px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 0 8px rgba(45,212,191,.25)) drop-shadow(0 0 16px rgba(45,212,191,.1));
@@ -179,7 +179,7 @@ body::after {
   height: 40px;
   background: rgba(8,10,16,.8);
   border-bottom: 1px solid var(--border-dim);
-  position: sticky; top: 52px; z-index: 190;
+  position: sticky; top: 72px; z-index: 190;
   backdrop-filter: blur(12px);
 }
 .layer-tab {
@@ -1134,7 +1134,7 @@ body::after {
       <div class="kpi-sub" id="kpi-net-pnl-sub">All bots</div>
     </div>
     <div class="kpi pos">
-      <div class="kpi-label">Realised <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realised PnL</div>Profit locked in from closed trades and completed deal cycles.</span></span></div>
+      <div class="kpi-label">Realised <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realised PnL</div>Locked profit from closed Binance native bot trades. 3Commas realised is tracked separately via deal history.</span></span></div>
       <div class="kpi-value" id="kpi-realised">—</div>
       <div class="kpi-sub">Closed positions</div>
     </div>
@@ -1890,13 +1890,17 @@ function scoreLabel(score) {
 function renderTcBotCard(b) {
   const score = _botScores[b.id];
   const eff   = _botEff[b.id] || {};
-  const profit = parseFloat(b.profit||0);
-  const capital = parseFloat(b.capital||0);
-  const isActive = b.enabled && (b.activeDeals||0) > 0;
-  const status = !b.enabled ? 'paused' : isActive ? 'active' : 'waiting';
+  // Handle both reconciliation format (realised) and 3Commas proxy format (profit)
+  const profit = parseFloat(b.realised ?? b.profit ?? 0);
+  const capital = parseFloat(b.capital || 0);
+  const trueValue = parseFloat(b.trueValue || capital);
+  // enabled: reconciliation bots don't have enabled field — assume active if capital > 0
+  const isEnabled = b.enabled !== undefined ? b.enabled : (capital > 0);
+  const isActive = isEnabled && ((b.activeDeals||0) > 0 || capital > 0);
+  const status = !isEnabled ? 'paused' : isActive ? 'active' : 'waiting';
   const dir = (b.direction||'long').toLowerCase();
   const strat = (b.strategy||b.pair||'dca').toLowerCase();
-  const pair = (b.pair||'').replace('USDT_','').replace('_USDT','') + '/USDT';
+  const pair = b.pair ? (b.pair||'').replace('USDT_','').replace('_USDT','') + '/USDT' : b.name || '';
 
   return '<div class="bot-card ' + dir + '" data-bot-id="' + b.id + '" data-venue="3commas">'
     + '<div class="bot-card-header">'
@@ -1916,7 +1920,7 @@ function renderTcBotCard(b) {
     + '<div class="bot-stats">'
     + '<div class="stat"><span class="stat-label">Capital</span><span class="stat-value" style="color:#60a5fa">' + fmtUSD(capital) + '</span></div>'
     + '<div class="stat"><span class="stat-label">Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + fmtPnl(profit) + '</span></div>'
-    + '<div class="stat"><span class="stat-label">Deals</span><span class="stat-value">' + (b.completedDeals||0) + '</span></div>'
+    + '<div class="stat"><span class="stat-label">Trades</span><span class="stat-value">' + (b.completedDeals || b.trades || 0) + '</span></div>'
     + '</div>'
     + '<div class="pnl-bar"><div class="pnl-fill ' + (profit>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(profit/Math.max(capital,1)*100)) + '%"></div></div>'
     + (eff.recommendation ? '<div class="bot-sys-rec"><div class="bot-sys-rec-lbl">System</div><div class="bot-sys-rec-txt">' + eff.recommendation + '</div></div>' : '')
@@ -1931,18 +1935,22 @@ function renderBnBotCard(b) {
   const score  = _botScores[b.id];
   const eff    = _botEff[b.id] || {};
   const trades = b.trades || 0;
-  const capital = parseFloat(eff.capital||meta.capital||0);
-  const roi     = parseFloat(meta.roi||0);
-  const profit  = Math.round((roi/100)*capital*100)/100;
-  const isActive = trades > 0;
+  // Use real capital from reconciliation (live-locked or estimate) — never $0
+  const capital = parseFloat(b.capital || eff.capital || meta.capital || 0);
+  // Use real realised profit from reconciliation
+  const profit  = parseFloat(b.realised ?? b.profit ?? 0);
+  const trueValue = parseFloat(b.trueValue || capital);
+  const isActive = trades > 0 || capital > 0;
   const status   = isActive ? 'active' : 'idle';
-  const pair     = (b.symbol||'').replace('USDT','') + '/USDT';
-  const strat    = (meta.strategy||b.type||'grid').toLowerCase();
-  const dir      = (meta.direction||'long').toLowerCase();
+  // Name: reconciliation has it directly, fallback to symbol
+  const pair     = b.name || (b.symbol||'').replace('USDT','') + '/USDT';
+  const strat    = (b.strategy || meta.strategy || b.type || 'grid').toLowerCase();
+  const dir      = (b.direction || meta.direction || 'long').toLowerCase();
+  const capSource = b.capitalSource || '';
 
   return '<div class="bot-card ' + strat + '" data-bot-id="' + b.id + '" data-venue="binance">'
     + '<div class="bot-card-header">'
-    + '<div class="bot-name">' + (meta.name||pair) + '</div>'
+    + '<div class="bot-name">' + pair + (capSource === 'futures-estimate' ? ' <span style="font-size:9px;color:var(--warn);opacity:.7">~est</span>' : '') + '</div>'
     + '<div class="bot-header-right">'
     + '<span class="status-badge status-' + status + '">' + status.toUpperCase() + '</span>'
     + '<div class="ai-score-wrap"><span class="ai-lbl">AI</span><span class="ai-score ' + scoreClass(score) + '">' + scoreLabel(score) + '</span></div>'
@@ -1957,7 +1965,7 @@ function renderBnBotCard(b) {
     + '<div class="bot-divider"></div>'
     + '<div class="bot-stats">'
     + '<div class="stat"><span class="stat-label">Capital</span><span class="stat-value" style="color:#60a5fa">' + fmtUSD(capital) + '</span></div>'
-    + '<div class="stat"><span class="stat-label">Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + (roi>=0?'+':'') + roi.toFixed(2) + '%</span></div>'
+    + '<div class="stat"><span class="stat-label">Locked Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + fmtPnl(profit) + '</span></div>'
     + '<div class="stat"><span class="stat-label">Trades</span><span class="stat-value">' + trades + '</span></div>'
     + '</div>'
     + '<div class="pnl-bar"><div class="pnl-fill ' + (roi>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(roi)*5) + '%"></div></div>'
@@ -2059,15 +2067,17 @@ async function refreshDecisions() {
 
 async function refreshBots() {
   try {
-    const [tcData, bnData, scores] = await Promise.all([
-      apiFetch('decisions').then(d => d),
-      apiFetch('binance-bots'),
-      Promise.resolve({})
-    ]);
-    const tcBots = tcData.tcBots || [];
-    const bnBots = bnData.bots || [];
-    const botScores = tcData.scores || {};
-    const botEff    = tcData.efficiency || {};
+    // Pull everything from reconciliation — it has both tcBots and bnBots with real capital/profit
+    const recon = await apiFetch('reconciliation');
+    const tcBots = recon.tcBots || [];
+    const bnBots = recon.bnBots || [];
+    // Also grab scores/efficiency from decisions if available
+    let botScores = {}, botEff = {};
+    try {
+      const dec = await apiFetch('decisions');
+      botScores = dec.scores || {};
+      botEff    = dec.efficiency || {};
+    } catch(e) {}
     renderExecution(tcBots, bnBots, botScores, botEff);
     setEl('h-tc-val', tcBots.length > 0 ? tcBots.length + ' bots' : 'Connected');
   } catch(e) { console.error('Bot refresh error:', e); }
