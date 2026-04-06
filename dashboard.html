@@ -1305,6 +1305,56 @@ body::after {
 .d2-kpi-num.teal { color: var(--teal); text-shadow: 0 0 20px rgba(20,217,196,.4); }
 .d2-kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
 
+/* 3-column orbital dashboard layout */
+.d2-body-orbital {
+  display: grid;
+  grid-template-columns: 1fr 440px 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.d2-col-left {
+  padding: 20px 18px;
+  border-right: 1px solid var(--border-dim);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.d2-col-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 20px;
+  position: relative;
+}
+.d2-col-right {
+  padding: 20px 18px;
+  border-left: 1px solid var(--border-dim);
+  overflow-y: auto;
+}
+.dash-hannah-label {
+  text-align: center;
+  margin-top: 12px;
+}
+.dash-hannah-name-txt {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--teal);
+  text-shadow: 0 0 16px rgba(20,217,196,.5);
+}
+.dash-hannah-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* Main body 2-col */
 .d2-body {
   display: grid;
@@ -2218,31 +2268,13 @@ body::after {
     </div>
   </div>
 
-  <!-- ── MAIN BODY ── -->
-  <div class="d2-body">
+  <!-- ── MAIN BODY — 3-column orbital layout ── -->
+  <div class="d2-body-orbital">
 
-    <!-- LEFT: Hannah + Chat -->
-    <div class="d2-left">
-      <div class="d2-hannah-header">
-        <div class="d2-hannah-portrait">
-          <div class="d2-portrait-frame">
-            <div class="d2-scanline"></div>
-            <img id="dash-hannah-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Ccircle cx='45' cy='45' r='45' fill='%230d1420'/%3E%3Ccircle cx='45' cy='34' r='16' fill='%231a2540'/%3E%3Cellipse cx='45' cy='72' rx='24' ry='18' fill='%231a2540'/%3E%3Ccircle cx='45' cy='34' r='14' fill='%2322304e'/%3E%3C/svg%3E" class="d2-photo" alt="Hannah" />
-            <video id="dash-simli-mirror" class="d2-photo" style="display:none;border-radius:50%;object-fit:cover;" autoplay playsinline muted></video>
-          </div>
-          <div class="d2-talk-ring" id="dash-talk-ring"></div>
-        </div>
-        <div class="d2-hannah-info">
-          <div class="d2-hannah-name">HANNAH</div>
-          <div class="d2-hannah-role">Strix AI · Capital Advisor</div>
-          <div class="d2-hannah-status-row">
-            <span class="d2-status-dot" id="dash-status-dot"></span>
-            <span class="d2-status-label" id="dash-status-label">Neural Active</span>
-          </div>
-        </div>
-      </div>
+    <!-- LEFT COLUMN: Signals + Chat -->
+    <div class="d2-col-left">
 
-      <!-- Inline chat -->
+      <!-- Chat panel -->
       <div class="d2-chat-panel">
         <div class="d2-chat-msgs" id="d2-chat-msgs">
           <div class="d2-msg hannah">Hey — I'm Hannah. I'm monitoring your portfolio in real time. Ask me anything about your capital, bots, or strategy.</div>
@@ -2256,13 +2288,9 @@ body::after {
           <div class="d2-activate-sub">Connect AI · ElevenLabs voice · Simli avatar</div>
         </div>
       </div>
-    </div>
 
-    <!-- RIGHT: Signals + Status -->
-    <div class="d2-right">
-
-      <!-- AI Insights -->
-      <div class="d2-section-title">⚡ AI SIGNALS TODAY</div>
+      <!-- AI Signals -->
+      <div class="d2-section-title" style="margin-top:16px">⚡ AI SIGNALS TODAY</div>
       <div class="d2-signals" id="dash-alerts">
         <div class="d2-signal done">
           <span class="d2-signal-tag done">DONE</span>
@@ -2281,25 +2309,92 @@ body::after {
           <span class="d2-signal-text">XRP Grid near floor $1.315 — reset required</span>
         </div>
       </div>
+    </div>
+
+    <!-- CENTRE COLUMN: Hannah orbital -->
+    <div class="d2-col-centre">
+      <div class="dash-hannah-wrap">
+        <!-- Orbital rings -->
+        <div class="dash-orbital-ring r1"></div>
+        <div class="dash-orbital-ring r2"></div>
+        <div class="dash-orbital-ring r3"></div>
+        <div class="dash-glow"></div>
+
+        <!-- 6 metric cards -->
+        <div class="dash-metric-card dm1">
+          <div class="dm-lbl">Daily Profit</div>
+          <div class="dm-val pos" id="cv-daily">—</div>
+          <div class="dm-sub" id="cv-daily-pct">+0.155%/day</div>
+        </div>
+        <div class="dash-metric-card dm2">
+          <div class="dm-lbl">Capital</div>
+          <div class="dm-val teal" id="cv-capital">—</div>
+          <div class="dm-sub">Binance</div>
+        </div>
+        <div class="dash-metric-card dm3">
+          <div class="dm-lbl">Trial Day</div>
+          <div class="dm-val" id="cv-trial">5 / 30</div>
+          <div class="dm-sub">Day 5</div>
+        </div>
+        <div class="dash-metric-card dm4">
+          <div class="dm-lbl">Target</div>
+          <div class="dm-val" id="cv-target">$316</div>
+          <div class="dm-sub">6% goal</div>
+        </div>
+        <div class="dash-metric-card dm5">
+          <div class="dm-lbl">Stretch</div>
+          <div class="dm-val warn" id="cv-stretch">$527</div>
+          <div class="dm-sub">10% goal</div>
+        </div>
+        <div class="dash-metric-card dm6">
+          <div class="dm-lbl">Progress</div>
+          <div class="dm-val pos" id="cv-progress">+2.41%</div>
+          <div class="dm-sub">Locked</div>
+        </div>
+
+        <!-- Hannah portrait -->
+        <div class="dash-hannah-portrait">
+          <div class="dash-portrait-inner">
+            <div class="br-bl"></div><div class="br-br"></div>
+            <div class="dash-scanline"></div>
+            <img id="dash-hannah-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='148' height='148' viewBox='0 0 148 148'%3E%3Ccircle cx='74' cy='74' r='74' fill='%230d1420'/%3E%3Ccircle cx='74' cy='56' r='26' fill='%231a2540'/%3E%3Cellipse cx='74' cy='118' rx='40' ry='30' fill='%231a2540'/%3E%3Ccircle cx='74' cy='56' r='22' fill='%2322304e'/%3E%3C/svg%3E" class="dash-photo" alt="Hannah" />
+            <video id="dash-simli-mirror" class="dash-photo" style="display:none;border-radius:50%;object-fit:cover;" autoplay playsinline muted></video>
+          </div>
+          <div class="dash-talk-ring" id="dash-talk-ring"></div>
+        </div>
+      </div>
+
+      <!-- Hannah name + status below orbital -->
+      <div class="dash-hannah-label">
+        <div class="dash-hannah-name-txt">HANNAH</div>
+        <div class="dash-hannah-sub-row">
+          <span class="d2-status-dot" id="dash-status-dot"></span>
+          <span class="d2-status-label" id="dash-status-label">Neural Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Status + Trial -->
+    <div class="d2-col-right">
 
       <!-- System status -->
-      <div class="d2-section-title" style="margin-top:20px">◉ SYSTEM STATUS</div>
+      <div class="d2-section-title">◉ SYSTEM STATUS</div>
       <div class="d2-status-grid">
         <div class="d2-status-row">
           <span class="d2-status-key">Binance</span>
-          <span class="d2-status-val safe">● Connected</span>
+          <span class="d2-status-val safe" id="sys-binance">● Connected</span>
         </div>
         <div class="d2-status-row">
           <span class="d2-status-key">3Commas</span>
-          <span class="d2-status-val safe">● Connected</span>
+          <span class="d2-status-val safe" id="sys-3commas">● Connected</span>
         </div>
         <div class="d2-status-row">
           <span class="d2-status-key">Risk Level</span>
-          <span class="d2-status-val warn" id="dsp-risk">Moderate</span>
+          <span class="d2-status-val warn" id="dsp-risk">LOW</span>
         </div>
         <div class="d2-status-row">
           <span class="d2-status-key">Next Review</span>
-          <span class="d2-status-val" id="dsp-review">09:00 GST</span>
+          <span class="d2-status-val" id="dsp-review">17:45</span>
         </div>
       </div>
 
