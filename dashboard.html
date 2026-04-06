@@ -788,6 +788,496 @@ body::after {
 }
 
 
+/* ════════════════════════════════════════════════════════════
+   NEW REDESIGN CSS — Dashboard / Action Centre / Bots
+   ════════════════════════════════════════════════════════════ */
+
+/* Screen panels */
+.screen-panel { position:relative; z-index:1; }
+
+/* ── ASSET CLASS BAR ── */
+.asset-class-bar {
+  display:flex; gap:8px; padding:14px 28px;
+  background:rgba(8,10,18,.7); border-bottom:1px solid var(--border-dim);
+}
+.asset-tile {
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-md); padding:10px 16px; flex:1;
+  transition:border-color .2s;
+}
+.asset-tile.active { border-color:rgba(45,212,191,.3); background:rgba(45,212,191,.04); }
+.asset-tile.dim { opacity:.5; }
+.asset-tile-icon { font-size:18px; opacity:.7; flex-shrink:0; }
+.asset-tile-name { font-family:var(--font-display); font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--text-muted); margin-bottom:2px; }
+.asset-tile-val { font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary); }
+.asset-tile-status { font-size:8px; font-weight:700; margin-top:2px; }
+.asset-tile-status.live { color:var(--safe); }
+.asset-tile-status.soon { color:var(--text-dim); }
+
+/* ── DASHBOARD 3-COLUMN GRID ── */
+.dash-grid {
+  display:grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap:0;
+  padding:0 28px 12px;
+  min-height:580px;
+}
+@media(max-width:1200px) { .dash-grid { grid-template-columns:240px 1fr 240px; } }
+@media(max-width:960px) { .dash-grid { grid-template-columns:1fr; } }
+
+/* Left col */
+.dash-left {
+  padding:16px 16px 16px 0;
+  border-right:1px solid var(--border-dim);
+  display:flex; flex-direction:column; gap:10px;
+}
+.dash-kpi-pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dash-kpi {
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-md); padding:10px 12px;
+}
+.dash-kpi-lbl { font-size:8px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:4px; font-family:var(--font-body); }
+.dash-kpi-val { font-family:var(--font-mono); font-size:16px; font-weight:700; }
+.dash-kpi-val.pos { color:var(--safe); }
+.dash-kpi-sub { font-size:8px; color:var(--text-dim); margin-top:2px; font-family:var(--font-mono); }
+
+.dash-section-title {
+  font-family:var(--font-display); font-size:8px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--text-muted);
+  display:flex; align-items:center; gap:8px; margin-bottom:6px;
+}
+.dash-section-title::after { content:''; flex:1; height:1px; background:var(--border-dim); }
+
+.dash-action-btn {
+  font-family:var(--font-display); font-size:7px; font-weight:700;
+  letter-spacing:.1em; padding:3px 8px; border-radius:20px;
+  background:rgba(251,191,36,.12); color:var(--warn); border:1px solid rgba(251,191,36,.3);
+  cursor:pointer; white-space:nowrap; margin-left:auto; flex-shrink:0;
+}
+.dash-action-btn:hover { background:rgba(251,191,36,.2); }
+
+/* Connected platforms */
+.dash-platforms { display:flex; flex-direction:column; gap:5px; }
+.dash-platform {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-sm); padding:7px 10px;
+  transition:border-color .2s;
+}
+.dash-platform.live { border-color:rgba(74,222,128,.2); }
+.dash-platform.soon { opacity:.55; }
+.plat-icon {
+  width:26px; height:26px; border-radius:6px; display:flex;
+  align-items:center; justify-content:center; font-size:10px; font-weight:700;
+  font-family:var(--font-display); flex-shrink:0;
+}
+.plat-icon.bn { background:rgba(240,185,11,.15); color:#f0b90b; }
+.plat-icon.tc { background:rgba(96,165,250,.15); color:var(--balanced); }
+.plat-icon.fx { background:rgba(167,139,250,.15); color:var(--purple); }
+.plat-icon.ib { background:rgba(248,113,113,.12); color:#f87171; }
+.plat-icon.cm { background:rgba(45,212,191,.12); color:var(--teal); }
+.plat-name { font-size:11px; font-weight:700; color:var(--text-primary); }
+.plat-sub { font-size:8px; color:var(--text-dim); }
+.plat-badge { font-size:8px; font-weight:700; padding:2px 6px; border-radius:10px; margin-left:auto; white-space:nowrap; flex-shrink:0; }
+.plat-badge.live { background:var(--safe-dim); color:var(--safe); }
+.plat-badge.soon { background:var(--bg-raised); color:var(--text-dim); }
+
+/* Alerts */
+.dash-alerts { display:flex; flex-direction:column; gap:4px; }
+.dash-alert-item {
+  display:flex; align-items:center; gap:6px;
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-sm); padding:6px 8px; font-size:10px;
+}
+.alert-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.alert-dot.done { background:var(--safe); }
+.alert-dot.warn { background:var(--warn); }
+.alert-text { flex:1; color:var(--text-secondary); line-height:1.3; }
+.alert-tag { font-size:7px; font-weight:700; padding:1px 5px; border-radius:3px; flex-shrink:0; }
+.alert-tag.done { background:var(--safe-dim); color:var(--safe); }
+.alert-tag.warn { background:var(--warn-dim); color:var(--warn); }
+
+/* ── CENTRE COLUMN ── */
+.dash-centre {
+  display:flex; flex-direction:column; align-items:center;
+  padding:16px 24px;
+  position:relative;
+}
+
+/* ANALYSE / EXECUTE big buttons */
+.dash-big-btn {
+  font-family:var(--font-display); font-size:11px; font-weight:700;
+  letter-spacing:.2em; padding:10px 32px;
+  border-radius:var(--radius-sm); cursor:pointer; width:280px;
+  transition:all .2s; text-align:center;
+  border:1px solid;
+}
+.dash-big-btn.analyse {
+  background:rgba(45,212,191,.06); border-color:rgba(45,212,191,.35); color:var(--teal);
+}
+.dash-big-btn.analyse:hover { background:rgba(45,212,191,.12); border-color:var(--teal); }
+.dash-big-btn.execute {
+  background:rgba(96,165,250,.06); border-color:rgba(96,165,250,.35); color:var(--balanced);
+}
+.dash-big-btn.execute:hover { background:rgba(96,165,250,.12); border-color:var(--balanced); }
+
+.dash-btn-connector {
+  width:1px; height:14px; background:rgba(45,212,191,.3); flex-shrink:0;
+}
+.dash-btn-connector.bottom { background:rgba(96,165,250,.3); }
+
+/* Hannah orbital wrap */
+.dash-hannah-wrap {
+  position:relative;
+  width:420px; height:420px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.dash-orbital-ring {
+  position:absolute; top:50%; left:50%;
+  border-radius:50%; border:1px solid rgba(45,212,191,.18);
+  pointer-events:none;
+}
+.dash-orbital-ring.r1 {
+  width:380px; height:100px; margin-left:-190px; margin-top:-50px;
+  border-color:rgba(45,212,191,.28);
+  animation:ring-spin 22s linear infinite;
+}
+.dash-orbital-ring.r2 {
+  width:310px; height:80px; margin-left:-155px; margin-top:-40px;
+  animation:ring-spin 32s linear infinite reverse;
+}
+.dash-orbital-ring.r3 {
+  width:240px; height:62px; margin-left:-120px; margin-top:-31px;
+  border-color:rgba(45,212,191,.10);
+  animation:ring-spin 44s linear infinite;
+}
+.dash-glow {
+  position:absolute; top:50%; left:50%;
+  width:220px; height:220px; margin-left:-110px; margin-top:-110px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(45,212,191,.12) 0%, transparent 70%);
+  animation:arena-pulse2 3s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* Metric cards around Hannah */
+.dash-metric-card {
+  position:absolute;
+  width:115px; z-index:8;
+  background:rgba(14,16,26,.94); border:1px solid var(--border-dim);
+  border-radius:var(--radius-md); padding:9px 11px; text-align:center;
+  backdrop-filter:blur(8px);
+}
+.dash-metric-card::after {
+  content:''; position:absolute; width:5px; height:5px; border-radius:50%;
+  background:rgba(45,212,191,.45); box-shadow:0 0 6px rgba(45,212,191,.35);
+}
+/* Positions */
+.dm1 { top:28px; left:18px; }
+.dm1::after { right:-3px; top:50%; margin-top:-2px; }
+.dm2 { top:28px; right:18px; }
+.dm2::after { left:-3px; top:50%; margin-top:-2px; }
+.dm3 { top:168px; left:4px; }
+.dm3::after { right:-3px; top:50%; margin-top:-2px; }
+.dm4 { top:168px; right:4px; }
+.dm4::after { left:-3px; top:50%; margin-top:-2px; }
+.dm5 { bottom:68px; left:18px; }
+.dm5::after { right:-3px; top:50%; margin-top:-2px; }
+.dm6 { bottom:68px; right:18px; }
+.dm6::after { left:-3px; top:50%; margin-top:-2px; }
+
+.dm-lbl { font-size:7.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; font-family:var(--font-body); white-space:nowrap; }
+.dm-val { font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text-primary); }
+.dm-val.pos { color:var(--safe); }
+.dm-val.teal { color:var(--teal); }
+.dm-val.warn { color:var(--warn); }
+.dm-sub { font-size:7.5px; color:var(--text-dim); margin-top:2px; font-family:var(--font-mono); }
+
+/* Hannah portrait */
+.dash-hannah-portrait {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%); z-index:10;
+}
+.dash-portrait-inner {
+  position:relative; width:148px; height:148px;
+}
+.dash-portrait-inner::before,
+.dash-portrait-inner::after,
+.dash-portrait-inner .br-bl,
+.dash-portrait-inner .br-br {
+  content:''; position:absolute; width:20px; height:20px;
+  border-color:var(--teal); border-style:solid; opacity:.95; z-index:12;
+}
+.dash-portrait-inner::before { top:-2px; left:-2px; border-width:2px 0 0 2px; }
+.dash-portrait-inner::after { top:-2px; right:-2px; border-width:2px 2px 0 0; }
+.dash-portrait-inner .br-bl { bottom:-2px; left:-2px; border-width:0 0 2px 2px; }
+.dash-portrait-inner .br-br { bottom:-2px; right:-2px; border-width:0 2px 2px 0; }
+.dash-scanline {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(45,212,191,.55),transparent);
+  animation:scan 3.5s ease-in-out infinite; z-index:13; border-radius:0 0 50% 50%;
+}
+.dash-photo {
+  width:148px; height:148px; border-radius:50%; object-fit:cover;
+  border:2px solid rgba(45,212,191,.5);
+  box-shadow:0 0 0 4px rgba(45,212,191,.08), 0 0 32px rgba(45,212,191,.28), 0 0 64px rgba(45,212,191,.1);
+  animation:portrait-glow 3s ease-in-out infinite;
+  display:block;
+}
+.dash-talk-ring {
+  position:absolute; top:50%; left:50%;
+  width:172px; height:172px; margin-left:-86px; margin-top:-86px;
+  border-radius:50%; border:2px solid rgba(45,212,191,.65);
+  opacity:0; pointer-events:none; transition:opacity .2s; z-index:9;
+}
+.dash-talk-ring.talking { opacity:1; animation:talk-beat .7s ease-in-out infinite; }
+
+/* Hannah ID below portrait */
+.dash-hannah-id {
+  position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+  text-align:center; z-index:8;
+}
+.dash-hannah-name { font-family:var(--font-display); font-size:12px; font-weight:700; letter-spacing:.15em; color:var(--teal); }
+.dash-hannah-status { display:flex; align-items:center; gap:5px; justify-content:center; margin-top:3px; font-size:9px; color:var(--text-muted); }
+.dash-status-dot { width:5px; height:5px; border-radius:50%; background:var(--safe); box-shadow:0 0 5px var(--safe); }
+
+/* Performance chart */
+.dash-perf-wrap { width:100%; margin-top:8px; }
+.dash-perf-label { font-size:8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; text-align:center; font-family:var(--font-body); }
+.dash-perf-chart { width:100%; height:55px; border-radius:4px; }
+
+/* ── RIGHT COLUMN ── */
+.dash-right {
+  padding:16px 0 16px 16px;
+  border-left:1px solid var(--border-dim);
+  display:flex; flex-direction:column; gap:8px;
+}
+
+/* Bot platforms */
+.dash-bot-platforms { display:flex; flex-direction:column; gap:5px; }
+.dash-bot-platform {
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-sm); padding:8px 10px;
+}
+.dash-bot-platform.dim { opacity:.5; }
+.dbp-header { display:flex; align-items:center; gap:6px; }
+.dbp-count { font-size:9px; color:var(--text-muted); font-family:var(--font-mono); }
+.dbp-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
+.dbp-tag { font-size:8px; background:var(--bg-raised); color:var(--text-muted); padding:1px 5px; border-radius:3px; font-family:var(--font-mono); }
+
+/* AI insights */
+.dash-insights { display:flex; flex-direction:column; gap:5px; }
+.dash-insight {
+  display:flex; align-items:center; gap:8px;
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-sm); padding:7px 10px;
+}
+.dash-insight.ok { border-color:rgba(74,222,128,.2); }
+.dash-insight.warn { border-color:rgba(251,191,36,.2); }
+.dash-insight.err { border-color:rgba(248,113,113,.2); }
+.insight-icon { font-size:14px; flex-shrink:0; }
+.dash-insight.ok .insight-icon { color:var(--safe); }
+.dash-insight.warn .insight-icon { color:var(--warn); }
+.dash-insight.err .insight-icon { color:#f87171; }
+.insight-title { font-size:9px; font-weight:700; font-family:var(--font-display); letter-spacing:.06em; color:var(--text-primary); }
+.insight-sub { font-size:9px; color:var(--text-muted); margin-top:1px; }
+
+/* System status */
+.dash-status-panel {
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-sm); padding:10px 12px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.dsp-row { display:flex; justify-content:space-between; align-items:center; }
+.dsp-lbl { font-size:10px; color:var(--text-muted); }
+.dsp-val { font-family:var(--font-mono); font-size:11px; font-weight:700; }
+.dsp-val.ok { color:var(--safe); }
+.dsp-val.warn { color:var(--warn); }
+
+/* Hannah mini card */
+.dash-hannah-mini {
+  display:flex; align-items:flex-start; gap:8px;
+  background:rgba(45,212,191,.04); border:1px solid rgba(45,212,191,.18);
+  border-radius:var(--radius-md); padding:10px 12px; margin-top:4px;
+}
+.dhm-photo { width:38px; height:38px; border-radius:50%; object-fit:cover; border:1px solid rgba(45,212,191,.4); flex-shrink:0; }
+.dhm-name { font-family:var(--font-display); font-size:9px; font-weight:700; letter-spacing:.1em; color:var(--teal); margin-bottom:4px; }
+.dhm-msg { font-size:10px; color:var(--text-secondary); line-height:1.5; }
+
+/* ── BOTTOM KPI STRIP ── */
+.dash-bottom-kpis {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  border-top:1px solid var(--border-dim);
+  background:rgba(5,6,8,.6);
+}
+.dbk-cell {
+  padding:10px 20px; border-right:1px solid var(--border-dim);
+  text-align:center;
+}
+.dbk-cell:last-child { border-right:none; }
+.dbk-lbl { font-size:8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; font-family:var(--font-body); }
+.dbk-val { font-family:var(--font-mono); font-size:18px; font-weight:700; }
+.dbk-val.pos { color:var(--safe); }
+.dbk-val.teal { color:var(--teal); }
+.dbk-sub { font-size:8px; color:var(--text-dim); margin-top:2px; font-family:var(--font-mono); }
+
+/* ════════ ACTION CENTRE CSS ════════ */
+
+/* Trial progress bar */
+.trial-progress-bar {
+  padding:12px 28px 8px;
+  background:rgba(8,10,18,.8); border-bottom:1px solid var(--border-dim);
+}
+.tpb-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.tpb-label { font-family:var(--font-display); font-size:8px; font-weight:700; letter-spacing:.1em; color:var(--text-muted); }
+.tpb-locked { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--safe); }
+.tpb-track { height:6px; background:var(--bg-raised); border-radius:3px; position:relative; overflow:visible; }
+.tpb-fill { height:100%; background:linear-gradient(90deg,var(--safe),rgba(74,222,128,.6)); border-radius:3px; transition:width .5s; }
+.tpb-stretch-mark { position:absolute; top:-3px; width:2px; height:12px; background:var(--warn); border-radius:1px; }
+.tpb-footer { display:flex; justify-content:space-between; margin-top:4px; }
+.tpb-footer span { font-size:9px; color:var(--text-dim); font-family:var(--font-mono); }
+
+/* Rules bar */
+.rules-bar {
+  display:grid; grid-template-columns:repeat(5,1fr);
+  gap:0; padding:0 28px; border-bottom:1px solid var(--border-dim);
+}
+.rule-chip {
+  padding:8px 12px; border-right:1px solid var(--border-dim);
+  background:var(--bg-card);
+}
+.rule-chip:last-child { border-right:none; }
+.rule-num { font-size:7.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; font-family:var(--font-body); }
+.rule-val { font-family:var(--font-mono); font-size:11px; font-weight:700; }
+.rule-val.ok { color:var(--safe); }
+.rule-val.warn { color:#f87171; }
+.rule-sub { font-size:8px; color:var(--text-muted); margin-top:2px; }
+
+/* Action centre 3-col */
+.action-grid {
+  display:grid; grid-template-columns:320px 1fr 300px;
+  gap:0; min-height:560px;
+}
+@media(max-width:1100px) { .action-grid { grid-template-columns:1fr; } }
+
+.action-left {
+  padding:16px;
+  border-right:1px solid var(--border-dim);
+  overflow-y:auto;
+}
+.action-centre {
+  display:flex; flex-direction:column; align-items:center;
+  padding:20px 24px; gap:12px;
+}
+.action-right {
+  padding:16px; border-left:1px solid var(--border-dim);
+  overflow-y:auto;
+}
+
+.ac-engine-label {
+  font-family:var(--font-display); font-size:9px; font-weight:700;
+  letter-spacing:.18em; color:var(--text-muted); text-align:center;
+}
+
+/* Action centre Hannah */
+.ac-hannah-wrap { position:relative; width:148px; height:148px; }
+.ac-talk-ring {
+  position:absolute; top:50%; left:50%;
+  width:168px; height:168px; margin-left:-84px; margin-top:-84px;
+  border-radius:50%; border:2px solid rgba(45,212,191,.65);
+  opacity:0; z-index:9; pointer-events:none; transition:opacity .2s;
+}
+.ac-talk-ring.talking { opacity:1; animation:talk-beat .7s ease-in-out infinite; }
+.ac-portrait-inner { position:relative; width:148px; height:148px; }
+.ac-portrait-inner::before, .ac-portrait-inner::after,
+.ac-portrait-inner .br-bl, .ac-portrait-inner .br-br {
+  content:''; position:absolute; width:20px; height:20px;
+  border-color:var(--teal); border-style:solid; opacity:.95; z-index:12;
+}
+.ac-portrait-inner::before { top:-2px; left:-2px; border-width:2px 0 0 2px; }
+.ac-portrait-inner::after { top:-2px; right:-2px; border-width:2px 2px 0 0; }
+.ac-portrait-inner .br-bl { bottom:-2px; left:-2px; border-width:0 0 2px 2px; }
+.ac-portrait-inner .br-br { bottom:-2px; right:-2px; border-width:0 2px 2px 0; }
+.ac-scanline {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(45,212,191,.55),transparent);
+  animation:scan 3.5s ease-in-out infinite; z-index:13;
+}
+.ac-photo { width:148px; height:148px; border-radius:50%; object-fit:cover; border:2px solid rgba(45,212,191,.5); box-shadow:0 0 32px rgba(45,212,191,.25); display:block; animation:portrait-glow 3s ease-in-out infinite; }
+.ac-hannah-label { font-family:var(--font-display); font-size:13px; font-weight:700; letter-spacing:.18em; color:var(--teal); text-align:center; }
+.ac-hannah-sub { font-size:9px; color:var(--text-muted); text-align:center; }
+
+.ac-analysis-box {
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-md); padding:12px 14px; width:100%;
+}
+.ac-analysis-header { font-family:var(--font-display); font-size:8px; font-weight:700; letter-spacing:.14em; color:var(--text-muted); margin-bottom:8px; }
+.ac-analysis-text { font-size:11px; color:var(--text-secondary); line-height:1.6; }
+
+/* Quantum path */
+.qp-section { width:100%; }
+.qp-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.qp-label { font-size:8px; font-weight:700; font-family:var(--font-display); letter-spacing:.06em; color:var(--text-muted); width:64px; flex-shrink:0; }
+.qp-bar-wrap { flex:1; height:4px; background:var(--bg-raised); border-radius:2px; overflow:hidden; }
+.qp-bar { height:100%; border-radius:2px; }
+.qp-bar.current { background:var(--safe); }
+.qp-bar.target { background:var(--balanced); }
+.qp-bar.quantum { background:var(--warn); }
+.qp-val { font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--text-primary); width:52px; text-align:right; flex-shrink:0; }
+.qp-val.pos { color:var(--safe); }
+.qp-val.warn { color:var(--warn); }
+.qp-sub { font-size:8px; color:var(--text-dim); font-family:var(--font-mono); width:52px; flex-shrink:0; }
+
+/* Completed today */
+.ac-completed-list { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+.ac-done-item {
+  display:flex; align-items:flex-start; gap:6px;
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:4px; padding:5px 8px; font-size:10px;
+}
+.ac-done-item.pending { opacity:.7; }
+.acd-time { color:var(--text-dim); font-family:var(--font-mono); font-size:9px; white-space:nowrap; flex-shrink:0; }
+.acd-tag { font-size:8px; font-weight:700; padding:1px 5px; border-radius:3px; white-space:nowrap; flex-shrink:0; }
+.acd-tag.scale { background:var(--safe-dim); color:var(--safe); }
+.acd-tag.reset { background:rgba(96,165,250,.12); color:var(--balanced); }
+.acd-tag.stop { background:var(--warn-dim); color:var(--warn); }
+.acd-tag.warn { background:rgba(248,113,113,.1); color:#f87171; }
+.acd-text { color:var(--text-secondary); line-height:1.3; }
+
+/* Impact box */
+.ac-impact-box {
+  background:var(--bg-card); border:1px solid var(--border-dim);
+  border-radius:var(--radius-md); padding:10px 12px; margin-bottom:10px;
+}
+.ac-impact-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.ac-impact-lbl { font-size:8px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+.ac-impact-val { font-family:var(--font-mono); font-size:16px; font-weight:700; }
+.ac-impact-val.pos { color:var(--safe); }
+
+/* Checklist */
+.ac-checklist { display:flex; flex-direction:column; gap:5px; }
+.ac-check {
+  display:flex; align-items:flex-start; gap:7px;
+  font-size:10px; color:var(--text-secondary); cursor:pointer; line-height:1.4;
+}
+.ac-check input { margin-top:2px; flex-shrink:0; accent-color:var(--teal); }
+.ac-check.urgent { color:var(--warn); font-weight:600; }
+
+/* ════════ BOTS SCREEN CSS ════════ */
+.bots-summary-bar {
+  display:grid; grid-template-columns:repeat(6,1fr);
+  gap:0; padding:0 28px; border-bottom:1px solid var(--border-dim);
+  background:rgba(8,10,18,.8);
+}
+.bsum-cell { padding:10px 12px; border-right:1px solid var(--border-dim); text-align:center; }
+.bsum-cell:last-child { border-right:none; }
+.bsum-lbl { font-size:8px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; font-family:var(--font-body); }
+.bsum-val { font-family:var(--font-mono); font-size:15px; font-weight:700; color:var(--text-primary); }
+.bsum-val.pos { color:var(--safe); }
+.bsum-val.neg { color:#f87171; }
+.bsum-val.teal { color:var(--teal); }
+
 /* Splash logo image */
 .pw-logo-wrap {
   display: flex; justify-content: center; align-items: center;
@@ -1102,33 +1592,665 @@ body::after {
   </div>
 </header>
 
-<!-- ── LAYER NAV ───────────────────────────────────────────────────────── -->
-<nav class="layer-nav">
-  <button class="layer-tab active" onclick="showLayer('control')" id="tab-control">
-    <span class="layer-tab-dot" style="background:#f87171"></span>
-    Control
+<!-- ── SCREEN NAV ──────────────────────────────────────────────────────── -->
+<nav class="layer-nav" id="screen-nav">
+  <button class="layer-tab active" onclick="showScreen('dashboard')" id="tab-dashboard">
+    <span class="layer-tab-dot" style="background:var(--teal)"></span>
+    Dashboard
   </button>
   <div class="layer-sep"></div>
-  <button class="layer-tab" onclick="showLayer('portfolio')" id="tab-portfolio">
+  <button class="layer-tab" onclick="showScreen('action')" id="tab-action">
+    <span class="layer-tab-dot" style="background:#f87171"></span>
+    Action Centre
+  </button>
+  <div class="layer-sep"></div>
+  <button class="layer-tab" onclick="showScreen('bots')" id="tab-bots">
+    <span class="layer-tab-dot" style="background:#a78bfa"></span>
+    Bots &amp; Trades
+  </button>
+  <div class="layer-sep"></div>
+  <button class="layer-tab" onclick="showScreen('portfolio')" id="tab-portfolio">
     <span class="layer-tab-dot" style="background:#60a5fa"></span>
     Portfolio
   </button>
   <div class="layer-sep"></div>
-  <button class="layer-tab" onclick="showLayer('execution')" id="tab-execution">
-    <span class="layer-tab-dot" style="background:#a78bfa"></span>
-    Execution
-  </button>
-  <div class="layer-sep"></div>
-  <button class="layer-tab" onclick="showLayer('context')" id="tab-context">
-    <span class="layer-tab-dot" style="background:#2dd4bf"></span>
-    Context
+  <button class="layer-tab" onclick="showScreen('context')" id="tab-context">
+    <span class="layer-tab-dot" style="background:#fbbf24"></span>
+    Market
   </button>
 </nav>
 
 <main class="ac-main">
 
 <!-- ════════════════════════════════════════════════════════════════════
-     LAYER 1 — CONTROL
+     SCREEN 1 — DASHBOARD / HOMESCREEN
+     ════════════════════════════════════════════════════════════════════ -->
+<section id="screen-dashboard" class="screen-panel">
+
+  <!-- ── ASSET CLASS TILES ── -->
+  <div class="asset-class-bar">
+    <div class="asset-tile active">
+      <span class="asset-tile-icon">◈</span>
+      <div class="asset-tile-info">
+        <div class="asset-tile-name">CRYPTO</div>
+        <div class="asset-tile-val" id="dash-crypto-total">$9,111</div>
+        <div class="asset-tile-status live">● LIVE</div>
+      </div>
+    </div>
+    <div class="asset-tile dim">
+      <span class="asset-tile-icon">FX</span>
+      <div class="asset-tile-info">
+        <div class="asset-tile-name">FOREX</div>
+        <div class="asset-tile-val">$0</div>
+        <div class="asset-tile-status soon">MT5 · Soon</div>
+      </div>
+    </div>
+    <div class="asset-tile dim">
+      <span class="asset-tile-icon">⛏</span>
+      <div class="asset-tile-info">
+        <div class="asset-tile-name">COMMODITIES</div>
+        <div class="asset-tile-val">$0</div>
+        <div class="asset-tile-status soon">MT5 · Soon</div>
+      </div>
+    </div>
+    <div class="asset-tile dim">
+      <span class="asset-tile-icon">📈</span>
+      <div class="asset-tile-info">
+        <div class="asset-tile-name">STOCKS</div>
+        <div class="asset-tile-val">$0</div>
+        <div class="asset-tile-status soon">IBKR · Alpaca · Soon</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN 3-COLUMN GRID ── -->
+  <div class="dash-grid">
+
+    <!-- LEFT COL -->
+    <div class="dash-left">
+
+      <!-- KPIs -->
+      <div class="dash-kpi-pair">
+        <div class="dash-kpi">
+          <div class="dash-kpi-lbl">Locked $</div>
+          <div class="dash-kpi-val pos" id="dash-locked">+$126.60</div>
+          <div class="dash-kpi-sub">+1.38%</div>
+        </div>
+        <div class="dash-kpi">
+          <div class="dash-kpi-lbl">Daily %</div>
+          <div class="dash-kpi-val pos" id="dash-daily-pct">+0.155%</div>
+          <div class="dash-kpi-sub">Target: 0.333%</div>
+        </div>
+      </div>
+
+      <!-- Connected Platforms -->
+      <div class="dash-section-title">CONNECTED PLATFORMS</div>
+      <div class="dash-platforms">
+        <div class="dash-platform live">
+          <div class="plat-icon bn">BN</div>
+          <div class="plat-info">
+            <div class="plat-name">Binance</div>
+            <div class="plat-sub">Spot · Futures · Grid</div>
+          </div>
+          <div class="plat-badge live">● LIVE</div>
+        </div>
+        <div class="dash-platform live">
+          <div class="plat-icon tc">3C</div>
+          <div class="plat-info">
+            <div class="plat-name">3Commas</div>
+            <div class="plat-sub">DCA · Hedge · Signal</div>
+          </div>
+          <div class="plat-badge live">● LIVE</div>
+        </div>
+        <div class="dash-platform soon">
+          <div class="plat-icon fx">FX</div>
+          <div class="plat-info">
+            <div class="plat-name">MT5 / Forex</div>
+            <div class="plat-sub">Pepperstone · MT5</div>
+          </div>
+          <div class="plat-badge soon">Soon</div>
+        </div>
+        <div class="dash-platform soon">
+          <div class="plat-icon ib">IB</div>
+          <div class="plat-info">
+            <div class="plat-name">IBKR / Stocks</div>
+            <div class="plat-sub">IBKR · Alpaca</div>
+          </div>
+          <div class="plat-badge soon">Soon</div>
+        </div>
+        <div class="dash-platform soon">
+          <div class="plat-icon cm">CM</div>
+          <div class="plat-info">
+            <div class="plat-name">Commodities</div>
+            <div class="plat-sub">MT5 · Futures</div>
+          </div>
+          <div class="plat-badge soon">Soon</div>
+        </div>
+      </div>
+
+      <!-- Alerts & Action Feed -->
+      <div class="dash-section-title" style="margin-top:14px">
+        ALERTS &amp; SIGNALS
+        <button class="dash-action-btn" onclick="showScreen('action')">⚡ ACTION CENTRE</button>
+      </div>
+      <div class="dash-alerts" id="dash-alerts">
+        <div class="dash-alert-item done">
+          <span class="alert-dot done"></span>
+          <span class="alert-text">BTC Hedge Scaled ↑ $900→$1,300</span>
+          <span class="alert-tag done">DONE</span>
+        </div>
+        <div class="dash-alert-item done">
+          <span class="alert-dot done"></span>
+          <span class="alert-text">SOL DCA Scaled ↑ $100→$300</span>
+          <span class="alert-tag done">DONE</span>
+        </div>
+        <div class="dash-alert-item done">
+          <span class="alert-dot done"></span>
+          <span class="alert-text">SOL Spot Grid Reset 30 grids</span>
+          <span class="alert-tag done">DONE</span>
+        </div>
+        <div class="dash-alert-item warn">
+          <span class="alert-dot warn"></span>
+          <span class="alert-text">XRP Grid near floor $1.315 — reset queued</span>
+          <span class="alert-tag warn">PENDING</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTRE COL — Hannah -->
+    <div class="dash-centre">
+
+      <!-- ANALYSE button above Hannah -->
+      <button class="dash-big-btn analyse" onclick="showScreen('action')">ANALYSE</button>
+      <div class="dash-btn-connector"></div>
+
+      <!-- Hannah orbital -->
+      <div class="dash-hannah-wrap">
+        <div class="dash-orbital-ring r1"></div>
+        <div class="dash-orbital-ring r2"></div>
+        <div class="dash-orbital-ring r3"></div>
+        <div class="dash-glow"></div>
+
+        <!-- Metric cards around Hannah -->
+        <div class="dash-metric-card dm1">
+          <div class="dm-lbl">Daily Profit</div>
+          <div class="dm-val pos" id="dm-daily-profit">+$14.21</div>
+          <div class="dm-sub">+0.155%/day</div>
+        </div>
+        <div class="dash-metric-card dm2">
+          <div class="dm-lbl">Total Capital</div>
+          <div class="dm-val teal" id="dm-capital">$9,111</div>
+          <div class="dm-sub">Deployed capital</div>
+        </div>
+        <div class="dash-metric-card dm3">
+          <div class="dm-lbl">Trial Day</div>
+          <div class="dm-val" id="dm-trial-day">5/30</div>
+          <div class="dm-sub">16.7% elapsed</div>
+        </div>
+        <div class="dash-metric-card dm4">
+          <div class="dm-lbl">Target</div>
+          <div class="dm-val" id="dm-target">$465</div>
+          <div class="dm-sub">6.00% goal</div>
+        </div>
+
+        <!-- Hannah portrait -->
+        <div class="dash-hannah-portrait">
+          <div class="dash-portrait-inner bracketed">
+            <div class="br-bl"></div><div class="br-br"></div>
+            <div class="dash-scanline"></div>
+            <img id="dash-hannah-photo" src="" class="dash-photo" alt="Hannah" />
+            <video id="dash-simli-mirror" class="dash-photo" style="display:none;border-radius:50%;object-fit:cover;" autoplay playsinline muted></video>
+          </div>
+          <div class="dash-talk-ring" id="dash-talk-ring"></div>
+        </div>
+
+        <!-- Hannah label -->
+        <div class="dash-hannah-id">
+          <div class="dash-hannah-name">HANNAH</div>
+          <div class="dash-hannah-status">
+            <span class="dash-status-dot" id="dash-status-dot"></span>
+            <span id="dash-status-label">Strix AI Core · v1.0 · Neural Active</span>
+          </div>
+        </div>
+
+        <!-- Bottom metric cards -->
+        <div class="dash-metric-card dm5">
+          <div class="dm-lbl">Stretch Target</div>
+          <div class="dm-val warn" id="dm-stretch">$775</div>
+          <div class="dm-sub">10.00% goal</div>
+        </div>
+        <div class="dash-metric-card dm6">
+          <div class="dm-lbl">Total Profit Locked</div>
+          <div class="dm-val pos" id="dm-locked">+$126.60</div>
+          <div class="dm-sub">+1.38% | Day 5/30</div>
+        </div>
+      </div>
+
+      <div class="dash-btn-connector bottom"></div>
+      <!-- EXECUTE button below Hannah -->
+      <button class="dash-big-btn execute" onclick="showScreen('bots')">EXECUTE</button>
+
+      <!-- Live performance sparkline -->
+      <div class="dash-perf-wrap">
+        <div class="dash-perf-label">LIVE PERFORMANCE — LOCKED PROFIT (TRIAL)</div>
+        <canvas id="dash-perf-chart" class="dash-perf-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT COL -->
+    <div class="dash-right">
+
+      <!-- Active Bots by Platform -->
+      <div class="dash-section-title">ACTIVE BOTS BY PLATFORM</div>
+      <div class="dash-bot-platforms">
+        <div class="dash-bot-platform">
+          <div class="dbp-header">
+            <div class="plat-icon bn" style="font-size:9px">BN</div>
+            <span>Binance</span>
+            <span class="dbp-count" id="dbp-bn-count">10 bots total</span>
+            <span class="plat-badge live" style="margin-left:auto">● LIVE</span>
+          </div>
+          <div class="dbp-tags" id="dbp-bn-tags">
+            <span class="dbp-tag">Spot Grid × 5</span>
+            <span class="dbp-tag">UM Grid × 3</span>
+            <span class="dbp-tag">Spot DCA × 1</span>
+            <span class="dbp-tag">Rebalancing × 1</span>
+          </div>
+        </div>
+        <div class="dash-bot-platform">
+          <div class="dbp-header">
+            <div class="plat-icon tc" style="font-size:9px">3C</div>
+            <span>3Commas</span>
+            <span class="dbp-count" id="dbp-tc-count">9 bots total</span>
+            <span class="plat-badge live" style="margin-left:auto">● LIVE</span>
+          </div>
+          <div class="dbp-tags" id="dbp-tc-tags">
+            <span class="dbp-tag">DCA Long × 5</span>
+            <span class="dbp-tag">Hedge × 1</span>
+            <span class="dbp-tag">Breakout × 1</span>
+            <span class="dbp-tag">Stable × 1</span>
+          </div>
+        </div>
+        <div class="dash-bot-platform dim">
+          <div class="dbp-header">
+            <div class="plat-icon fx">FX</div>
+            <span>MT5 / Pepperstone</span>
+            <span class="plat-badge soon" style="margin-left:auto">Soon</span>
+          </div>
+        </div>
+        <div class="dash-bot-platform dim">
+          <div class="dbp-header">
+            <div class="plat-icon ib">IB</div>
+            <span>IBKR / Alpaca</span>
+            <span class="plat-badge soon" style="margin-left:auto">Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Insights -->
+      <div class="dash-section-title" style="margin-top:14px">AI INSIGHTS</div>
+      <div class="dash-insights" id="dash-insights">
+        <div class="dash-insight ok">
+          <span class="insight-icon">✓</span>
+          <div class="insight-body">
+            <div class="insight-title">19 BOTS ACTIVE</div>
+            <div class="insight-sub">All systems running</div>
+          </div>
+        </div>
+        <div class="dash-insight warn">
+          <span class="insight-icon">⚡</span>
+          <div class="insight-body">
+            <div class="insight-title">XRP GRID WARNING</div>
+            <div class="insight-sub">Near floor boundary</div>
+          </div>
+        </div>
+        <div class="dash-insight err">
+          <span class="insight-icon">◉</span>
+          <div class="insight-body">
+            <div class="insight-title">REGIME: EXTREME FEAR</div>
+            <div class="insight-sub">F&G 26 — hedges favoured</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div class="dash-section-title" style="margin-top:14px">SYSTEM STATUS</div>
+      <div class="dash-status-panel">
+        <div class="dsp-row"><span class="dsp-lbl">System</span><span class="dsp-val ok" id="dsp-system">ONLINE</span></div>
+        <div class="dsp-row"><span class="dsp-lbl">Risk Level</span><span class="dsp-val warn" id="dsp-risk">MODERATE</span></div>
+        <div class="dsp-row"><span class="dsp-lbl">Next Review</span><span class="dsp-val" id="dsp-review">09:00 GST</span></div>
+        <div class="dsp-row"><span class="dsp-lbl">Trial Day</span><span class="dsp-val" id="dsp-trial">5/30</span></div>
+      </div>
+
+      <!-- Hannah Mini Card -->
+      <div class="dash-hannah-mini">
+        <img id="dash-mini-photo" src="" class="dhm-photo" alt="H" />
+        <div class="dhm-body">
+          <div class="dhm-name">HANNAH — STRIX AI</div>
+          <div class="dhm-msg" id="dhm-msg">Day 5/30. Locked +$126.60. BTC Hedge leading at +$31.69. ⚡ XRP grid near floor — review recommended.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM KPI STRIP ── -->
+  <div class="dash-bottom-kpis">
+    <div class="dbk-cell">
+      <div class="dbk-lbl">Monthly ROI</div>
+      <div class="dbk-val pos" id="dbk-roi">+4.65%</div>
+      <div class="dbk-sub">projected</div>
+    </div>
+    <div class="dbk-cell">
+      <div class="dbk-lbl">Win Rate</div>
+      <div class="dbk-val pos" id="dbk-wr">82.5%</div>
+      <div class="dbk-sub">closed trades</div>
+    </div>
+    <div class="dbk-cell">
+      <div class="dbk-lbl">Daily Locked</div>
+      <div class="dbk-val pos" id="dbk-daily">+$14.21</div>
+      <div class="dbk-sub">+0.155%/day</div>
+    </div>
+    <div class="dbk-cell">
+      <div class="dbk-lbl">Trial Goal</div>
+      <div class="dbk-val teal" id="dbk-goal">$465</div>
+      <div class="dbk-sub">6.00% target</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SCREEN 2 — ACTION CENTRE
+     ════════════════════════════════════════════════════════════════════ -->
+<section id="screen-action" class="screen-panel" style="display:none">
+
+  <!-- Trial progress bar (shared) -->
+  <div class="trial-progress-bar">
+    <div class="tpb-header">
+      <span class="tpb-label">TRIAL PROGRESS — TARGET <span id="tpb-target">$465 (6%)</span> · STRETCH <span id="tpb-stretch">$775 (10%)</span> · DAY <span id="tpb-day">5/30</span></span>
+      <span class="tpb-locked" id="tpb-locked">+$126.60 target</span>
+    </div>
+    <div class="tpb-track">
+      <div class="tpb-fill" id="tpb-fill" style="width:23%"></div>
+      <div class="tpb-stretch-mark" style="left:60%"></div>
+    </div>
+    <div class="tpb-footer">
+      <span id="tpb-sub">23% · $338 remaining · -26 days at current pace · needs +$15.50/day</span>
+      <span id="tpb-stretch-sub">10% stretch · $649 remaining · needs +$27/day · requires 0.333%/day rate</span>
+    </div>
+  </div>
+
+  <!-- Rule status bar -->
+  <div class="rules-bar">
+    <div class="rule-chip ok">
+      <div class="rule-num">R1 · GRID RANGE VALIDITY</div>
+      <div class="rule-val ok" id="r1-val">8/9 ✓</div>
+      <div class="rule-sub">XRP at risk — reset today</div>
+    </div>
+    <div class="rule-chip warn">
+      <div class="rule-num">R2 · REGIME GATE</div>
+      <div class="rule-val warn">F&G 26 ✗</div>
+      <div class="rule-sub">No new directional longs</div>
+    </div>
+    <div class="rule-chip ok">
+      <div class="rule-num">R3 · 48HR IDLE RULE</div>
+      <div class="rule-val ok">Clear ✓</div>
+      <div class="rule-sub">$80 DCA stopped per rule</div>
+    </div>
+    <div class="rule-chip ok">
+      <div class="rule-num">R4 · CAPITAL EFFICIENCY</div>
+      <div class="rule-val ok">0.155%/d ✓</div>
+      <div class="rule-sub">Above 0.8% threshold</div>
+    </div>
+    <div class="rule-chip ok">
+      <div class="rule-num">R5 · LOCKED SCOREBOARD</div>
+      <div class="rule-val ok">+$126.60 ✓</div>
+      <div class="rule-sub">Still locked counts</div>
+    </div>
+  </div>
+
+  <!-- 3-column layout -->
+  <div class="action-grid">
+
+    <!-- Left: Pending Actions -->
+    <div class="action-left">
+      <div class="dash-section-title">PENDING ACTIONS</div>
+      <div id="required-actions-list-ac"></div>
+      <div id="suggested-wrap-ac" style="display:none">
+        <div class="section-label suggested" style="margin-top:10px">Suggested</div>
+        <div id="suggested-actions-list-ac"></div>
+      </div>
+    </div>
+
+    <!-- Centre: Hannah AI Engine -->
+    <div class="action-centre">
+      <div class="ac-engine-label">⚡ AI ENGINE</div>
+      <div class="ac-hannah-wrap">
+        <div class="ac-talk-ring" id="ac-talk-ring"></div>
+        <div class="ac-portrait-inner bracketed">
+          <div class="br-bl"></div><div class="br-br"></div>
+          <div class="ac-scanline"></div>
+          <img id="ac-hannah-photo" src="" class="ac-photo" alt="Hannah" />
+        </div>
+      </div>
+      <div class="ac-hannah-label">HANNAH</div>
+      <div class="ac-hannah-sub">AI Engine · Active · Claude + GPT-4o · Real-time</div>
+
+      <!-- Analysis text -->
+      <div class="ac-analysis-box">
+        <div class="ac-analysis-header">ANALYSIS — DAY 5</div>
+        <div class="ac-analysis-text" id="ac-analysis-text">
+          Rate +0.155%/day is solid but below quantum target. BTC Hedge is massively underweighted — $0.330%/day on $1,300. Doubling it to $2,600 alone adds ~0.11%/day to system average.<br><br>
+          XRP grid is critical: 1.1% from freezing. Reset before tomorrow's session or it stalls.<br><br>
+          F&G 26 means floating will stay elevated. Focus only on locked profit — never trade on floating numbers.
+        </div>
+      </div>
+
+      <!-- Quantum Path -->
+      <div class="qp-section">
+        <div class="dash-section-title" style="margin-bottom:8px">QUANTUM PATH</div>
+        <div class="qp-row">
+          <span class="qp-label">CURRENT</span>
+          <div class="qp-bar-wrap"><div class="qp-bar current" style="width:46%"></div></div>
+          <span class="qp-val pos">+0.155%</span>
+          <span class="qp-sub">6% by D30</span>
+        </div>
+        <div class="qp-row">
+          <span class="qp-label">TARGET</span>
+          <div class="qp-bar-wrap"><div class="qp-bar target" style="width:60%"></div></div>
+          <span class="qp-val">+0.200%</span>
+          <span class="qp-sub">6% by D30</span>
+        </div>
+        <div class="qp-row">
+          <span class="qp-label">QUANTUM</span>
+          <div class="qp-bar-wrap"><div class="qp-bar quantum" style="width:100%"></div></div>
+          <span class="qp-val warn">+0.333%</span>
+          <span class="qp-sub">10% by D30</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Completed, Impact, Checklist -->
+    <div class="action-right">
+      <div class="dash-section-title">COMPLETED TODAY — <span id="ac-date">4 Apr 2026</span></div>
+      <div class="ac-completed-list" id="ac-completed-list">
+        <div class="ac-done-item"><span class="acd-time">00:11</span><span class="acd-tag scale">SCALE ↑</span><span class="acd-text">BTC Hedge Bot $900 → $1,300 USDT base order</span></div>
+        <div class="ac-done-item"><span class="acd-time">00:14</span><span class="acd-tag scale">SCALE ↑</span><span class="acd-text">SOL DCA Long $100 → $300 USDT base order</span></div>
+        <div class="ac-done-item"><span class="acd-time">00:22</span><span class="acd-tag reset">RESET</span><span class="acd-text">SOL Spot Grid → $72-$100 · 220 USDT · 30 grids</span></div>
+        <div class="ac-done-item"><span class="acd-time">00:22</span><span class="acd-tag reset">RESET</span><span class="acd-text">BNB Spot Grid → $530-$680 · 300 USDT · 30 grids</span></div>
+        <div class="ac-done-item"><span class="acd-time">00:25</span><span class="acd-tag stop">STOP</span><span class="acd-text">BNB DCA Long — R3: 48hr idle rule triggered · capital freed</span></div>
+        <div class="ac-done-item"><span class="acd-time">00:29</span><span class="acd-tag stop">STOP</span><span class="acd-text">BTC Long Futures Bot — R2: F&G=26 regime gate · capital freed</span></div>
+        <div class="ac-done-item pending"><span class="acd-time">PENDING</span><span class="acd-tag warn">QUEUE</span><span class="acd-text">XRP Spot Grid — near floor $1.315 — reset queued</span></div>
+      </div>
+
+      <!-- Day Impact -->
+      <div class="ac-impact-box">
+        <div class="dash-section-title">DAY 5 IMPACT ESTIMATE</div>
+        <div class="ac-impact-row">
+          <div class="ac-impact-cell">
+            <div class="ac-impact-lbl">Added Daily Rate</div>
+            <div class="ac-impact-val pos" id="ac-impact-rate">+0.024%</div>
+          </div>
+          <div class="ac-impact-cell">
+            <div class="ac-impact-lbl">Est. Extra Daily $</div>
+            <div class="ac-impact-val pos" id="ac-impact-usd">+$2.20</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Session Checklist -->
+      <div class="dash-section-title" style="margin-top:12px">NEXT SESSION CHECKLIST</div>
+      <div class="ac-checklist">
+        <label class="ac-check"><input type="checkbox"> Check F&G — if below 30, hold all directional longs</label>
+        <label class="ac-check urgent"><input type="checkbox"> Reset XRP Spot Grid — urgent · do first</label>
+        <label class="ac-check"><input type="checkbox"> Deploy $800 freed capital — Hedge + XRP DCA</label>
+        <label class="ac-check"><input type="checkbox"> Verify SOL + BNB grids trading after reset</label>
+        <label class="ac-check"><input type="checkbox"> Check 48hr idle on any bot with 0 trades</label>
+        <label class="ac-check"><input type="checkbox"> Record locked profit delta vs yesterday</label>
+        <label class="ac-check"><input type="checkbox"> Consider Quantum Push if F&G recovers above 35</label>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SCREEN 3 — BOTS & TRADES (was Execution layer)
+     ════════════════════════════════════════════════════════════════════ -->
+<section id="screen-bots" class="screen-panel" style="display:none">
+
+  <!-- Bots summary row -->
+  <div class="bots-summary-bar">
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Active Bots</div>
+      <div class="bsum-val teal" id="bsum-active">19</div>
+    </div>
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Capital Deployed</div>
+      <div class="bsum-val" id="bsum-capital">$9,111</div>
+    </div>
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Total Locked</div>
+      <div class="bsum-val pos" id="bsum-locked">+$126.60</div>
+    </div>
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Total Floating</div>
+      <div class="bsum-val neg" id="bsum-floating">-$85.20</div>
+    </div>
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Total Trades</div>
+      <div class="bsum-val" id="bsum-trades">2,295+</div>
+    </div>
+    <div class="bsum-cell">
+      <div class="bsum-lbl">Avg Daily %</div>
+      <div class="bsum-val pos" id="bsum-daily">+0.155%</div>
+    </div>
+  </div>
+
+
+<section class="layer-execution" id="layer-execution" style="display:block">
+
+  <!-- Asset class tabs -->
+  <div class="exec-tabs">
+    <button class="exec-tab active" id="exec-crypto-tab" onclick="showExecTab('crypto')">
+      Crypto Bots
+    </button>
+    <button class="exec-tab" onclick="showExecTab('forex')">
+      Forex <span class="coming-soon">Coming Soon</span>
+    </button>
+    <button class="exec-tab" onclick="showExecTab('equities')">
+      Equities <span class="coming-soon">Coming Soon</span>
+    </button>
+    <button class="exec-tab" onclick="showExecTab('commodities')">
+      Commodities <span class="coming-soon">Coming Soon</span>
+    </button>
+  </div>
+
+  <!-- Crypto execution panel -->
+  <div id="exec-crypto">
+    <!-- Bot manager -->
+    <div class="mgr-panel bracketed" id="mgr-panel">
+      <div class="br-bl"></div><div class="br-br"></div>
+      <div class="mgr-header">
+        <div class="mgr-title">⚙ Bot Manager — Binance Native Bots</div>
+        <button class="mgr-btn mgr-btn-cancel" onclick="document.getElementById('mgr-panel').style.display='none'">Close</button>
+      </div>
+      <div class="mgr-form-wrap" id="mgr-form-wrap">
+        <div class="mgr-grid">
+          <div class="mgr-field"><label class="mgr-label">Bot Name</label><input class="mgr-input" id="mgr-name" placeholder="e.g. SOL/USDT Spot Grid"></div>
+          <div class="mgr-field"><label class="mgr-label">Symbol</label><input class="mgr-input" id="mgr-symbol" placeholder="SOLUSDT"></div>
+          <div class="mgr-field"><label class="mgr-label">Strategy</label>
+            <select class="mgr-select" id="mgr-strategy">
+              <option value="grid">Grid</option><option value="dca">DCA</option>
+              <option value="signal">Signal</option><option value="futures-grid">Futures Grid</option>
+            </select>
+          </div>
+          <div class="mgr-field"><label class="mgr-label">Direction</label>
+            <select class="mgr-select" id="mgr-direction">
+              <option value="long">Long</option><option value="short">Short</option>
+            </select>
+          </div>
+          <div class="mgr-field"><label class="mgr-label">Market Type</label>
+            <select class="mgr-select" id="mgr-market">
+              <option value="spot">Spot</option><option value="futures">Futures</option>
+            </select>
+          </div>
+          <div class="mgr-field"><label class="mgr-label">Max Alloc %</label><input class="mgr-input" id="mgr-alloc" type="number" placeholder="15" min="1" max="100"></div>
+        </div>
+        <div class="mgr-actions">
+          <button class="mgr-btn mgr-btn-add" onclick="addBotFromForm()">Add Bot</button>
+          <button class="mgr-btn mgr-btn-cancel" onclick="document.getElementById('mgr-form-wrap').style.display='none'">Cancel</button>
+        </div>
+      </div>
+      <div class="mgr-actions" style="margin-bottom:10px">
+        <button class="mgr-toggle-btn" onclick="document.getElementById('mgr-form-wrap').style.display='block'">+ Add New Bot</button>
+      </div>
+      <div class="mgr-list" id="mgr-bot-list"></div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="bot-filter-bar">
+      <button class="bot-filter active" onclick="filterBots('all',this)">All</button>
+      <button class="bot-filter" onclick="filterBots('dca',this)">DCA</button>
+      <button class="bot-filter" onclick="filterBots('signal',this)">Signal</button>
+      <button class="bot-filter" onclick="filterBots('spot',this)">Spot</button>
+      <button class="bot-filter" onclick="filterBots('futures',this)">Futures</button>
+      <button class="bot-filter" onclick="filterBots('binance',this)">Binance Native</button>
+      <button class="manage-bots-btn" onclick="document.getElementById('mgr-panel').style.display='block'">⚙ Manage Bots</button>
+    </div>
+
+    <!-- 3Commas bots section -->
+    <div class="bot-section-header" id="tc-section-header">
+      <div class="bot-section-title">3Commas Bots</div>
+      <div class="bot-section-count" id="tc-count">—</div>
+      <div class="bot-section-line"></div>
+      <div class="bot-section-ai">AI Score</div>
+    </div>
+    <div class="bots-grid" id="tc-bots-grid"></div>
+
+    <!-- Binance native bots section -->
+    <div class="bot-section-header" id="bn-section-header" style="margin-top:20px">
+      <div class="bot-section-title">Binance Native Bots</div>
+      <div class="bot-section-count" id="bn-count">—</div>
+      <div class="bot-section-line"></div>
+    </div>
+    <div class="bots-grid" id="bn-bots-grid"></div>
+  </div>
+
+  <!-- Forex placeholder -->
+  <div id="exec-forex" style="display:none">
+    <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-family:var(--font-display);font-size:14px;letter-spacing:.1em;margin-bottom:8px;color:var(--text-secondary)">IBKR INTEGRATION</div>
+      <div style="font-size:13px;line-height:1.6">Forex positions and recommendations coming soon.<br>Connect your IBKR account to see live positions here.</div>
+    </div>
+  </div>
+
+</section>
+
+</section><!-- /screen-bots -->
+
+<!-- ════════════════════════════════════════════════════════════════════
+     HIDDEN CONTROL LAYER (data source for Action Centre)
      ════════════════════════════════════════════════════════════════════ -->
 <style>
 /* ══════════════════════════════════════════════════
@@ -1610,6 +2732,8 @@ body::after {
 }
 </style>
 
+<div id="screen-control-hidden" style="display:none">
+<!-- Original Control layer — data is mirrored to Action Centre -->
 <section class="layer-control" id="layer-control">
 <div class="cv16-shell">
 
@@ -1766,11 +2890,16 @@ body::after {
 
 </div><!-- /cv16-shell -->
 </section>
+</div><!-- /screen-control-hidden -->
 
 <!-- ════════════════════════════════════════════════════════════════════
-     LAYER 2 — PORTFOLIO
+     SCREEN 4 — PORTFOLIO
      ════════════════════════════════════════════════════════════════════ -->
-<section class="layer-portfolio" id="layer-portfolio" style="display:none">
+
+<section id="screen-portfolio" class="screen-panel" style="display:none">
+
+<!-- Re-mapped from layer-portfolio -->
+<section class="layer-portfolio" id="layer-portfolio" style="display:block !important;border:none">
 
   <div class="portfolio-grid">
 
@@ -1899,113 +3028,18 @@ body::after {
   </div>
 
 </section>
+</section><!-- /screen-portfolio -->
 
 <!-- ════════════════════════════════════════════════════════════════════
-     LAYER 3 — EXECUTION
+     SCREEN 3 continued — BOTS & TRADES (Execution layer)
      ════════════════════════════════════════════════════════════════════ -->
-<section class="layer-execution" id="layer-execution" style="display:none">
 
-  <!-- Asset class tabs -->
-  <div class="exec-tabs">
-    <button class="exec-tab active" id="exec-crypto-tab" onclick="showExecTab('crypto')">
-      Crypto Bots
-    </button>
-    <button class="exec-tab" onclick="showExecTab('forex')">
-      Forex <span class="coming-soon">Coming Soon</span>
-    </button>
-    <button class="exec-tab" onclick="showExecTab('equities')">
-      Equities <span class="coming-soon">Coming Soon</span>
-    </button>
-    <button class="exec-tab" onclick="showExecTab('commodities')">
-      Commodities <span class="coming-soon">Coming Soon</span>
-    </button>
-  </div>
-
-  <!-- Crypto execution panel -->
-  <div id="exec-crypto">
-    <!-- Bot manager -->
-    <div class="mgr-panel bracketed" id="mgr-panel">
-      <div class="br-bl"></div><div class="br-br"></div>
-      <div class="mgr-header">
-        <div class="mgr-title">⚙ Bot Manager — Binance Native Bots</div>
-        <button class="mgr-btn mgr-btn-cancel" onclick="document.getElementById('mgr-panel').style.display='none'">Close</button>
-      </div>
-      <div class="mgr-form-wrap" id="mgr-form-wrap">
-        <div class="mgr-grid">
-          <div class="mgr-field"><label class="mgr-label">Bot Name</label><input class="mgr-input" id="mgr-name" placeholder="e.g. SOL/USDT Spot Grid"></div>
-          <div class="mgr-field"><label class="mgr-label">Symbol</label><input class="mgr-input" id="mgr-symbol" placeholder="SOLUSDT"></div>
-          <div class="mgr-field"><label class="mgr-label">Strategy</label>
-            <select class="mgr-select" id="mgr-strategy">
-              <option value="grid">Grid</option><option value="dca">DCA</option>
-              <option value="signal">Signal</option><option value="futures-grid">Futures Grid</option>
-            </select>
-          </div>
-          <div class="mgr-field"><label class="mgr-label">Direction</label>
-            <select class="mgr-select" id="mgr-direction">
-              <option value="long">Long</option><option value="short">Short</option>
-            </select>
-          </div>
-          <div class="mgr-field"><label class="mgr-label">Market Type</label>
-            <select class="mgr-select" id="mgr-market">
-              <option value="spot">Spot</option><option value="futures">Futures</option>
-            </select>
-          </div>
-          <div class="mgr-field"><label class="mgr-label">Max Alloc %</label><input class="mgr-input" id="mgr-alloc" type="number" placeholder="15" min="1" max="100"></div>
-        </div>
-        <div class="mgr-actions">
-          <button class="mgr-btn mgr-btn-add" onclick="addBotFromForm()">Add Bot</button>
-          <button class="mgr-btn mgr-btn-cancel" onclick="document.getElementById('mgr-form-wrap').style.display='none'">Cancel</button>
-        </div>
-      </div>
-      <div class="mgr-actions" style="margin-bottom:10px">
-        <button class="mgr-toggle-btn" onclick="document.getElementById('mgr-form-wrap').style.display='block'">+ Add New Bot</button>
-      </div>
-      <div class="mgr-list" id="mgr-bot-list"></div>
-    </div>
-
-    <!-- Filter bar -->
-    <div class="bot-filter-bar">
-      <button class="bot-filter active" onclick="filterBots('all',this)">All</button>
-      <button class="bot-filter" onclick="filterBots('dca',this)">DCA</button>
-      <button class="bot-filter" onclick="filterBots('signal',this)">Signal</button>
-      <button class="bot-filter" onclick="filterBots('spot',this)">Spot</button>
-      <button class="bot-filter" onclick="filterBots('futures',this)">Futures</button>
-      <button class="bot-filter" onclick="filterBots('binance',this)">Binance Native</button>
-      <button class="manage-bots-btn" onclick="document.getElementById('mgr-panel').style.display='block'">⚙ Manage Bots</button>
-    </div>
-
-    <!-- 3Commas bots section -->
-    <div class="bot-section-header" id="tc-section-header">
-      <div class="bot-section-title">3Commas Bots</div>
-      <div class="bot-section-count" id="tc-count">—</div>
-      <div class="bot-section-line"></div>
-      <div class="bot-section-ai">AI Score</div>
-    </div>
-    <div class="bots-grid" id="tc-bots-grid"></div>
-
-    <!-- Binance native bots section -->
-    <div class="bot-section-header" id="bn-section-header" style="margin-top:20px">
-      <div class="bot-section-title">Binance Native Bots</div>
-      <div class="bot-section-count" id="bn-count">—</div>
-      <div class="bot-section-line"></div>
-    </div>
-    <div class="bots-grid" id="bn-bots-grid"></div>
-  </div>
-
-  <!-- Forex placeholder -->
-  <div id="exec-forex" style="display:none">
-    <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
-      <div style="font-family:var(--font-display);font-size:14px;letter-spacing:.1em;margin-bottom:8px;color:var(--text-secondary)">IBKR INTEGRATION</div>
-      <div style="font-size:13px;line-height:1.6">Forex positions and recommendations coming soon.<br>Connect your IBKR account to see live positions here.</div>
-    </div>
-  </div>
-
-</section>
 
 <!-- ════════════════════════════════════════════════════════════════════
-     LAYER 4 — CONTEXT
+     SCREEN 5 — MARKET CONTEXT (was Layer 4)
      ════════════════════════════════════════════════════════════════════ -->
-<section class="layer-context" id="layer-context" style="display:none">
+<section id="screen-context" class="screen-panel" style="display:none">
+<section class="layer-context" id="layer-context" style="display:block !important;border:none">
 
   <div class="context-toggle" onclick="toggleContext()">
     <div class="context-toggle-title">Market Context</div>
@@ -2179,9 +3213,10 @@ body::after {
   </div>
 
 </section>
+</section><!-- /screen-context -->
 
-<!-- Action history -->
-<div class="history-panel">
+<!-- Action history (global, always visible at bottom) -->
+<div class="history-panel" id="history-panel" style="display:none">
   <div class="history-title">
     Recommendation History
     <span class="history-count" id="hist-count">0</span>
@@ -2235,13 +3270,27 @@ const LAYERS = ['control','portfolio','execution','context'];
 let activeLayer = 'control';
 
 function showLayer(layer) {
-  LAYERS.forEach(l => {
-    const el  = document.getElementById('layer-' + l);
-    const tab = document.getElementById('tab-' + l);
-    if (el)  el.style.display  = (l === layer) ? '' : 'none';
-    if (tab) tab.classList.toggle('active', l === layer);
+  // Legacy shim — map old layer names to new screens
+  const map = { control:'dashboard', portfolio:'portfolio', execution:'bots', context:'context' };
+  showScreen(map[layer] || layer);
+}
+
+const SCREENS = ['dashboard','action','bots','portfolio','context'];
+let activeScreen = 'dashboard';
+
+function showScreen(screen) {
+  SCREENS.forEach(s => {
+    const el  = document.getElementById('screen-' + s);
+    const tab = document.getElementById('tab-' + s);
+    if (el)  el.style.display = (s === screen) ? '' : 'none';
+    if (tab) tab.classList.toggle('active', s === screen);
   });
-  activeLayer = layer;
+  // Legacy layers inside their screen wrappers — force visible
+  document.getElementById('layer-portfolio') && (document.getElementById('layer-portfolio').style.display = '');
+  document.getElementById('layer-context')   && (document.getElementById('layer-context').style.display   = '');
+  activeScreen = screen;
+  activeLayer  = screen;
+  if (screen === 'dashboard') _drawDashChart();
 }
 
 function showExecTab(tab) {
@@ -3031,11 +4080,22 @@ function checkPw() {
     document.getElementById('pw-overlay').classList.add('hidden');
     document.getElementById('app-shell').style.display  = 'block';
     sessionStorage.setItem('bjbots_auth', '1');
+    showScreen('dashboard');
     setTimeout(loadTradeHistory, 3000);
     refreshAll();
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
     renderHistory();
+    // Mirror Hannah photo after login
+    requestAnimationFrame(() => {
+      const fabImg = document.querySelector('.hannah-fab-img') || document.querySelector('#cv16-hannah-photo');
+      if (fabImg && fabImg.src) {
+        ['dash-hannah-photo','ac-hannah-photo','dash-mini-photo'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.src = fabImg.src;
+        });
+      }
+    });
   } else {
     const errEl = document.getElementById('pw-error');
     if (errEl) { errEl.style.display = 'block'; setTimeout(() => errEl.style.display='none', 2000); }
@@ -3052,6 +4112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sessionStorage.getItem('bjbots_auth') === '1') {
     document.getElementById('pw-overlay').classList.add('hidden');
     document.getElementById('app-shell').style.display  = 'block';
+    showScreen('dashboard');
     refreshAll();
     setTimeout(loadTradeHistory, 3000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
@@ -3066,6 +4127,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Click trades KPI to refresh
   const tradesKpi = document.getElementById('kpi-trades');
   if (tradesKpi) tradesKpi.addEventListener('click', loadTradeHistory);
+
+  // Mirror Hannah photo to Dashboard + Action Centre portraits
+  requestAnimationFrame(() => {
+    const fabImg = document.querySelector('.hannah-fab-img') || document.querySelector('#cv16-hannah-photo');
+    if (fabImg && fabImg.src) {
+      ['dash-hannah-photo','ac-hannah-photo','dash-mini-photo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.src = fabImg.src;
+      });
+    }
+  });
 });
 
 </script>
@@ -3446,6 +4518,89 @@ function _updateCtrlCards(data) {
     const lbl = document.getElementById('cv16-chart-lbl');
     if (lbl) lbl.textContent = (finalPct >= 0 ? '+' : '') + finalPct.toFixed(2) + '%';
   }
+
+  // ── Mirror to Dashboard KPI cards ──
+  const setD = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const trialDay = 5;
+  const trialTarget   = (gt * 0.06).toFixed(0);
+  const trialStretch  = (gt * 0.10).toFixed(0);
+  const monthlyRoi    = (0.00155 * 30 * 100).toFixed(1) + '%';
+  const dailyPct      = '+0.155%';
+  const winRate       = '82.5%';
+
+  // 6 orbital metric cards
+  setD('dm-daily-profit', '+' + fmtUSD(dailyProfit));
+  setD('dm-capital',  fmtUSD(gt));
+  setD('dm-trial-day', trialDay + '/30');
+  setD('dm-target',   '$' + trialTarget);
+  setD('dm-stretch',  '$' + trialStretch);
+  setD('dm-locked',   fmtPnl(rPnl));
+
+  // Left KPI pair
+  setD('dash-locked',     fmtPnl(rPnl));
+  setD('dash-daily-pct',  dailyPct);
+
+  // Asset tile
+  setD('dash-crypto-total', fmtUSD(gt));
+
+  // Bottom strip
+  setD('dbk-roi',   monthlyRoi);
+  setD('dbk-wr',    winRate);
+  setD('dbk-daily', '+' + fmtUSD(dailyProfit));
+  setD('dbk-goal',  '$' + trialTarget);
+
+  // Header extras
+  setD('header-trial-day', trialDay + '/30');
+  setD('header-target',    '$' + trialTarget);
+  setD('header-stretch',   '$' + trialStretch);
+
+  // Bots summary bar
+  setD('bsum-capital',  fmtUSD(gt));
+  setD('bsum-locked',   fmtPnl(rPnl));
+  setD('bsum-floating', fmtPnl(0));
+  setD('bsum-daily',    '+' + fmtUSD(dailyProfit));
+
+  // System status panel
+  setD('dsp-system',  'OPERATIONAL');
+  setD('dsp-risk',    'LOW');
+  setD('dsp-review',  new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+
+  // Hannah mini msg
+  setD('dhm-msg', 'Capital stable at ' + fmtUSD(gt) + '. Daily rate tracking target.');
+
+  // Action Centre impact box
+  setD('ac-impact-rate', dailyPct);
+  setD('ac-impact-usd',  '+' + fmtUSD(dailyProfit));
+
+  // Action Centre date
+  const acDate = document.getElementById('ac-date');
+  if (acDate) acDate.textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+  // Trial progress bar
+  const pct = Math.min(100, (rPnl / (gt * 0.06)) * 100);
+  const fill = document.getElementById('tpb-fill');
+  if (fill) fill.style.width = pct.toFixed(1) + '%';
+  setD('tpb-locked',  fmtPnl(rPnl) + ' locked');
+  setD('tpb-day',     'Day ' + trialDay);
+  setD('tpb-target',  '$' + trialTarget + ' target');
+  setD('tpb-stretch', '$' + trialStretch + ' stretch');
+  setD('tpb-sub',     pct.toFixed(0) + '% of trial target');
+
+  // Mirror action cards to Action Centre
+  setTimeout(() => {
+    const reqList = document.getElementById('required-actions-list');
+    const acList  = document.getElementById('required-actions-list-ac');
+    if (reqList && acList && reqList.innerHTML.trim()) acList.innerHTML = reqList.innerHTML;
+    const sugWrap   = document.getElementById('suggested-wrap');
+    const acSugWrap = document.getElementById('suggested-wrap-ac');
+    if (sugWrap && acSugWrap) {
+      acSugWrap.innerHTML    = sugWrap.innerHTML;
+      acSugWrap.style.display = sugWrap.style.display;
+    }
+  }, 200);
+
+  // Draw dashboard performance chart
+  _drawDashChart(gt, rPnl);
 }
 
 // Patch renderControl to also update our cards
@@ -3454,6 +4609,71 @@ function _updateCtrlCards(data) {
   window.renderControl = function(data) {
     if (orig) orig.call(this, data);
     _updateCtrlCards(data);
+  };
+})();
+
+// ── Dashboard performance mini-chart ───────────────────────────────────────
+function _drawDashChart(gt, rPnl) {
+  const canvas = document.getElementById('dash-perf-chart');
+  if (!canvas) return;
+  const W = canvas.offsetWidth || 340; const H = 55;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const finalPct = gt ? ((rPnl||0) / gt) * 100 : 1.38;
+  const days = 5;
+  const pts = Array.from({length: days + 1}, (_, i) => (finalPct / days) * i);
+  const max = Math.max(finalPct * 1.25, .1);
+  const xStep = W / days;
+  ctx.clearRect(0, 0, W, H);
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(45,212,191,.22)');
+  grad.addColorStop(1, 'rgba(45,212,191,.01)');
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = i * xStep;
+    const y = H - (v / max) * (H - 6) - 3;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(days * xStep, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = i * xStep;
+    const y = H - (v / max) * (H - 6) - 3;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = 'rgba(45,212,191,.75)'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+// ── Talk ring mirroring — patch Hannah _hTalking ───────────────────────────
+(function() {
+  const _origTalking = window._hTalking;
+  window._hTalking = function(on) {
+    if (_origTalking) _origTalking.call(this, on);
+    ['dash-talk-ring','ac-talk-ring'].forEach(id => {
+      const r = document.getElementById(id);
+      if (r) r.classList.toggle('talking', !!on);
+    });
+  };
+})();
+
+// ── Status dot mirroring ───────────────────────────────────────────────────
+(function() {
+  const _origDot = window._hDot;
+  window._hDot = function(state) {
+    if (_origDot) _origDot.call(this, state);
+    const dot = document.getElementById('dash-status-dot');
+    const lbl = document.getElementById('dash-status-label');
+    if (dot) {
+      if      (state === 'active')     { dot.style.background = 'var(--safe)';     dot.style.boxShadow = '0 0 5px var(--safe)'; }
+      else if (state === 'connecting') { dot.style.background = 'var(--warn)';     dot.style.boxShadow = '0 0 5px var(--warn)'; }
+      else                             { dot.style.background = 'var(--text-dim)'; dot.style.boxShadow = 'none'; }
+    }
+    if (lbl) {
+      if      (state === 'active')     lbl.textContent = 'Strix AI Core · Neural Active';
+      else if (state === 'connecting') lbl.textContent = 'Connecting…';
+      else                             lbl.textContent = 'Strix AI Core · v1.0 · Offline';
+    }
   };
 })();
 
