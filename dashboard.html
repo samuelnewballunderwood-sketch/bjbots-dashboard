@@ -1326,9 +1326,10 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 16px 0 20px;
+  justify-content: flex-start;
+  padding: 16px 12px 20px;
   position: relative;
+  overflow-y: auto;
 }
 .d2-col-right {
   padding: 20px 18px;
@@ -2271,26 +2272,11 @@ body::after {
   <!-- ── MAIN BODY — 3-column orbital layout ── -->
   <div class="d2-body-orbital">
 
-    <!-- LEFT COLUMN: Signals + Chat -->
+    <!-- LEFT COLUMN: Signals only -->
     <div class="d2-col-left">
 
-      <!-- Chat panel -->
-      <div class="d2-chat-panel">
-        <div class="d2-chat-msgs" id="d2-chat-msgs">
-          <div class="d2-msg hannah">Hey — I'm Hannah. I'm monitoring your portfolio in real time. Ask me anything about your capital, bots, or strategy.</div>
-        </div>
-        <div class="d2-chat-input-row" id="d2-input-row" style="display:none">
-          <input class="d2-input" id="d2-input" placeholder="Ask Hannah anything…" onkeydown="if(event.key==='Enter')d2Send()" />
-          <button class="d2-send-btn" onclick="d2Send()">▶</button>
-        </div>
-        <div class="d2-activate-state" id="d2-activate-state">
-          <button class="d2-activate-btn" onclick="d2Activate()">⚡ ACTIVATE HANNAH</button>
-          <div class="d2-activate-sub">Connect AI · ElevenLabs voice · Simli avatar</div>
-        </div>
-      </div>
-
       <!-- AI Signals -->
-      <div class="d2-section-title" style="margin-top:16px">⚡ AI SIGNALS TODAY</div>
+      <div class="d2-section-title">⚡ AI SIGNALS TODAY</div>
       <div class="d2-signals" id="dash-alerts">
         <div class="d2-signal done">
           <span class="d2-signal-tag done">DONE</span>
@@ -2370,6 +2356,21 @@ body::after {
         <div class="dash-hannah-sub-row">
           <span class="d2-status-dot" id="dash-status-dot"></span>
           <span class="d2-status-label" id="dash-status-label">Neural Active</span>
+        </div>
+      </div>
+
+      <!-- Chat panel below Hannah -->
+      <div class="d2-chat-panel" style="width:100%;margin-top:14px;">
+        <div class="d2-chat-msgs" id="d2-chat-msgs">
+          <div class="d2-msg hannah">Hey — I'm Hannah. I'm monitoring your portfolio in real time. Ask me anything.</div>
+        </div>
+        <div class="d2-chat-input-row" id="d2-input-row" style="display:none">
+          <input class="d2-input" id="d2-input" placeholder="Ask Hannah anything…" onkeydown="if(event.key==='Enter')d2Send()" />
+          <button class="d2-send-btn" onclick="d2Send()">▶</button>
+        </div>
+        <div class="d2-activate-state" id="d2-activate-state">
+          <button class="d2-activate-btn" onclick="d2Activate()">⚡ ACTIVATE HANNAH</button>
+          <div class="d2-activate-sub">Connect AI · ElevenLabs voice · Simli avatar</div>
         </div>
       </div>
     </div>
@@ -4530,7 +4531,9 @@ function checkPw() {
     // Mirror Hannah photo after login
     requestAnimationFrame(() => { setTimeout(_mirrorHannahPhoto, 200); });
     // Auto-activate Hannah — no button press needed
-    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate(); }, 1500);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 1500);
+    // Pre-warm hannah proxy
+    fetch('https://hannah-proxy.onrender.com/health').catch(() => {});
   } else {
     const errEl = document.getElementById('pw-error');
     if (errEl) { errEl.style.display = 'block'; setTimeout(() => errEl.style.display='none', 2000); }
@@ -4554,7 +4557,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(refreshWallets, 30000);
     renderHistory();
     // Auto-activate Hannah on session restore
-    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate(); }, 2000);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
+    // Pre-warm hannah proxy
+    fetch('https://hannah-proxy.onrender.com/health').catch(() => {});
   }
 
   // Keyboard
