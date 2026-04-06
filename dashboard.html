@@ -4074,12 +4074,8 @@ function renderControl(data) {
   const total = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
   if (total) setEl('header-total', fmtUSD(total));
 
-  // Mode badge
-  const modeBadge = document.getElementById('h-mode');
-  if (modeBadge) {
-    modeBadge.textContent = data.executionEnabled ? '⚡ Live Mode' : '◉ Advisory Mode';
-    modeBadge.className = 'ac-mode-badge ' + (data.executionEnabled ? 'mode-live' : 'mode-advisory');
-  }
+  // Mode badge — do NOT read from decisions data, use /api/status instead
+  // Badge is set by refreshStatus() which is called on login
 
   // Prices
   if (data.prices) {
@@ -4763,6 +4759,17 @@ async function loadMarketPairs() {
   } catch(e) { console.warn('Market pairs load failed:', e.message); }
 }
 
+async function refreshStatus() {
+  try {
+    const d = await fetch('/api/status').then(r => r.json());
+    const badge = document.getElementById('h-mode');
+    if (!badge) return;
+    const live = d.executionEnabled === true;
+    badge.textContent = live ? '⚡ Live Mode' : '◉ Advisory Mode';
+    badge.className   = 'ac-mode-badge ' + (live ? 'mode-live' : 'mode-advisory');
+  } catch(e) { /* silent fail — badge stays at default */ }
+}
+
 async function refreshAll() {
   await Promise.all([
     refreshDecisions(),
@@ -4855,8 +4862,10 @@ function checkPw() {
     showScreen('dashboard');
     setTimeout(loadTradeHistory, 3000);
     refreshAll();
+    refreshStatus();
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
+    setInterval(refreshStatus, 5 * 60 * 1000); // re-check mode every 5 min
     renderHistory();
     // Mirror Hannah photo after login
     requestAnimationFrame(() => { setTimeout(_mirrorHannahPhoto, 200); });
@@ -4882,9 +4891,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('app-shell').style.display  = 'block';
     showScreen('dashboard');
     refreshAll();
+    refreshStatus();
     setTimeout(loadTradeHistory, 3000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
+    setInterval(refreshStatus, 5 * 60 * 1000);
     renderHistory();
     // Auto-activate Hannah on session restore
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
