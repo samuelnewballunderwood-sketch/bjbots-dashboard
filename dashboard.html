@@ -1356,8 +1356,140 @@ body::after {
   margin-top: 6px;
 }
 
-/* Main body 2-col */
-.d2-body {
+/* ── MARKET SCREEN ─────────────────────────────── */
+.layer-context {
+  display: flex !important;
+  flex-direction: column;
+  padding: 16px 20px 20px;
+  gap: 16px;
+  overflow-y: auto;
+}
+.mkt-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-dim);
+}
+.mkt-header-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: .12em;
+  color: var(--teal);
+  font-weight: 700;
+}
+.mkt-header-sub { font-size: 11px; color: var(--text-dim); }
+.mkt-header-time { font-size: 10px; color: var(--text-dim); margin-left: auto; font-family: var(--font-mono); }
+
+/* Macro strip */
+.mkt-macro-strip {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  gap: 0;
+}
+.mkt-macro-cell { flex: 1; text-align: center; }
+.mkt-macro-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 4px; }
+.mkt-macro-val { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.mkt-macro-sub { font-size: 9px; color: var(--text-dim); margin-top: 2px; font-family: var(--font-mono); }
+.mkt-macro-sep { width: 1px; height: 40px; background: var(--border-dim); flex-shrink: 0; }
+
+/* Pair cards grid */
+.mkt-pairs-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.mkt-pair-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .2s;
+}
+.mkt-pair-card:hover { border-color: rgba(45,212,191,.3); }
+.mkt-pair-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0 8px;
+  align-items: center;
+}
+.mkt-pair-sym {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--teal);
+  grid-row: 1;
+  letter-spacing: .06em;
+}
+.mkt-pair-name { font-size: 9px; color: var(--text-dim); grid-row: 2; }
+.mkt-pair-price {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+  grid-column: 2; grid-row: 1;
+}
+.mkt-pair-chg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  grid-column: 2; grid-row: 2;
+}
+.mkt-pair-chg.pos { color: var(--safe); }
+.mkt-pair-chg.neg { color: var(--danger); }
+
+/* Bot tags */
+.mkt-pair-bots { display: flex; flex-wrap: wrap; gap: 4px; }
+.mkt-bot-tag {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.mkt-bot-tag.grid    { background: rgba(45,212,191,.12); color: var(--teal); border: 1px solid rgba(45,212,191,.2); }
+.mkt-bot-tag.dca     { background: rgba(99,102,241,.12); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+.mkt-bot-tag.futures { background: rgba(245,158,11,.12); color: var(--warn); border: 1px solid rgba(245,158,11,.2); }
+.mkt-bot-tag.signal  { background: rgba(139,92,246,.12); color: #a78bfa; border: 1px solid rgba(139,92,246,.2); }
+.mkt-bot-tag.short   { opacity: .75; }
+.mkt-bot-tag.warn    { background: rgba(248,113,113,.12); color: var(--danger); border: 1px solid rgba(248,113,113,.3); }
+
+/* Stats */
+.mkt-pair-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
+.mkt-stat { display: flex; flex-direction: column; gap: 1px; }
+.mkt-stat-lbl { font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+.mkt-stat-val { font-family: var(--font-mono); font-size: 10px; color: var(--text-secondary); }
+
+/* Signal line */
+.mkt-pair-signal {
+  font-size: 9px;
+  color: var(--text-dim);
+  background: rgba(255,255,255,.03);
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  min-height: 28px;
+}
+
+/* TradingView ticker */
+.mkt-tv-wrap {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-dim);
+  flex-shrink: 0;
+}
   display: grid;
   grid-template-columns: 420px 1fr;
   min-height: calc(100vh - 200px);
@@ -3478,49 +3610,79 @@ body::after {
 
 
 <!-- ════════════════════════════════════════════════════════════════════
-     SCREEN 5 — MARKET CONTEXT (was Layer 4)
+     SCREEN 5 — MARKET
      ════════════════════════════════════════════════════════════════════ -->
 <section id="screen-context" class="screen-panel" style="display:none">
-<section class="layer-context" id="layer-context" style="display:block !important;border:none">
+<section class="layer-context" id="layer-context" style="display:block !important;border:none;overflow-y:auto">
 
-  <div class="context-toggle" onclick="toggleContext()">
-    <div class="context-toggle-title">Market Context</div>
-    <div class="context-toggle-line"></div>
-    <div class="context-toggle-arrow" id="ctx-arrow">▼</div>
+  <!-- ── MARKET HEADER ── -->
+  <div class="mkt-header">
+    <div class="mkt-header-title">◈ MARKET INTELLIGENCE</div>
+    <div class="mkt-header-sub">Live data for your 6 bot pairs · BTC · ETH · SOL · XRP · BNB · ETHUSDT-PERP</div>
+    <div class="mkt-header-time">Updated <span id="mkt-last-update">—</span></div>
   </div>
 
-  <!-- TradingView Market Overview -->
-  <div class="tv-market-wrap" id="tv-market-overview">
-    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+  <!-- ── MACRO STRIP ── -->
+  <div class="mkt-macro-strip">
+    <div class="mkt-macro-cell">
+      <div class="mkt-macro-lbl">Fear &amp; Greed</div>
+      <div class="mkt-macro-val" id="mkt-fg-val">—</div>
+      <div class="mkt-macro-sub" id="mkt-fg-label">—</div>
+    </div>
+    <div class="mkt-macro-sep"></div>
+    <div class="mkt-macro-cell">
+      <div class="mkt-macro-lbl">BTC Dominance</div>
+      <div class="mkt-macro-val" id="mkt-btc-dom">—</div>
+      <div class="mkt-macro-sub">of total market cap</div>
+    </div>
+    <div class="mkt-macro-sep"></div>
+    <div class="mkt-macro-cell">
+      <div class="mkt-macro-lbl">BTC Funding Rate</div>
+      <div class="mkt-macro-val" id="mkt-funding">—</div>
+      <div class="mkt-macro-sub">perp funding</div>
+    </div>
+    <div class="mkt-macro-sep"></div>
+    <div class="mkt-macro-cell">
+      <div class="mkt-macro-lbl">Market Regime</div>
+      <div class="mkt-macro-val" id="mkt-regime">—</div>
+      <div class="mkt-macro-sub" id="mkt-volatility">—</div>
+    </div>
+    <div class="mkt-macro-sep"></div>
+    <div class="mkt-macro-cell">
+      <div class="mkt-macro-lbl">Grid Suitability</div>
+      <div class="mkt-macro-val" id="mkt-grid-suit">—</div>
+      <div class="mkt-macro-sub">for your grid bots</div>
+    </div>
+  </div>
+
+  <!-- ── BOT PAIR CARDS ── -->
+  <div class="mkt-pairs-grid" id="mkt-pairs-grid">
+
+
+  </div>
+
+  <!-- ── TRADINGVIEW TICKER TAPE ── -->
+  <div class="mkt-tv-wrap">
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
-      "colorTheme": "dark",
-      "dateRange": "1D",
-      "showChart": true,
-      "locale": "en",
-      "largeChartUrl": "",
-      "isTransparent": true,
+      "symbols": [
+        {"proName": "BINANCE:BTCUSDT", "title": "BTC/USDT"},
+        {"proName": "BINANCE:ETHUSDT", "title": "ETH/USDT"},
+        {"proName": "BINANCE:SOLUSDT", "title": "SOL/USDT"},
+        {"proName": "BINANCE:XRPUSDT", "title": "XRP/USDT"},
+        {"proName": "BINANCE:BNBUSDT", "title": "BNB/USDT"},
+        {"proName": "BINANCE:ETHUSDT.P", "title": "ETH PERP"}
+      ],
       "showSymbolLogo": true,
-      "showFloatingTooltip": false,
-      "width": "100%",
-      "height": "320",
-      "tabs": [
-        {
-          "title": "Crypto",
-          "symbols": [
-            {"s": "BINANCE:BTCUSDT", "d": "BTC/USDT"},
-            {"s": "BINANCE:ETHUSDT", "d": "ETH/USDT"},
-            {"s": "BINANCE:SOLUSDT", "d": "SOL/USDT"},
-            {"s": "BINANCE:XRPUSDT", "d": "XRP/USDT"},
-            {"s": "BINANCE:BNBUSDT", "d": "BNB/USDT"}
-          ],
-          "originalTitle": "Crypto"
-        }
-      ]
+      "isTransparent": true,
+      "displayMode": "adaptive",
+      "colorTheme": "dark",
+      "locale": "en"
     }
     </script>
   </div>
 
-  <div id="ctx-panels" style="display:none">
+  <div id="ctx-panels">
     <div class="context-panels">
 
       <!-- BTC Dominance widget -->
@@ -3733,6 +3895,7 @@ function showScreen(screen) {
   activeScreen = screen;
   activeLayer  = screen;
   if (screen === 'dashboard') _drawDashChart();
+  if (screen === 'context') { loadMarketSignals(); loadMarketPairs(); }
 }
 
 function showExecTab(tab) {
@@ -4413,25 +4576,191 @@ async function refreshBots() {
 // ── Market Signals — Fear & Greed, BTC Dominance, Funding ─────────────────
 async function loadMarketSignals() {
   try {
-    // Fetch from Oregon proxy market-signals endpoint
     const res = await fetch('https://tc-proxy-h2pp.onrender.com/market-signals');
     if (!res.ok) return;
     const s = await res.json();
-    // Update Context layer F&G
+    // Update old Context layer elements (kept for compatibility)
     setEl('ctx-fg-value',  s.fearGreed?.value ?? '—');
-    setEl('ctx-fg-label',  s.fearGreed?.classification ?? '—');
+    setEl('ctx-fg-label',  s.fearGreed?.label ?? s.fearGreed?.classification ?? '—');
     setEl('ctx-regime',    s.regime ?? '—');
     setEl('ctx-btc-dom',   s.btcDominance ? s.btcDominance + '%' : '—');
-    setEl('ctx-funding',   s.btcFundingRate ? s.btcFundingRate + '%' : '—');
-    // Colour F&G
+    setEl('ctx-funding',   s.fundingRate != null ? s.fundingRate.toFixed(4) + '%' : '—');
     const fgEl = document.getElementById('ctx-fg-value');
-    if (fgEl && s.fearGreed?.value !== null) {
+    if (fgEl && s.fearGreed?.value != null) {
       const v = s.fearGreed.value;
       fgEl.style.color = v <= 25 ? '#f87171' : v <= 45 ? '#fbbf24' : v >= 75 ? '#4ade80' : 'var(--text-bright)';
     }
-    // Inject into Hannah system prompt context (global for chat-dual calls)
     window._marketSignals = s;
+
+    // ── Populate new Market screen ──────────────────────────────────────
+    const fg = s.fearGreed?.value ?? null;
+    const fgLabel = s.fearGreed?.label ?? s.fearGreed?.classification ?? '—';
+    const regime = s.regime ?? '—';
+    const vol = window._lastDecisions?.reconciliation ? (window._lastDecisions.dataIntegrity ? '—' : '—') : '—';
+
+    // Macro strip
+    const fgEl2 = document.getElementById('mkt-fg-val');
+    if (fgEl2 && fg != null) {
+      fgEl2.textContent = fg;
+      fgEl2.style.color = fg <= 25 ? '#f87171' : fg <= 45 ? '#fbbf24' : fg >= 75 ? '#4ade80' : 'var(--teal)';
+    }
+    setEl('mkt-fg-label',   fgLabel);
+    setEl('mkt-btc-dom',    s.btcDominance ? s.btcDominance + '%' : '—');
+    const fundEl = document.getElementById('mkt-funding');
+    if (fundEl) {
+      const f = s.fundingRate;
+      fundEl.textContent = f != null ? (f >= 0 ? '+' : '') + f.toFixed(4) + '%' : '—';
+      fundEl.style.color = f != null ? (f > 0.01 ? '#f87171' : f < -0.005 ? '#4ade80' : 'var(--teal)') : '';
+    }
+    setEl('mkt-regime', regime);
+
+    // Grid suitability based on regime + volatility
+    const btcChange = window._lastBotData?.market?.btcChange24h ?? 0;
+    const v = Math.abs(btcChange);
+    const gridSuit = v > 4 ? '⚠ Poor (high vol)' : v > 2 ? '◑ Fair' : '✓ Good';
+    const gsEl = document.getElementById('mkt-grid-suit');
+    if (gsEl) {
+      gsEl.textContent = gridSuit;
+      gsEl.style.color = v > 4 ? '#f87171' : v > 2 ? '#fbbf24' : '#4ade80';
+    }
+    setEl('mkt-volatility', v > 4 ? 'High Volatility' : v > 2 ? 'Medium Volatility' : 'Low Volatility');
+    setEl('mkt-last-update', new Date().toLocaleTimeString());
+
   } catch(e) { console.warn('Market signals unavailable:', e.message); }
+}
+
+// ── Populate market pair cards with live 24h data ──────────────────────────
+async function loadMarketPairs() {
+  try {
+    const [botsRes, pricesRes, decisionsData] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/binance-bots').then(r => r.ok ? r.json() : null),
+      fetch('https://tc-proxy-eu.onrender.com/prices').then(r => r.ok ? r.json() : {}),
+      apiFetch('decisions').catch(() => null),
+    ]);
+    if (!botsRes) return;
+
+    const changes = botsRes.market?.changes || {};
+    const prices  = pricesRes || {};
+    window._lastBotData = botsRes;
+
+    // Build dynamic pair map from all live bot data
+    const pairMap = {};
+
+    function addBot(rawSymbol, botName, strategy, direction, capital) {
+      if (!rawSymbol) return;
+      // Normalise to base asset
+      const sym = rawSymbol.replace(/USDT$|BUSD$|USDC$|-FUTURES$|\.P$/,'').replace('/','').toUpperCase();
+      if (!sym || sym === 'USDT') return;
+      const key = sym + 'USDT';
+      if (!pairMap[sym]) pairMap[sym] = { sym, key, bots: [], capital: 0 };
+      pairMap[sym].bots.push({ name: botName, strategy: strategy || 'grid', direction: direction || 'long' });
+      pairMap[sym].capital += (capital || 0);
+    }
+
+    // Binance native bots from binance-bots endpoint
+    botsRes.bots?.forEach(b => {
+      const name = (b.id || b.symbol || '').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+      const strat = b.type?.includes('futures') ? 'futures-grid' : b.type?.includes('dca') ? 'dca' : 'grid';
+      addBot(b.symbol, name, strat, 'long', 0);
+    });
+
+    // 3Commas bots from decisions reconciliation
+    decisionsData?.reconciliation?.tcBots?.forEach(b => {
+      const rawSym = b.pair?.includes('_') ? b.pair.split('_').pop() : b.symbol || b.pair;
+      addBot(rawSym, b.name || String(b.id), b.strategy || 'dca', b.direction || 'long', b.capital || 0);
+    });
+
+    // Fallback: any pair with live 24h data gets a card even with no bots
+    Object.keys(changes).forEach(key => {
+      const sym = key.replace('USDT','');
+      if (!pairMap[sym]) pairMap[sym] = { sym, key, bots: [], capital: 0 };
+    });
+
+    // Format helpers
+    const fmtPrice = p => !p ? '—' : p >= 10000 ? '$'+p.toLocaleString('en',{maximumFractionDigits:0})
+      : p >= 100 ? '$'+p.toFixed(2) : p >= 1 ? '$'+p.toFixed(3) : '$'+p.toFixed(5);
+    const fmtVol = n => !n ? '—' : n >= 1e9 ? '$'+(n/1e9).toFixed(1)+'B' : n >= 1e6 ? '$'+(n/1e6).toFixed(0)+'M' : '$'+n.toFixed(0);
+    const stratClass = s => s?.includes('futures') ? 'futures' : s === 'dca' ? 'dca' : s === 'signal' ? 'signal' : 'grid';
+
+    // Generic signal line based on actual bots on this pair
+    function signalLine(pct, bots) {
+      const hasGrid    = bots.some(b => b.strategy?.includes('grid'));
+      const hasFutures = bots.some(b => b.strategy?.includes('futures'));
+      const hasShort   = bots.some(b => b.direction === 'short');
+      const hasDCA     = bots.some(b => b.strategy === 'dca');
+      const up = pct > 2, down = pct < -2, bigUp = pct > 4, bigDown = pct < -4;
+      if (bigDown && hasShort)   return '↑ Short bots performing — hedge working';
+      if (bigDown && hasDCA)     return '↓ Sharp drop — DCA bots accumulating at lows';
+      if (bigDown && hasGrid)    return '⚠ Price falling — check grid lower bounds';
+      if (bigUp   && hasFutures) return '↑ Rally — futures grid earning on long side';
+      if (bigUp   && hasGrid)    return '↑ Rally — grid bots earning on upswing';
+      if (up      && hasGrid)    return '↑ Trending up — grid bots active and earning';
+      if (down    && hasGrid)    return '↓ Drift down — grid accumulating, watch floors';
+      if (up      && hasDCA)     return '↑ Momentum — DCA in profit territory';
+      if (down    && hasDCA)     return '↓ Dip — DCA averaging down';
+      if (hasGrid)               return '→ Ranging — ideal conditions for grid bots';
+      if (hasDCA)                return '→ Stable — DCA bots running normally';
+      if (hasShort)              return '→ Watching for short signal triggers';
+      return '→ Monitoring';
+    }
+
+    // Rebuild cards dynamically
+    const grid = document.getElementById('mkt-pairs-grid');
+    if (!grid) return;
+
+    const pairs = Object.values(pairMap)
+      .sort((a,b) => (b.capital - a.capital) || a.sym.localeCompare(b.sym));
+
+    grid.style.gridTemplateColumns = `repeat(${Math.min(pairs.length, 6)}, 1fr)`;
+    grid.innerHTML = '';
+
+    for (const { sym, key, bots, capital } of pairs) {
+      const c     = changes[key] || null;
+      const price = prices[key] || null;
+      const pct   = c?.change ?? 0;
+      const uniq  = bots.filter((b,i,a) => a.findIndex(x => x.name === b.name) === i);
+      const signal = signalLine(pct, uniq);
+      const sigColor = signal.startsWith('⚠') ? '#f87171' : signal.startsWith('↓') ? '#fbbf24' : signal.startsWith('↑') ? '#4ade80' : 'var(--text-dim)';
+      const names = { BTC:'Bitcoin', ETH:'Ethereum', BNB:'BNB Chain', SOL:'Solana', XRP:'Ripple', DOGE:'Dogecoin', ADA:'Cardano', DOT:'Polkadot', AVAX:'Avalanche', MATIC:'Polygon', LINK:'Chainlink' };
+
+      const botTags = uniq.length
+        ? uniq.map(b => `<div class="mkt-bot-tag ${stratClass(b.strategy)}${b.direction==='short'?' short':''}">${b.name}</div>`).join('')
+        : '<div class="mkt-bot-tag dca" style="opacity:.4">No bots</div>';
+
+      const card = document.createElement('div');
+      card.className = 'mkt-pair-card';
+      card.innerHTML = `
+        <div class="mkt-pair-header">
+          <div class="mkt-pair-sym">${sym}</div>
+          <div class="mkt-pair-name">${names[sym] || sym+'/USDT'}</div>
+          <div class="mkt-pair-price">${fmtPrice(price)}</div>
+          <div class="mkt-pair-chg ${pct>=0?'pos':'neg'}">${pct>=0?'+':''}${pct.toFixed(2)}%</div>
+        </div>
+        <div class="mkt-pair-bots">${botTags}</div>
+        <div class="mkt-pair-stats">
+          <div class="mkt-stat"><span class="mkt-stat-lbl">24h Vol</span><span class="mkt-stat-val">${fmtVol(c?.volume)}</span></div>
+          <div class="mkt-stat"><span class="mkt-stat-lbl">24h High</span><span class="mkt-stat-val">${fmtPrice(c?.high)}</span></div>
+          <div class="mkt-stat"><span class="mkt-stat-lbl">24h Low</span><span class="mkt-stat-val">${fmtPrice(c?.low)}</span></div>
+          <div class="mkt-stat"><span class="mkt-stat-lbl">Capital</span><span class="mkt-stat-val warn">${capital>0?'$'+Math.round(capital):'—'}</span></div>
+        </div>
+        <div class="mkt-pair-signal" style="color:${sigColor}">${signal}</div>
+      `;
+      grid.appendChild(card);
+    }
+
+    // Update header subtitle
+    const subEl = document.querySelector('.mkt-header-sub');
+    if (subEl) subEl.textContent = `Live data for ${pairs.length} bot pairs · ${pairs.map(p=>p.sym).join(' · ')}`;
+
+    // Grid suitability
+    const btcPct = Math.abs(changes['BTCUSDT']?.change ?? 0);
+    const gs = btcPct > 4 ? '⚠ Poor (high vol)' : btcPct > 2 ? '◑ Fair' : '✓ Good';
+    const gsEl = document.getElementById('mkt-grid-suit');
+    if (gsEl) { gsEl.textContent = gs; gsEl.style.color = btcPct>4?'#f87171':btcPct>2?'#fbbf24':'#4ade80'; }
+    setEl('mkt-volatility', btcPct>4?'High Volatility':btcPct>2?'Medium Volatility':'Low Volatility');
+    setEl('mkt-last-update', new Date().toLocaleTimeString());
+
+  } catch(e) { console.warn('Market pairs load failed:', e.message); }
 }
 
 async function refreshAll() {
@@ -4440,6 +4769,7 @@ async function refreshAll() {
     refreshBots(),
     refreshWallets(),
     loadMarketSignals(),
+    loadMarketPairs(),
   ]);
 }
 
