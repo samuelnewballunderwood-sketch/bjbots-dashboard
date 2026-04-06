@@ -1211,31 +1211,26 @@ function getBotMeta(botId) { return BOT_META[botId]||BOT_META[String(botId)]||nu
 function executionAllowed(env) { return env.EXECUTION_ENABLED==='true'; }
 
 async function getPrices() {
-  const res=await fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT"]');
-  const data=await res.json(); const prices={};
-  data.forEach(p=>prices[p.symbol]=parseFloat(p.price)); return json(prices);
+  const r = await fetch('https://tc-proxy-eu.onrender.com/prices');
+  if (!r.ok) throw new Error('prices HTTP ' + r.status);
+  const d = await r.json();
+  return json(d);
 }
 
 async function getSpotWalletData(env) {
-  const ts=Date.now(),q=`timestamp=${ts}&recvWindow=10000`;
-  const sig=await hmacSign(env.BINANCE_SECRET,q);
-  const res=await fetch(`https://api.binance.com/api/v3/account?${q}&signature=${sig}`,{headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY}});
-  const data=await res.json(); if(data.msg) throw new Error(data.msg);
-  const usdt=data.balances.find(b=>b.asset==='USDT');
-  const usdtBal=usdt?parseFloat(usdt.free)+parseFloat(usdt.locked):0;
-  const nonZero=data.balances.filter(b=>parseFloat(b.free)+parseFloat(b.locked)>0);
-  return {usdtBalance:usdtBal,assetCount:nonZero.length,balances:nonZero.map(b=>({asset:b.asset,free:parseFloat(b.free),locked:parseFloat(b.locked)}))};
+  const r = await fetch('https://tc-proxy-eu.onrender.com/spot-wallet');
+  if (!r.ok) throw new Error('spot-wallet HTTP ' + r.status);
+  return r.json();
 }
 async function getSpotWallet(env) {
   return json(await getSpotWalletData(env));
 }
 
 async function getFuturesWallet(env) {
-  const ts=Date.now(),q=`timestamp=${ts}&recvWindow=10000`;
-  const sig=await hmacSign(env.BINANCE_SECRET,q);
-  const res=await fetch(`https://fapi.binance.com/fapi/v2/account?${q}&signature=${sig}`,{headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY}});
-  const data=await res.json(); if(data.msg) throw new Error(data.msg);
-  return json({marginBalance:parseFloat(data.totalMarginBalance||0),walletBalance:parseFloat(data.totalWalletBalance||0),unrealizedPnl:parseFloat(data.totalUnrealizedProfit||0),availableBalance:parseFloat(data.availableBalance||0)});
+  const r = await fetch('https://tc-proxy-eu.onrender.com/futures-wallet');
+  if (!r.ok) throw new Error('futures-wallet HTTP ' + r.status);
+  const d = await r.json();
+  return json(d);
 }
 
 async function getCommasBots() {
@@ -1246,46 +1241,13 @@ async function getCommasBots() {
 }
 
 async function getBinanceBots(env) {
-  try {
-    const ts=Date.now();
-    async function spotTrades(sym){
-      const q=`symbol=${sym}&limit=1000&timestamp=${ts}&recvWindow=10000`;
-      const sig=await hmacSign(env.BINANCE_SECRET,q);
-      const r=await fetch(`https://api.binance.com/api/v3/myTrades?${q}&signature=${sig}`,{headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY}});
-      const d=await r.json(); return Array.isArray(d)?d.length:0;
-    }
-    async function futuresTrades(sym){
-      const q=`symbol=${sym}&limit=1000&timestamp=${ts}&recvWindow=10000`;
-      const sig=await hmacSign(env.BINANCE_SECRET,q);
-      const r=await fetch(`https://fapi.binance.com/fapi/v1/userTrades?${q}&signature=${sig}`,{headers:{'X-MBX-APIKEY':env.BINANCE_API_KEY}});
-      const d=await r.json(); return Array.isArray(d)?d.length:0;
-    }
-    async function get24h(){
-      const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","XRPUSDT","SOLUSDT","BNBUSDT"]');
-      const d=await r.json(); const c={};
-      d.forEach(t=>{c[t.symbol]={change:parseFloat(t.priceChangePercent),volume:parseFloat(t.quoteVolume),high:parseFloat(t.highPrice),low:parseFloat(t.lowPrice)};});
-      return c;
-    }
-    const [eth,btc,bnb,sol,xrp,ethF,ch]=await Promise.all([
-      spotTrades('ETHUSDT'),spotTrades('BTCUSDT'),spotTrades('BNBUSDT'),
-      spotTrades('SOLUSDT'),spotTrades('XRPUSDT'),futuresTrades('ETHUSDT'),get24h()
-    ]);
-    const bots=[
-      {symbol:'ETHUSDT',        type:'spot-grid',    trades:eth,  id:'eth-grid-trades',     change24h:ch['ETHUSDT']?.change||0},
-      {symbol:'BTCUSDT',        type:'spot-dca',     trades:btc,  id:'btc-dca-trades',      change24h:ch['BTCUSDT']?.change||0},
-      {symbol:'BNBUSDT',        type:'spot-grid',    trades:bnb,  id:'bnb-grid-trades',     change24h:ch['BNBUSDT']?.change||0},
-      {symbol:'SOLUSDT',        type:'spot-grid',    trades:sol,  id:'sol-grid-trades',     change24h:ch['SOLUSDT']?.change||0},
-      {symbol:'XRPUSDT',        type:'spot-grid',    trades:xrp,  id:'xrp-grid-trades',     change24h:ch['XRPUSDT']?.change||0},
-      {symbol:'ETHUSDT-FUTURES',type:'futures-grid', trades:ethF, id:'ethusdt-perp-trades', change24h:ch['ETHUSDT']?.change||0},
-    ];
-    const btcCh=ch['BTCUSDT']?.change||0, v=Math.abs(btcCh);
-    return json({bots,totalTrades:bots.reduce((s,b)=>s+b.trades,0),
-      market:{regime:btcCh>2?'Bull':btcCh<-2?'Bear':'Sideways',volatility:v>4?'High':v>1.5?'Medium':'Low',btcChange24h:btcCh,changes:ch}});
-  } catch(e){return json({error:e.message,bots:[],totalTrades:0});}
+  const r = await fetch('https://tc-proxy-eu.onrender.com/binance-bots');
+  if (!r.ok) throw new Error('binance-bots HTTP ' + r.status);
+  return json(await r.json());
 }
 
-async function getBinanceBotsData(env){return (await getBinanceBots(env)).json();}
-async function getFuturesWalletData(env){return (await getFuturesWallet(env)).json();}
+async function getBinanceBotsData(env){ const r=await fetch("https://tc-proxy-eu.onrender.com/binance-bots"); if(!r.ok) throw new Error("binance-bots HTTP "+r.status); return r.json(); }
+async function getFuturesWalletData(env){ const r=await fetch("https://tc-proxy-eu.onrender.com/futures-wallet"); if(!r.ok) throw new Error("futures-wallet HTTP "+r.status); return r.json(); }
 
 function buildLivePortfolio(tcBots, bnBots, recon) {
   // If reconciliation data is available, use live capital values
@@ -1381,10 +1343,7 @@ async function getTradeHistory(env) {
             ? `symbol=${sym}&limit=1000&fromId=${fromId}&timestamp=${ts}&recvWindow=10000`
             : `symbol=${sym}&limit=1000&timestamp=${ts}&recvWindow=10000`;
           const sig = await hmacSign(env.BINANCE_SECRET, q);
-          const res = await fetch(
-            `https://api.binance.com/api/v3/myTrades?${q}&signature=${sig}`,
-            { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
-          );
+          const res = await fetch('https://tc-proxy-eu.onrender.com/binance-proxy/spot-trades?'+q+'&signature='+sig, { headers: { 'X-MBX-APIKEY': 'proxy' } });
           const trades = await res.json();
           if (!Array.isArray(trades) || trades.length === 0) { keepGoing = false; break; }
           pairTotal += trades.length;
@@ -1403,8 +1362,8 @@ async function getTradeHistory(env) {
       const q   = `symbol=ETHUSDT&limit=1000&timestamp=${ts}&recvWindow=10000`;
       const sig = await hmacSign(env.BINANCE_SECRET, q);
       const res = await fetch(
-        `https://fapi.binance.com/fapi/v1/userTrades?${q}&signature=${sig}`,
-        { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
+        'https://tc-proxy-eu.onrender.com/binance-proxy/futures-trades?'+q+'&signature='+sig,
+        { headers: { 'X-MBX-APIKEY': 'proxy' } }
       );
       const trades = await res.json();
       futuresTrades = Array.isArray(trades) ? trades.length : 0;
@@ -1441,7 +1400,7 @@ async function getAlgoSpotBots(env) {
     const q   = `timestamp=${ts}&recvWindow=10000`;
     const sig = await hmacSign(env.BINANCE_SECRET, q);
     const res = await fetch(
-      `https://api.binance.com/sapi/v1/algo/spot/openOrders?${q}&signature=${sig}`,
+      `https://tc-proxy-eu.onrender.com/binance-proxy/sapi/v1/algo/spot/openOrders?${q}&signature=${sig}`,
       { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
     );
     const data = await res.json();
@@ -1457,7 +1416,7 @@ async function getAlgoFutureBots(env) {
     const q   = `timestamp=${ts}&recvWindow=10000`;
     const sig = await hmacSign(env.BINANCE_SECRET, q);
     const res = await fetch(
-      `https://api.binance.com/sapi/v1/algo/futures/openOrders?${q}&signature=${sig}`,
+      `https://tc-proxy-eu.onrender.com/binance-proxy/sapi/v1/algo/futures/openOrders?${q}&signature=${sig}`,
       { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
     );
     const data = await res.json();
@@ -1474,7 +1433,7 @@ async function getReconciliation(env) {
       getFuturesWalletData(env),
       fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
       getBinanceBotsData(env),
-      fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]').then(r=>r.json()).catch(()=>[]),
+      fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
     ]);
     const recon = buildReconciliation({
       spotBalances: spotData.balances || [],
@@ -1495,7 +1454,7 @@ async function getDecisions(env){
       fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()),
       getBinanceBotsData(env),getFuturesWalletData(env),
       getSpotWalletData(env),
-      fetch('https://api.binance.com/api/v3/ticker/price?symbols=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]').then(r=>r.json()).catch(()=>[]),
+      fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
     ]);
     // Build reconciliation first — this gives us true capital numbers
     const recon = buildReconciliation({
