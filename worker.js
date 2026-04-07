@@ -1234,7 +1234,7 @@ async function getFuturesWallet(env) {
 }
 
 async function getCommasBots() {
-  const res=await fetch('https://tc-proxy-h2pp.onrender.com/bots');
+  const res=await fetch('https://tc-proxy-eu.onrender.com/bots');
   const raw=await res.text(); let data;
   try{data=JSON.parse(raw);}catch(e){throw new Error('Parse error: '+raw.slice(0,200));}
   if(data.error) throw new Error(data.error); return json(data);
@@ -1321,7 +1321,7 @@ async function getTradeHistory(env) {
     }
 
     // ── 3Commas: full deal history ──────────────────────────────────────
-    const tcSummary = await fetch('https://tc-proxy-h2pp.onrender.com/deals/summary')
+    const tcSummary = await fetch('https://tc-proxy-eu.onrender.com/deals/summary')
       .then(r => r.json())
       .catch(() => ({ completedDeals: 0, activeDeals: 0, totalOrders: 0, totalProfit: 0 }));
 
@@ -1431,7 +1431,7 @@ async function getReconciliation(env) {
     const [spotData, futData, tcData, bnData, pricesData] = await Promise.all([
       getSpotWalletData(env),
       getFuturesWalletData(env),
-      fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
+      fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
       getBinanceBotsData(env),
       fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
     ]);
@@ -1451,7 +1451,7 @@ async function getReconciliation(env) {
 async function getDecisions(env){
   try{
     const [tcData,bnData,futData,spotData,pricesData]=await Promise.all([
-      fetch('https://tc-proxy-h2pp.onrender.com/bots').then(r=>r.json()),
+      fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()),
       getBinanceBotsData(env),getFuturesWalletData(env),
       getSpotWalletData(env),
       fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
@@ -1490,7 +1490,7 @@ async function getDecisions(env){
 }
 
 async function botAction(env,botId,action){
-  const url=`https://tc-proxy-h2pp.onrender.com/bot/${botId}/${action}`;
+  const url=`https://tc-proxy-eu.onrender.com/bot/${botId}/${action}`;
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'}});
   const raw=await res.text();let data;
   try{data=JSON.parse(raw);}catch(e){throw new Error('Parse error: '+raw.slice(0,200));}
@@ -1520,7 +1520,7 @@ export default {
       if(path==='/api/render-ip') {
         try {
           // Ask the Render proxy to fetch its own outbound IP
-          const r = await fetch('https://tc-proxy-h2pp.onrender.com/my-ip');
+          const r = await fetch('https://tc-proxy-eu.onrender.com/my-ip');
           const d = await r.json();
           return json({ renderIp: d.ip, note: 'This is the Render proxy outbound IPv4' });
         } catch(e) { return json({ error: e.message, note: 'Render proxy may not have /my-ip endpoint yet' }); }
