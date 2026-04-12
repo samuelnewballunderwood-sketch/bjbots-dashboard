@@ -67,7 +67,11 @@ const RC = {
 function priceAssets(balances, prices) {
   const PRICE_MAP = {};
   if (Array.isArray(prices)) {
+    // Legacy array format: [{symbol, price}, ...]
     prices.forEach(p => { PRICE_MAP[p.symbol] = parseFloat(p.price); });
+  } else if (prices && typeof prices === 'object') {
+    // Object format from EU proxy: {BTCUSDT: 71672, ETHUSDT: 2216, ...}
+    Object.entries(prices).forEach(([sym, price]) => { PRICE_MAP[sym] = parseFloat(price); });
   }
   let total = 0;
   const breakdown = [];
