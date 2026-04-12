@@ -3471,138 +3471,187 @@ body::after {
      ════════════════════════════════════════════════════════════════════ -->
 
 <section id="screen-portfolio" class="screen-panel" style="display:none">
-
-<!-- Re-mapped from layer-portfolio -->
 <section class="layer-portfolio" id="layer-portfolio" style="display:block !important;border:none">
 
-  <div class="portfolio-grid">
+<!-- ── LEVEL 1: TOTAL ─────────────────────────────────────────────────── -->
+<div style="padding:16px 14px 0">
+  <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-display);margin-bottom:6px">Total Portfolio</div>
+  <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div style="font-family:var(--font-mono);font-size:36px;font-weight:700;color:#fff;letter-spacing:-.02em" id="p-grand-total">—</div>
+    <div style="padding-bottom:5px">
+      <div id="p-24h-change" style="font-size:13px;font-family:var(--font-mono)">—</div>
+      <div style="font-size:10px;color:var(--text-muted)">24h change</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Binance source of truth · <span id="p-recon-status" style="color:var(--safe)">Reconciled</span></div>
+</div>
 
-    <!-- PnL Panel -->
-    <div class="port-panel">
-      <div class="port-panel-title">
-        <span class="port-panel-dot" style="background:var(--safe)"></span>
-        Performance
-      </div>
-      <div class="pnl-grid">
-        <div class="pnl-block full">
-          <div class="pnl-label">Total Capital <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Capital</div>Live market value of all assets across Binance spot, futures and Earn. Source of truth — from wallet balances priced at current rates.</span></span></div>
-          <div class="pnl-value" style="color:#60a5fa;font-size:26px" id="p-grand-total">—</div>
-          <div class="pnl-sub">Binance source of truth · <span id="p-recon-status">—</span></div>
-        </div>
-        <div class="pnl-block">
-          <div class="pnl-label">Realised PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realised PnL</div>Profit locked in from completed trades. This is yours regardless of market moves.</span></span></div>
-          <div class="pnl-value" id="p-realised">—</div>
-          <div class="pnl-sub">Locked in</div>
-        </div>
-        <div class="pnl-block">
-          <div class="pnl-label">Floating PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Floating PnL</div>Unrealised profit/loss on open positions. Only real when you close.</span></span></div>
-          <div class="pnl-value" id="p-floating">—</div>
-          <div class="pnl-sub">Open positions</div>
-        </div>
-        <div class="pnl-block full">
-          <div class="pnl-label">True PnL</div>
-          <div class="pnl-value" id="p-total-pnl">—</div>
-          <div class="pnl-quality"><div class="pnl-r" id="pnl-r-bar" style="width:50%"></div><div class="pnl-f" id="pnl-f-bar" style="width:50%"></div></div>
-          <div class="pnl-sub" id="pnl-quality-lbl">Realised vs Floating</div>
+<div style="height:1px;background:var(--border-dim);margin:14px 0"></div>
+
+<!-- ── LEVEL 2: BY PLATFORM ───────────────────────────────────────────── -->
+<div style="padding:0 14px">
+  <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-display);margin-bottom:10px">By Platform</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(30,35,55,.7);border:1px solid var(--border-dim);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#60a5fa;flex-shrink:0"></div>
+        <div>
+          <div style="font-size:12px;color:var(--text-bright);font-weight:600">Binance Spot</div>
+          <div style="font-size:10px;color:var(--text-muted)" id="p-spot-asset-count">— assets</div>
         </div>
       </div>
-    </div>
-
-    <!-- Exposure Panel -->
-    <div class="port-panel">
-      <div class="port-panel-title">
-        <span class="port-panel-dot" style="background:#f87171"></span>
-        Exposure & Bias
-      </div>
-      <div class="exp-row">
-        <span class="exp-label">Long</span>
-        <span class="exp-value" id="p-long-pct" style="color:var(--safe)">—</span>
-      </div>
-      <div class="exp-bar"><div class="exp-long" id="p-long-bar" style="width:0%"></div></div>
-      <div class="exp-row">
-        <span class="exp-label">Short / Hedge</span>
-        <span class="exp-value" id="p-short-pct" style="color:#f87171">—</span>
-      </div>
-      <div class="exp-bar"><div class="exp-short" id="p-short-bar" style="width:0%"></div></div>
-      <div class="exp-row" style="margin-top:8px">
-        <span class="exp-label">Net Bias</span>
-        <span class="bias-pill bias-long" id="p-bias">LONG</span>
-      </div>
-      <div style="height:1px;background:var(--border-dim);margin:10px 0"></div>
-      <div class="exp-row">
-        <span class="exp-label" style="font-size:10px;color:var(--text-muted)">Futures uPnL</span>
-        <span class="exp-value" style="font-size:11px" id="p-upnl">—</span>
-      </div>
-      <div class="exp-row">
-        <span class="exp-label" style="font-size:10px;color:var(--text-muted)">Avail. Margin</span>
-        <span class="exp-value" style="font-size:11px" id="p-margin">—</span>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#fff" id="p-spot-total">—</div>
+        <div style="font-size:10px;color:var(--text-muted)" id="p-spot-pct">—% of total</div>
       </div>
     </div>
 
-    <!-- Capital States Panel -->
-    <div class="port-panel">
-      <div class="port-panel-title">
-        <span class="port-panel-dot" style="background:var(--balanced)"></span>
-        Capital Deployment
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(30,35,55,.7);border:1px solid var(--border-dim);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--teal);flex-shrink:0"></div>
+        <div>
+          <div style="font-size:12px;color:var(--text-bright);font-weight:600">Binance Futures USDT-M</div>
+          <div style="font-size:10px;color:var(--text-muted)">Margin balance</div>
+        </div>
       </div>
-      <div class="cap-states" id="p-cap-states">
-        <div class="cap-state"><div class="cap-state-val" id="cs-active">—</div><div class="cap-state-lbl">In Trades</div><div class="cap-state-bar"><div class="cap-state-fill" id="cs-active-bar" style="background:var(--safe);width:0%"></div></div></div>
-        <div class="cap-state"><div class="cap-state-val" id="cs-reserved">—</div><div class="cap-state-lbl">Reserved</div><div class="cap-state-bar"><div class="cap-state-fill" id="cs-reserved-bar" style="background:#60a5fa;width:0%"></div></div></div>
-        <div class="cap-state"><div class="cap-state-val" id="cs-idle">—</div><div class="cap-state-lbl">Idle</div><div class="cap-state-bar"><div class="cap-state-fill" id="cs-idle-bar" style="background:var(--warn);width:0%"></div></div></div>
-        <div class="cap-state"><div class="cap-state-val" id="cs-free">—</div><div class="cap-state-lbl">Free</div><div class="cap-state-bar"><div class="cap-state-fill" id="cs-free-bar" style="background:var(--purple);width:0%"></div></div></div>
-        <div class="cap-state"><div class="cap-state-val" id="cs-futures">—</div><div class="cap-state-lbl">Futures</div><div class="cap-state-bar"><div class="cap-state-fill" id="cs-futures-bar" style="background:var(--teal);width:0%"></div></div></div>
-      </div>
-      <div style="height:1px;background:var(--border-dim);margin:10px 0"></div>
-      <!-- Allocation by strategy -->
-      <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--font-display)">By Strategy</div>
-      <div id="p-by-strategy"></div>
-      <div style="height:1px;background:var(--border-dim);margin:10px 0"></div>
-      <!-- Reconciliation mini -->
-      <div class="recon-mini">
-        <div class="recon-status-dot ok" id="recon-dot"></div>
-        <span class="recon-mini-text" id="recon-mini-text">Reconciling...</span>
-        <span class="recon-mini-diff" id="recon-mini-diff"></span>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:#fff" id="p-futures-total">—</div>
+        <div style="font-size:10px;color:var(--text-muted)" id="p-futures-pct">—% of total</div>
       </div>
     </div>
 
-  </div><!-- /portfolio-grid -->
+    <!-- Futures uPnL sub-row -->
+    <div style="display:flex;justify-content:space-between;padding:6px 12px 0;font-size:10px;color:var(--text-muted)">
+      <span>Futures Unrealised PnL</span>
+      <span id="p-upnl" style="font-family:var(--font-mono)">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:2px 12px 0;font-size:10px;color:var(--text-muted)">
+      <span>Available Margin</span>
+      <span id="p-margin" style="font-family:var(--font-mono)">—</span>
+    </div>
 
-  <!-- KPI strip — secondary -->
-  <div class="kpi-strip">
-    <div class="kpi pos">
-      <div class="kpi-label">Net PnL <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Net PnL</div>Total profit across all bots. Realised + floating combined.</span></span></div>
-      <div class="kpi-value" id="kpi-net-pnl">—</div>
-      <div class="kpi-sub" id="kpi-net-pnl-sub">All bots</div>
+  </div>
+</div>
+
+<div style="height:1px;background:var(--border-dim);margin:14px 0"></div>
+
+<!-- ── LEVEL 3: BY ASSET ───────────────────────────────────────────────── -->
+<div style="padding:0 14px">
+  <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-display);margin-bottom:10px">Assets</div>
+  <div id="p-asset-list" style="display:flex;flex-direction:column;gap:6px">
+    <div style="color:var(--text-muted);font-size:11px;padding:8px 0">Loading assets…</div>
+  </div>
+</div>
+
+<div style="height:1px;background:var(--border-dim);margin:14px 0"></div>
+
+<!-- ── LEVEL 4: LOCKED PROFIT (THE SCOREBOARD) ────────────────────────── -->
+<div style="padding:0 14px 16px">
+  <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:var(--font-display);margin-bottom:10px">Locked Profit — The Only Scoreboard</div>
+
+  <!-- Today's delta — most prominent -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;margin-bottom:10px">
+    <div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">Locked Today</div>
+      <div style="font-size:10px;color:var(--text-muted)">Closed trades only</div>
     </div>
-    <div class="kpi pos">
-      <div class="kpi-label">Realised <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Realised PnL</div>Locked profit from closed Binance native bot trades. 3Commas realised is tracked separately via deal history.</span></span></div>
-      <div class="kpi-value" id="kpi-realised">—</div>
-      <div class="kpi-sub">Closed positions</div>
+    <div style="font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--safe)" id="p-locked-today">—</div>
+  </div>
+
+  <!-- Cumulative breakdown -->
+  <div style="display:flex;flex-direction:column;gap:6px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(30,35,55,.5);border:1px solid var(--border-dim);border-radius:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:6px;height:6px;border-radius:50%;background:#a78bfa"></div>
+        <div>
+          <div style="font-size:11px;color:var(--text-bright)">3Commas DCA / Grid</div>
+          <div style="font-size:10px;color:var(--text-muted)">Closed deal profit</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--safe)" id="p-tc-locked">—</div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Floating <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Floating PnL</div>Unrealised profit/loss on open positions. Changes with market price.</span></span></div>
-      <div class="kpi-value" id="kpi-floating">—</div>
-      <div class="kpi-sub">Open positions</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(30,35,55,.5);border:1px solid var(--border-dim);border-radius:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:6px;height:6px;border-radius:50%;background:#60a5fa"></div>
+        <div>
+          <div style="font-size:11px;color:var(--text-bright)">Binance Grid (matched)</div>
+          <div style="font-size:10px;color:var(--text-muted)">Grid matched profit only</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:14px;font-weight:600;color:var(--safe)" id="p-bn-locked">—</div>
     </div>
-    <div class="kpi blue">
-      <div class="kpi-label">Capital <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Capital</div>Live market value of everything in your Binance account.</span></span></div>
-      <div class="kpi-value" id="kpi-capital">—</div>
-      <div class="kpi-sub">Spot + Futures</div>
+
+    <!-- Grand total locked -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(30,35,55,.9);border:1px solid rgba(255,255,255,.1);border-radius:8px;margin-top:4px">
+      <div>
+        <div style="font-size:12px;color:var(--text-bright);font-weight:600">Total Locked</div>
+        <div style="font-size:10px;color:var(--text-muted)" id="p-locked-pct-lbl">—% of capital · Day —/30</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--safe)" id="p-realised">—</div>
+        <div style="font-size:10px;color:var(--text-muted)">Target: <span id="p-target-val">—</span></div>
+      </div>
     </div>
-    <div class="kpi blue">
-      <div class="kpi-label">Allocated <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Allocated Capital</div>Capital sitting inside active bot orders across all bots.</span></span></div>
-      <div class="kpi-value" id="kpi-allocated">—</div>
-      <div class="kpi-sub">Across all bots</div>
+
+    <!-- Trial progress bar -->
+    <div style="margin-top:8px">
+      <div style="height:6px;background:rgba(30,35,55,.9);border-radius:3px;overflow:hidden">
+        <div id="p-locked-bar" style="height:100%;background:linear-gradient(90deg,var(--safe),rgba(74,222,128,.5));border-radius:3px;transition:width .5s;width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text-muted)">
+        <span id="p-bar-pct">0% of 10% target</span>
+        <span id="p-bar-daily">Need $30.70/day</span>
+      </div>
     </div>
-    <div class="kpi">
-      <div class="kpi-label">Trades <span class="tip"><span class="tip-icon">?</span><span class="tip-box"><div class="tip-title">Total Trades</div>Lifetime buy/sell executions — Binance trades + 3Commas deal cycles. Loads on login.</span></span></div>
-      <div class="kpi-value" id="kpi-trades">—</div>
-      <div class="kpi-sub" id="kpi-trades-sub">Loading...</div>
+
+  </div>
+
+  <!-- Floating note -->
+  <div style="margin-top:10px;padding:8px 10px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:6px;font-size:10px;color:var(--text-muted)">
+    ⚡ Floating PnL is <span id="p-floating" style="font-family:var(--font-mono)">—</span> — not counted in locked score. Only closes matter.
+  </div>
+
+  <!-- Exposure & Bias compact row -->
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <div style="flex:1;min-width:120px;padding:8px 10px;background:rgba(30,35,55,.7);border:1px solid var(--border-dim);border-radius:6px">
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">Net Bias</div>
+      <div style="font-size:13px;font-weight:700" id="p-bias">—</div>
+    </div>
+    <div style="flex:1;min-width:120px;padding:8px 10px;background:rgba(30,35,55,.7);border:1px solid var(--border-dim);border-radius:6px">
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">Long Exposure</div>
+      <div style="font-size:13px;font-weight:700;color:var(--safe)" id="p-long-pct">—</div>
+    </div>
+    <div style="flex:1;min-width:120px;padding:8px 10px;background:rgba(30,35,55,.7);border:1px solid var(--border-dim);border-radius:6px">
+      <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">Hedge Exposure</div>
+      <div style="font-size:13px;font-weight:700;color:#f87171" id="p-short-pct">—</div>
     </div>
   </div>
 
+</div>
+
+<!-- KPI strip — kept for JS compatibility (hidden) -->
+<div style="display:none">
+  <div id="kpi-net-pnl"></div><div id="kpi-net-pnl-sub"></div>
+  <div id="kpi-realised"></div><div id="kpi-floating-hidden"></div>
+  <div id="kpi-capital"></div><div id="kpi-allocated"></div>
+  <div id="kpi-trades"></div><div id="kpi-trades-sub"></div>
+  <div id="p-total-pnl"></div><div id="p-long-bar"></div><div id="p-short-bar"></div>
+  <div id="pnl-r-bar"></div><div id="pnl-f-bar"></div><div id="pnl-quality-lbl"></div>
+  <div id="cs-active"></div><div id="cs-reserved"></div><div id="cs-idle"></div>
+  <div id="cs-free"></div><div id="cs-futures"></div>
+  <div id="cs-active-bar"></div><div id="cs-reserved-bar"></div><div id="cs-idle-bar"></div>
+  <div id="cs-free-bar"></div><div id="cs-futures-bar"></div>
+  <div id="p-by-strategy"></div><div id="recon-dot"></div><div id="recon-mini-text"></div><div id="recon-mini-diff"></div>
+</div>
+
 </section>
 </section><!-- /screen-portfolio -->
+
+
+
 
 <!-- ════════════════════════════════════════════════════════════════════
      SCREEN 3 continued — BOTS & TRADES (Execution layer)
@@ -4079,6 +4128,7 @@ function renderControl(data) {
 
   // Prices
   if (data.prices) {
+    window._lastPrices = data.prices; // store for asset list rendering
     setEl('header-btc', '$' + (data.prices.BTC||data.prices.BTCUSDT||0).toLocaleString('en-US',{maximumFractionDigits:0}));
     setEl('header-eth', '$' + (data.prices.ETH||data.prices.ETHUSDT||0).toLocaleString('en-US',{maximumFractionDigits:0}));
   }
@@ -4237,7 +4287,123 @@ function renderPortfolioFromRecon(r) {
 
   // Allocated
   setEl('kpi-allocated', fmtUSD(r.allocatedCapital||0));
+
+  // ── NEW: Populate 4-level portfolio view ──────────────────────────────
+  _renderNewPortfolio(r, grandTotal, rPnl, fPnl);
 }
+
+// ── Render new CoinStats-style 4-level portfolio view ─────────────────────
+function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
+  if (!grandTotal) return;
+
+  // Level 1 already handled by p-grand-total above
+
+  // Level 2 — Platform breakdown from spot/futures wallets
+  // These come from refreshWallets() which runs separately — patch here too
+  const spotVal    = parseFloat(document.getElementById('ctx-spot-wallet')?.textContent?.replace(/[^0-9.]/g,'') || 0);
+  const futVal     = parseFloat(document.getElementById('ctx-futures-wallet')?.textContent?.replace(/[^0-9.]/g,'') || 0);
+  const spotPct    = grandTotal ? Math.round((spotVal/grandTotal)*100) : 0;
+  const futPct     = grandTotal ? Math.round((futVal/grandTotal)*100)  : 0;
+  setEl('p-spot-total',   fmtUSD(spotVal));
+  setEl('p-futures-total', fmtUSD(futVal));
+  setEl('p-spot-pct',     spotPct + '% of total');
+  setEl('p-futures-pct',  futPct  + '% of total');
+
+  // Level 3 — Asset list from spot wallet balances
+  _renderAssetList(grandTotal);
+
+  // Level 4 — Locked profit scoreboard
+  // Split locked: 3Commas vs Binance native
+  const tcLocked = (window._tcBots||[]).reduce((s,b) => s + parseFloat(b.realised||b.profit||0), 0);
+  const bnLocked = (window._bnBots||[]).reduce((s,b) => s + parseFloat(b.realised||b.profit||0), 0);
+  const totalLocked = rPnl || (tcLocked + bnLocked);
+
+  const tcEl = document.getElementById('p-tc-locked');
+  const bnEl = document.getElementById('p-bn-locked');
+  if (tcEl) { tcEl.textContent = fmtPnl(tcLocked); tcEl.style.color = tcLocked>=0?'var(--safe)':'#f87171'; }
+  if (bnEl) { bnEl.textContent = fmtPnl(bnLocked); bnEl.style.color = bnLocked>=0?'var(--safe)':'#f87171'; }
+
+  // Today's locked delta — stored in sessionStorage to survive refreshes
+  const todayKey = 'locked_baseline_' + new Date().toDateString();
+  if (!sessionStorage.getItem(todayKey)) {
+    sessionStorage.setItem(todayKey, totalLocked.toFixed(2));
+  }
+  const baseline   = parseFloat(sessionStorage.getItem(todayKey) || totalLocked);
+  const todayDelta = totalLocked - baseline;
+  const todayEl = document.getElementById('p-locked-today');
+  if (todayEl) {
+    todayEl.textContent = (todayDelta >= 0 ? '+' : '') + '$' + todayDelta.toFixed(2);
+    todayEl.style.color = todayDelta >= 0 ? 'var(--safe)' : '#f87171';
+  }
+
+  // Trial progress
+  const trialStart   = new Date('2026-04-10');
+  const dayNum       = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
+  const target10pct  = grandTotal * 0.10;
+  const pctOfTarget  = target10pct > 0 ? Math.min(100, (totalLocked / target10pct) * 100) : 0;
+  const daysLeft     = Math.max(1, 30 - dayNum);
+  const dailyNeeded  = Math.max(0, (target10pct - totalLocked) / daysLeft);
+
+  setEl('p-target-val',    fmtUSD(target10pct));
+  setEl('p-locked-pct-lbl', pctOfTarget.toFixed(1) + '% of target · Day ' + dayNum + '/30');
+  setEl('p-bar-pct',       pctOfTarget.toFixed(0) + '% of 10% target');
+  setEl('p-bar-daily',     'Need ' + fmtUSD(dailyNeeded) + '/day');
+
+  const bar = document.getElementById('p-locked-bar');
+  if (bar) bar.style.width = pctOfTarget.toFixed(1) + '%';
+}
+
+// ── Render asset list from live spot wallet data ───────────────────────────
+function _renderAssetList(grandTotal) {
+  const listEl = document.getElementById('p-asset-list');
+  if (!listEl) return;
+
+  // Gather from _lastSpotBalances if available, else from reconciliation
+  const balances = window._lastSpotBalances || [];
+  const prices   = window._lastPrices || {};
+
+  if (!balances.length) {
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">Loading assets…</div>';
+    return;
+  }
+
+  const assetColors = { BTC:'#f7931a', ETH:'#627eea', SOL:'#9945ff', XRP:'#00aae4', BNB:'#f3ba2f', USDT:'#26a17b', USDC:'#2775ca' };
+
+  const rows = balances
+    .filter(b => {
+      const val = (parseFloat(b.free||0) + parseFloat(b.locked||0));
+      if (b.asset === 'USDT' || b.asset === 'USDC') return val > 0.01;
+      const usdVal = val * (prices[b.asset+'USDT'] || 0);
+      return usdVal > 0.50;
+    })
+    .map(b => {
+      const qty     = parseFloat(b.free||0) + parseFloat(b.locked||0);
+      const price   = b.asset === 'USDT' ? 1 : (prices[b.asset+'USDT'] || 0);
+      const usdVal  = qty * price;
+      const pct     = grandTotal ? ((usdVal/grandTotal)*100).toFixed(1) : '0';
+      const color   = assetColors[b.asset] || 'var(--text-muted)';
+      return { asset: b.asset, qty, usdVal, pct, color };
+    })
+    .sort((a,b) => b.usdVal - a.usdVal);
+
+  setEl('p-spot-asset-count', rows.length + ' assets');
+
+  listEl.innerHTML = rows.map(a =>
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+    + '<div style="display:flex;align-items:center;gap:10px">'
+    + '<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:'+a.color+'">'+a.asset.slice(0,3)+'</div>'
+    + '<div>'
+    + '<div style="font-size:12px;color:var(--text-bright);font-weight:600">'+a.asset+'</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">'+a.qty.toFixed(a.asset==='USDT'?2:6)+'</div>'
+    + '</div></div>'
+    + '<div style="text-align:right">'
+    + '<div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:#fff">$'+a.usdVal.toFixed(2)+'</div>'
+    + '<div style="font-size:10px;color:var(--text-muted)">'+a.pct+'% of portfolio</div>'
+    + '</div>'
+    + '</div>'
+  ).join('');
+}
+
 
 function renderPortfolioFromPortfolio(p, market) {
   if (!p) return;
@@ -4511,16 +4677,30 @@ async function refreshWallets() {
       apiFetch('spot-wallet'),
       apiFetch('futures-wallet'),
     ]);
+    // Store for asset list rendering
+    window._lastSpotBalances = spot.balances || [];
     // Spot
     const spotTotal = spot.usdtBalance || 0;
     setEl('ctx-spot-wallet', fmtUSD(spotTotal));
     setEl('ctx-assets', (spot.assetCount||0) + ' assets');
     setEl('h-binance-val', fmtUSD(spotTotal));
+    // Platform level-2 cards
+    setEl('p-spot-total', fmtUSD(spotTotal));
     // Futures
+    const futMargin = parseFloat(fut.marginBalance||0);
     setEl('ctx-upnl',           fmtPnl(parseFloat(fut.unrealizedPnl||0)));
-    setEl('ctx-futures-wallet', fmtUSD(parseFloat(fut.marginBalance||0)));
+    setEl('ctx-futures-wallet', fmtUSD(futMargin));
+    setEl('p-futures-total',    fmtUSD(futMargin));
     setEl('p-upnl',             fmtPnl(parseFloat(fut.unrealizedPnl||0)));
     setEl('p-margin',           fmtUSD(parseFloat(fut.availableBalance||0)));
+    // Pct of total
+    const total = spotTotal + futMargin;
+    if (total > 0) {
+      setEl('p-spot-pct',    Math.round((spotTotal/total)*100) + '% of total');
+      setEl('p-futures-pct', Math.round((futMargin/total)*100) + '% of total');
+    }
+    // Trigger asset list re-render
+    _renderAssetList(total);
   } catch(e) { console.error('Wallet refresh error:', e); }
 }
 
@@ -4572,7 +4752,7 @@ async function refreshBots() {
 // ── Market Signals — Fear & Greed, BTC Dominance, Funding ─────────────────
 async function loadMarketSignals() {
   try {
-    const res = await fetch('https://tc-proxy-h2pp.onrender.com/market-signals');
+    const res = await fetch('https://tc-proxy-eu.onrender.com/market-signals');
     if (!res.ok) return;
     const s = await res.json();
     // Update old Context layer elements (kept for compatibility)
@@ -4815,7 +4995,7 @@ async function toggleTcBot(botId, enable, name) {
     async () => {
       try {
         const endpoint = enable ? 'enable' : 'disable';
-        const r = await fetch('https://tc-proxy-h2pp.onrender.com/bot/' + botId + '/' + endpoint, {method:'POST'});
+        const r = await fetch('https://tc-proxy-eu.onrender.com/bot/' + botId + '/' + endpoint, {method:'POST'});
         const d = await r.json();
         if (d.success) {
           showToast((enable?'Enabled':'Paused') + ' ' + name, 'success');
@@ -4872,7 +5052,7 @@ function checkPw() {
     // Auto-activate Hannah — no button press needed
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 1500);
     // Pre-warm hannah proxy
-    fetch('https://hannah-proxy.onrender.com/health').catch(() => {});
+    fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
   } else {
     const errEl = document.getElementById('pw-error');
     if (errEl) { errEl.style.display = 'block'; setTimeout(() => errEl.style.display='none', 2000); }
@@ -4900,7 +5080,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-activate Hannah on session restore
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
     // Pre-warm hannah proxy
-    fetch('https://hannah-proxy.onrender.com/health').catch(() => {});
+    fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
   }
 
   // Keyboard
@@ -4963,7 +5143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Flow: user types → AI responds via hannah-proxy → ElevenLabs
 //       converts AI response to PCM16 → Simli speaks it
 // ══════════════════════════════════════════════════════════════════
-const HANNAH_PROXY = 'https://hannah-proxy.onrender.com';
+const HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com';
 const _SIMLI_KEY   = 'rwq4j9njja9lg0q9d45b9';
 const _SIMLI_FACE  = 'cace3ef7-a4c4-425d-a8cf-a5358eb0c427';
 const _EL_KEY      = 'sk_ff8bfc6a100041f7f1a8deecd344751943573cc708f37b22';
@@ -5227,12 +5407,60 @@ async function hannahSend() {
   // Show thinking indicator
   const thinking = _hAppend('thinking', 'Thinking…');
 
-  // Build portfolio context
+  // Build rich portfolio context for Hannah
+  const sig  = window._marketSignals || {};
+  const fg   = sig.fearGreed?.value ?? '?';
+  const fgLbl= sig.fearGreed?.label ?? sig.fearGreed?.classification ?? '';
+  const regime = sig.regime ?? 'UNKNOWN';
+  const r2Active = (typeof fg === 'number' && fg < 30) ? 'YES — no directional longs permitted' : (fg === '?' ? 'UNKNOWN' : 'NO — longs permitted');
+  const funding = sig.fundingRate != null ? sig.fundingRate.toFixed(4) + '%' : '?';
+  const btcDom  = sig.btcDominance ? sig.btcDominance + '%' : '?';
+
+  // Capital
+  const totalCap = document.getElementById('header-total')?.textContent || '?';
+  const spotEl   = document.getElementById('ctx-spot-wallet')?.textContent || '?';
+  const futEl    = document.getElementById('ctx-futures-wallet')?.textContent || '?';
+  const upnlEl   = document.getElementById('ctx-upnl')?.textContent || '?';
+
+  // Trial
+  const trialStart = new Date('2026-04-10');
+  const dayNum = Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1;
+  const lockedEl = document.getElementById('d2-locked-num')?.textContent || document.getElementById('dash-locked')?.textContent || '?';
+
+  // Bots summary
+  const tcBotLines = (window._tcBots || []).map(b => {
+    const profit = parseFloat(b.realised ?? b.profit ?? 0);
+    const deals  = b.activeDeals || 0;
+    const age    = b.dealAgeHours ? b.dealAgeHours + 'h open' : '';
+    const r3warn = b.dealAgeHours > 48 ? ' ⚠️R3' : '';
+    return `  ${b.name||b.pair}: capital=${b.capital||0} locked=${profit>=0?'+':''}${profit.toFixed(2)} active_deals=${deals} ${age}${r3warn} ${b.active?'ENABLED':'DISABLED'}`;
+  }).join('\n');
+
+  const bnBotLines = (window._bnBots || []).map(b => {
+    const profit = parseFloat(b.realised ?? b.profit ?? 0);
+    return `  ${b.name||b.id}: capital=${b.capital||0} locked=${profit>=0?'+':''}${profit.toFixed(2)} trades=${b.trades||0} ${b.active?'ENABLED':'DISABLED'}`;
+  }).join('\n');
+
   const pCtx = [
-    'CAPITAL: ' + (document.getElementById('header-total')?.textContent || '?'),
-    '3Commas bots: ' + (window._tcBots?.length || 0) + ' active',
-    'Binance bots: '  + (window._bnBots?.length  || 0) + ' active',
+    '=== MARKET STATE ===',
+    `Fear & Greed: ${fg} (${fgLbl}) | Regime: ${regime} | R2 Active: ${r2Active}`,
+    `BTC Dominance: ${btcDom} | Funding Rate: ${funding}`,
+    '',
+    '=== CAPITAL ===',
+    `Total Capital: ${totalCap}`,
+    `Binance Spot: ${spotEl} | Futures USDT-M: ${futEl} | Unrealised PnL: ${upnlEl}`,
+    '',
+    '=== TRIAL PROGRESS ===',
+    `Trial Day: ${dayNum}/30 | Locked So Far: ${lockedEl}`,
+    `Target: 10% = ~$920 | Daily Required: $30.70/day`,
+    '',
+    '=== 3COMMAS BOTS ===',
+    tcBotLines || '  (no data)',
+    '',
+    '=== BINANCE NATIVE BOTS ===',
+    bnBotLines || '  (no data)',
   ].join('\n');
+
 
   try {
     // ─── Step 1: Get AI response from Hannah proxy ─────────────────
@@ -5324,9 +5552,9 @@ function _updateCtrlCards(data) {
 
   // ── Mirror to Dashboard KPI cards ──
   const setD = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  const trialDay = 5;
-  const trialTarget   = (gt * 0.06).toFixed(0);
-  const trialStretch  = (gt * 0.10).toFixed(0);
+  const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
+  const trialTarget   = (gt * 0.10).toFixed(0);
+  const trialStretch  = (gt * 0.15).toFixed(0);
   const monthlyRoi    = (0.00155 * 30 * 100).toFixed(1) + '%';
   const dailyPct      = '+0.155%';
   const winRate       = '82.5%';
@@ -5380,7 +5608,7 @@ function _updateCtrlCards(data) {
   if (acDate) acDate.textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
   // Trial progress bar
-  const pct = Math.min(100, (rPnl / (gt * 0.06)) * 100);
+  const pct = Math.min(100, (rPnl / (gt * 0.10)) * 100);
   const fill = document.getElementById('tpb-fill');
   if (fill) fill.style.width = pct.toFixed(1) + '%';
   setD('tpb-locked',  fmtPnl(rPnl) + ' locked');
