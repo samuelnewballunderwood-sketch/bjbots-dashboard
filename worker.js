@@ -1547,6 +1547,18 @@ export default {
         await logAction(env,{type:'bot_action',botId,action,timestamp:new Date().toISOString(),botMeta:getBotMeta(parseInt(botId)||botId)});
         return await botAction(env,botId,action);
       }
+      if(path==='/api/chat-dual'&&request.method==='POST'){
+        try {
+          const body = await request.text();
+          const r = await fetch('https://tc-proxy-eu.onrender.com/api/chat-dual', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          });
+          const data = await r.json();
+          return json(data);
+        } catch(e) { return json({ error: e.message, answer: "Hannah is unavailable right now. Try again in a moment." }, 500); }
+      }
       if(path==='/'||path==='/index.html') return await serveHTML();
       return new Response('Not found',{status:404});
     }catch(e){return json({error:e.message},500);}
