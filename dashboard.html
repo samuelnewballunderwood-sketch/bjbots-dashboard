@@ -2382,7 +2382,7 @@ body::after {
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">DAILY RATE</div>
       <div class="d2-kpi-num safe" id="dm-daily-profit">+$8.15</div>
-      <div class="d2-kpi-sub">+0.155%/day avg</div>
+      <div class="d2-kpi-sub">live avg/day</div>
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">TRIAL DAY</div>
@@ -4305,16 +4305,28 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
 
   // Level 1 already handled by p-grand-total above
 
-  // Level 2 — Platform breakdown from spot/futures wallets
-  // These come from refreshWallets() which runs separately — patch here too
-  const spotVal    = parseFloat(document.getElementById('ctx-spot-wallet')?.textContent?.replace(/[^0-9.]/g,'') || 0);
-  const futVal     = parseFloat(document.getElementById('ctx-futures-wallet')?.textContent?.replace(/[^0-9.]/g,'') || 0);
+  // Level 2 — Platform breakdown from reconciliation data
+  // r.spotTotal = spot wallet USD value, r.futuresTotal = futures balance
+  const spotVal    = r.spotTotal    || r.spotFree + r.spotLocked || 0;
+  const futVal     = r.futuresTotal || 0;
+  const tcCapVal   = (window._tcBots||[]).reduce((s,b) => s + (b.capital||0), 0);
   const spotPct    = grandTotal ? Math.round((spotVal/grandTotal)*100) : 0;
   const futPct     = grandTotal ? Math.round((futVal/grandTotal)*100)  : 0;
-  setEl('p-spot-total',   fmtUSD(spotVal));
+  const tcPct      = grandTotal ? Math.round((tcCapVal/grandTotal)*100) : 0;
+
+  // Patch spot/futures rows
+  setEl('p-spot-total',    fmtUSD(spotVal));
   setEl('p-futures-total', fmtUSD(futVal));
-  setEl('p-spot-pct',     spotPct + '% of total');
-  setEl('p-futures-pct',  futPct  + '% of total');
+  setEl('p-spot-pct',      spotPct  + '% of total');
+  setEl('p-futures-pct',   futPct   + '% of total');
+
+  // Update spot asset count
+  const spotAssetCount = (window._lastSpotBalances||[]).filter(b => {
+    const qty = parseFloat(b.free||0) + parseFloat(b.locked||0);
+    if (b.asset === 'USDT') return qty > 0.01;
+    return qty * (window._lastPrices?.[b.asset+'USDT'] || 0) > 0.50;
+  }).length;
+  setEl('p-spot-asset-count', spotAssetCount + ' assets');
 
   // Level 3 — Asset list from spot wallet balances
   _renderAssetList(grandTotal);
@@ -5711,10 +5723,10 @@ function _updateCtrlCards(data) {
     const r2   = fg3 != null && fg3 < 30;
     const allBots = [...(window._tcBots||[]), ...(window._bnBots||[])];
     const rows = [];
-    const activeGrids = allBots.filter(b => (b.strategy==='grid'||b.botType==='grid') && (b.active||b.capital>0));
+    const activeGrids = allBots.filter(b => (b.strategy==='grid'||b.botType==='grid') && (b.capital||0) > 0);
     rows.push({ ok: activeGrids.length > 0, label: 'R1 · Grid Ranges', detail: activeGrids.length + ' grids active' });
     rows.push({ ok: !r2, warn: r2, label: 'R2 · Regime Gate', detail: r2 ? 'ACTIVE — F&G ' + fg3 + ', longs blocked' : 'Clear — F&G ' + (fg3??'—') });
-    const idleBots = allBots.filter(b => b.active && b.activeDeals === 0 && b.capital > 0);
+    const idleBots = allBots.filter(b => (b.capital||0) > 0 && (b.activeDeals||0) === 0 && (b.strategy||'')!=='grid');
     rows.push({ ok: idleBots.length === 0, warn: idleBots.length > 0, label: 'R3 · 48hr Idle', detail: idleBots.length === 0 ? 'All active bots cycling' : idleBots.length + ' idle: ' + idleBots.map(b=>b.name||b.pair).join(', ').slice(0,40) });
     const dailyOk = actualDailyPct >= 0.05;
     rows.push({ ok: dailyOk, warn: !dailyOk, label: 'R4 · Daily Rate', detail: dailyPct + '/day' + (dailyOk ? ' ✓' : ' — below 0.05%') });

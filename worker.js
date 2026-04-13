@@ -384,58 +384,81 @@ const BASE_PROFILES = {
   },
 };
 
-function computeTargetState({ regime, volatility, riskState }) {
-  // Start from base profile
+function computeTargetState({ regime, volatility, riskState, fearGreed }) {
   const base = { ...BASE_PROFILES.default };
   const adjustments = [];
 
-  // Regime adjustments
-  if (regime === 'Bear') {
-    base.longPct  -= 10;  // less long in bear
-    base.shortPct += 5;   // more hedge in bear
-    base.gridPct  -= 10;  // grids suffer in trending markets
-    base.dcaPct   += 5;
-    adjustments.push('Bear market: long -10%, hedge +5%, grid -10%, DCA +5%');
-  } else if (regime === 'Bull') {
-    base.longPct  += 10;  // allow more long in bull
-    base.shortPct -= 5;   // less hedge needed
-    base.gridPct  += 5;   // grids work in ranging bull
-    adjustments.push('Bull market: long +10%, hedge -5%, grid +5%');
+  // ── Quantum Rules regime override — takes precedence over everything ──
+  // R2: F&G < 30 = EXTREME_FEAR/FEAR regime = 0% directional longs
+  const fg = fearGreed ?? 50;
+  if (fg < 30) {
+    // BEAR/EXTREME FEAR: no long exposure permitted (R2 active)
+    base.longPct  = 0;
+    base.shortPct = 40;
+    base.gridPct  = 50; // neutral grids OK
+    base.dcaPct   = 0;  // no DCA longs
+    adjustments.push('R2 ACTIVE (F&G=' + fg + '): long=0%, hedge=40%, grids=50%, DCA=0%');
+    return { targets: base, adjustments, basedOn: { regime, volatility, riskState, fearGreed: fg } };
+  } else if (fg < 50) {
+    // FEAR: reduced longs, elevated shorts
+    base.longPct  = 30;
+    base.shortPct = 25;
+    base.gridPct  = 40;
+    base.dcaPct   = 15;
+    adjustments.push('FEAR regime (F&G=' + fg + '): long=30%, hedge=25%, grids=40%');
+    return { targets: base, adjustments, basedOn: { regime, volatility, riskState, fearGreed: fg } };
+  } else if (fg > 70) {
+    // GREED: full long allocation
+    base.longPct  = 70;
+    base.shortPct = 10;
+    base.gridPct  = 45;
+    base.dcaPct   = 35;
+    adjustments.push('GREED regime (F&G=' + fg + '): long=70%, hedge=10%');
   } else {
-    adjustments.push('Sideways market: base targets apply');
+    // NEUTRAL (50-70): base targets with standard adjustments
+    if (regime === 'Bear') {
+      base.longPct  -= 10;
+      base.shortPct += 5;
+      base.gridPct  -= 10;
+      base.dcaPct   += 5;
+      adjustments.push('Bear market: long -10%, hedge +5%, grid -10%, DCA +5%');
+    } else if (regime === 'Bull') {
+      base.longPct  += 10;
+      base.shortPct -= 5;
+      base.gridPct  += 5;
+      adjustments.push('Bull market: long +10%, hedge -5%, grid +5%');
+    } else {
+      adjustments.push('Sideways market: base targets apply');
+    }
   }
 
   // Volatility adjustments
   if (volatility === 'High') {
-    base.gridPct   -= 10; // high vol hurts grids
-    base.dcaPct    += 5;  // DCA benefits from vol
-    base.shortPct  += 5;  // more defensive
+    base.gridPct   -= 10;
+    base.dcaPct    += 5;
+    base.shortPct  += 5;
     adjustments.push('High volatility: grid -10%, DCA +5%, hedge +5%');
   } else if (volatility === 'Low') {
-    base.gridPct   += 5;  // low vol good for grids
+    base.gridPct   += 5;
     adjustments.push('Low volatility: grid +5%');
   }
 
-  // Risk state adjustments (applied on top)
+  // Risk state adjustments
   if (riskState === 'HIGH_RISK') {
-    base.longPct   = Math.min(base.longPct, 60);
+    base.longPct   = Math.min(base.longPct, 50);
     base.shortPct  = Math.max(base.shortPct, 25);
     base.gridPct   = Math.min(base.gridPct, 35);
-    adjustments.push('HIGH_RISK state: long capped 60%, hedge floored 25%, grid capped 35%');
-  } else if (riskState === 'OVEREXPOSED') {
-    base.longPct   = Math.min(base.longPct, 70);
-    base.shortPct  = Math.max(base.shortPct, 20);
-    adjustments.push('OVEREXPOSED state: long capped 70%, hedge floored 20%');
+    adjustments.push('HIGH_RISK state: long capped 50%, hedge floored 25%');
   }
 
-  // Clamp all to sensible ranges
-  base.longPct   = Math.min(85, Math.max(45, base.longPct));
-  base.shortPct  = Math.min(35, Math.max(10, base.shortPct));
+  // Clamp
+  base.longPct   = Math.min(85, Math.max(0,  base.longPct));
+  base.shortPct  = Math.min(50, Math.max(0,  base.shortPct));
   base.gridPct   = Math.min(60, Math.max(20, base.gridPct));
-  base.dcaPct    = Math.min(50, Math.max(15, base.dcaPct));
+  base.dcaPct    = Math.min(50, Math.max(0,  base.dcaPct));
   base.signalPct = Math.min(20, Math.max(5,  base.signalPct));
 
-  return { targets: base, adjustments, basedOn: { regime, volatility, riskState } };
+  return { targets: base, adjustments, basedOn: { regime, volatility, riskState, fearGreed: fg } };
 }
 
 // Compute gaps between current portfolio and dynamic targets
@@ -958,6 +981,7 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     regime:    market.regime    || 'Sideways',
     volatility:market.volatility|| 'Low',
     riskState,
+    fearGreed: market.fearGreed ?? null,
   });
 
   // Portfolio gaps (sorted by size — biggest first)
@@ -1285,9 +1309,9 @@ function buildLivePortfolio(tcBots, bnBots, recon) {
   }));
   tcSource.forEach(b => {
     const cap = b.capital || 0;
-    // Only count active bots in allocation — skip stopped bots
-    const isActive = b.active !== false && b.enabled !== false && cap > 0;
-    if (!isActive) return;
+    // Use capital > 0 as the truth for "active" — 3Commas active/enabled field
+    // is unreliable (returns false for running bots). Capital > 0 = deployed = counts.
+    if (cap <= 0) return;
     const dir = b.direction || 'long';
     const meta = BOT_META[b.id];
     const sym = meta?.symbol || 'BTCUSDT';
@@ -1472,11 +1496,12 @@ async function getReconciliation(env) {
 
 async function getDecisions(env){
   try{
-    const [tcData,bnData,futData,spotData,pricesData]=await Promise.all([
+    const [tcData,bnData,futData,spotData,pricesData,sigData]=await Promise.all([
       fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()),
       getBinanceBotsData(env),getFuturesWalletData(env),
       getSpotWalletData(env),
       fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
+      fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r=>r.json()).catch(()=>({})),
     ]);
     // Build reconciliation first — this gives us true capital numbers
     const recon = buildReconciliation({
@@ -1487,7 +1512,15 @@ async function getDecisions(env){
       prices:  pricesData   || [],
     });
     const portfolio=buildLivePortfolio(tcData.bots||[],bnData.bots||[],recon);
-    const market=bnData.market||{regime:'Unknown',volatility:'Unknown',btcChange24h:0};
+    // Merge F&G from market-signals into market object
+    const fearGreed = sigData?.fearGreed?.value ?? null;
+    const market={
+      ...(bnData.market||{regime:'Unknown',volatility:'Unknown',btcChange24h:0}),
+      fearGreed,
+      regime: fearGreed != null
+        ? (fearGreed <= 25 ? 'Bear' : fearGreed <= 45 ? 'Bear' : fearGreed >= 75 ? 'Bull' : 'Sideways')
+        : (bnData.market?.regime || 'Unknown'),
+    };
     const dataIntegrity={hasTCBots:(tcData.bots||[]).length>0,hasBNBots:(bnData.bots||[]).length>0,hasHedge:portfolio.shortCapital>0,exposureValid:portfolio.totalAllocated>100};
     const dataReliable=dataIntegrity.hasTCBots&&dataIntegrity.hasBNBots&&dataIntegrity.hasHedge&&dataIntegrity.exposureValid;
     const botScores={},botEff={};
