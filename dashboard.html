@@ -5342,7 +5342,13 @@ function checkPw() {
     document.getElementById('app-shell').style.display  = 'block';
     sessionStorage.setItem('bjbots_auth', '1');
     showScreen('dashboard');
+    // Hold scroll at top for 2s — beats async renders, Hannah activation, cold-start retries
     window.scrollTo(0, 0);
+    const _scrollLockEnd = Date.now() + 2000;
+    (function _lockScroll() {
+      window.scrollTo(0, 0);
+      if (Date.now() < _scrollLockEnd) requestAnimationFrame(_lockScroll);
+    })();
     setTimeout(loadTradeHistory, 3000);
     refreshAll();
     refreshStatus();
@@ -5379,8 +5385,12 @@ function checkPw() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
+// Kill scroll restoration from every angle — bfcache, history, RAF
+if (history.scrollRestoration) history.scrollRestoration = 'manual';
+window.addEventListener('pageshow', () => { window.scrollTo(0, 0); });
+window.addEventListener('load', () => { window.scrollTo(0, 0); });
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Disable browser scroll restoration — always start at top
   if (history.scrollRestoration) history.scrollRestoration = 'manual';
   window.scrollTo(0, 0);
   // Clear old cache
@@ -5393,6 +5403,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('app-shell').style.display  = 'block';
     showScreen('dashboard');
     window.scrollTo(0, 0);
+    const _scrollLockEnd2 = Date.now() + 2000;
+    (function _lockScroll2() {
+      window.scrollTo(0, 0);
+      if (Date.now() < _scrollLockEnd2) requestAnimationFrame(_lockScroll2);
+    })();
     refreshAll();
     refreshStatus();
     setTimeout(loadTradeHistory, 3000);
