@@ -2377,7 +2377,7 @@ body::after {
     <div class="d2-kpi-cell highlight">
       <div class="d2-kpi-label">LOCKED PROFIT</div>
       <div class="d2-kpi-num safe" id="dm-locked">—</div>
-      <div class="d2-kpi-sub" id="dm-locked-pct">Loading…</div>
+      <div class="d2-kpi-sub" id="dm-locked-pct">—</div>
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">DAILY RATE</div>
@@ -2449,12 +2449,12 @@ body::after {
         </div>
         <div class="dash-metric-card dm5">
           <div class="dm-lbl">Stretch</div>
-          <div class="dm-val warn" id="cv-stretch">$527</div>
-          <div class="dm-sub">6% goal</div>
+          <div class="dm-val warn" id="cv-stretch">—</div>
+          <div class="dm-sub">10% goal</div>
         </div>
         <div class="dash-metric-card dm6">
           <div class="dm-lbl">Progress</div>
-          <div class="dm-val pos" id="cv-progress">+2.41%</div>
+          <div class="dm-val pos" id="cv-progress">—</div>
           <div class="dm-sub">Locked</div>
         </div>
 
@@ -3349,8 +3349,8 @@ body::after {
       </div>
       <div class="cv16-card cv16-card-5">
         <div class="cv16-card-lbl">Stretch</div>
-        <div class="cv16-card-val cv-warn" id="cv-stretch">$775</div>
-        <div class="cv16-card-sub">6% goal</div>
+        <div class="cv16-card-val cv-warn" id="cv-stretch">—</div>
+        <div class="cv16-card-sub">10% goal</div>
       </div>
       <div class="cv16-card cv16-card-6">
         <div class="cv16-card-lbl">Progress</div>
@@ -5598,6 +5598,8 @@ function _updateCtrlCards(data) {
   setD('dm-target',   '$' + trialTarget);
   setD('dm-stretch',  '$' + trialStretch);
   setD('dm-locked',   fmtPnl(rPnl));
+  // Update locked pct sub
+  if (gt > 0) setD('dm-locked-pct', '+' + ((rPnl/gt)*100).toFixed(2) + '% of capital');
 
   // Left KPI pair
   setD('dash-locked',     fmtPnl(rPnl));
