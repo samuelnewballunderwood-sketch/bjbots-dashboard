@@ -975,6 +975,7 @@ body::after {
   border-color:rgba(45,212,191,.10);
   animation:ring-spin 44s linear infinite;
 }
+/* Hannah state-reactive orbital — tied to system risk */
 .dash-glow {
   position:absolute; top:50%; left:50%;
   width:220px; height:220px; margin-left:-110px; margin-top:-110px;
@@ -982,7 +983,27 @@ body::after {
   background:radial-gradient(circle, rgba(45,212,191,.12) 0%, transparent 70%);
   animation:arena-pulse2 3s ease-in-out infinite;
   pointer-events:none;
+  transition: background 1s ease;
 }
+.dash-hannah-wrap.state-safe .dash-orbital-ring.r1 { animation-duration: 28s; border-color: rgba(45,212,191,.22); }
+.dash-hannah-wrap.state-safe .dash-orbital-ring.r2 { animation-duration: 40s; }
+.dash-hannah-wrap.state-safe .dash-orbital-ring.r3 { animation-duration: 56s; border-color: rgba(45,212,191,.08); }
+.dash-hannah-wrap.state-safe .dash-glow { background: radial-gradient(circle, rgba(45,212,191,.10) 0%, transparent 70%); }
+
+.dash-hannah-wrap.state-balanced .dash-orbital-ring.r1 { animation-duration: 22s; border-color: rgba(96,165,250,.28); }
+.dash-hannah-wrap.state-balanced .dash-orbital-ring.r2 { animation-duration: 32s; border-color: rgba(96,165,250,.18); }
+.dash-hannah-wrap.state-balanced .dash-orbital-ring.r3 { animation-duration: 44s; border-color: rgba(96,165,250,.10); }
+.dash-hannah-wrap.state-balanced .dash-glow { background: radial-gradient(circle, rgba(96,165,250,.12) 0%, transparent 70%); }
+
+.dash-hannah-wrap.state-overexposed .dash-orbital-ring.r1 { animation-duration: 14s; border-color: rgba(245,158,11,.38); }
+.dash-hannah-wrap.state-overexposed .dash-orbital-ring.r2 { animation-duration: 20s; border-color: rgba(245,158,11,.24); }
+.dash-hannah-wrap.state-overexposed .dash-orbital-ring.r3 { animation-duration: 28s; border-color: rgba(245,158,11,.14); }
+.dash-hannah-wrap.state-overexposed .dash-glow { background: radial-gradient(circle, rgba(245,158,11,.16) 0%, transparent 70%); animation-duration: 2s; }
+
+.dash-hannah-wrap.state-high-risk .dash-orbital-ring.r1 { animation-duration: 8s; border-color: rgba(239,68,68,.45); }
+.dash-hannah-wrap.state-high-risk .dash-orbital-ring.r2 { animation-duration: 12s; border-color: rgba(239,68,68,.28); }
+.dash-hannah-wrap.state-high-risk .dash-orbital-ring.r3 { animation-duration: 16s; border-color: rgba(239,68,68,.16); }
+.dash-hannah-wrap.state-high-risk .dash-glow { background: radial-gradient(circle, rgba(239,68,68,.18) 0%, transparent 70%); animation-duration: 1.4s; }
 
 /* Metric cards around Hannah */
 .dash-metric-card {
@@ -1328,15 +1349,74 @@ body::after {
 .d2-kpi-cell.highlight .d2-kpi-num { font-size: 28px; }
 .d2-kpi-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
 
-/* 3-column orbital dashboard layout */
-.d2-body-orbital {
+/* ── NEW 3-ROW DASHBOARD LAYOUT ─────────────────────────────────── */
+.d2-row1 {
   display: grid;
-  grid-template-columns: minmax(340px, 1.7fr) 440px minmax(220px, 0.8fr);
-  gap: 0;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  grid-template-columns: 220px 1fr 160px;
+  border-bottom: 1px solid rgba(160,175,220,.08);
 }
+.d2-row2 {
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid rgba(160,175,220,.07);
+}
+.d2-row2-header {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba(248,113,113,.15);
+}
+.d2-row2-title {
+  font-family: var(--font-display); font-size: 11px; font-weight: 700;
+  letter-spacing: .2em; color: #f87171;
+}
+.d2-row2-sub {
+  font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);
+}
+.d2-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.d2-actions-grid .action-card { margin-bottom: 0; }
+.d2-row3 {
+  padding: 16px 28px 20px;
+  opacity: 0.5;
+  border-top: 1px solid rgba(160,175,220,.05);
+  transition: opacity .3s;
+}
+.d2-row3:hover { opacity: 0.72; }
+.d2-row3-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+}
+.d2-row3-section-title {
+  font-family: var(--font-display); font-size: 8px; font-weight: 700;
+  letter-spacing: .18em; color: var(--text-dim); text-transform: uppercase;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+}
+.d2-row3-section-title::after { content:''; flex:1; height:1px; background:rgba(160,175,220,.06); }
+
+/* Left column: risk state + objective */
+.d2-risk-block { display: flex; flex-direction: column; gap: 3px; }
+.d2-risk-state {
+  font-family: var(--font-display); font-size: 18px; font-weight: 900;
+  letter-spacing: .06em; line-height: 1;
+}
+.d2-risk-state.SAFE        { color: var(--safe); }
+.d2-risk-state.BALANCED    { color: var(--balanced); }
+.d2-risk-state.OVEREXPOSED { color: var(--warn); }
+.d2-risk-state.HIGH_RISK   { color: #ef4444; }
+.d2-risk-score {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 2px;
+}
+.d2-objective {
+  font-size: 12px; font-weight: 600; color: var(--text-secondary);
+  line-height: 1.45; padding-top: 12px;
+  border-top: 1px solid rgba(160,175,220,.07);
+}
+.d2-objective::before { content: '▶ '; color: var(--purple); font-size: 9px; }
+
+/* Trial bar in right col */
+.d2-trial-bar-wrap { height: 3px; background: rgba(30,35,55,.9); border-radius: 2px; }
+.d2-trial-bar { height: 100%; background: var(--safe); border-radius: 2px; transition: width .5s; opacity: 0.6; }
 .d2-col-left {
   padding: 20px 20px;
   border-right: 1px solid var(--border-dim);
@@ -2515,26 +2595,18 @@ body::after {
       </div>
     </div>
 
-    <!-- RIGHT: Trial progress — quiet metadata -->
+    <!-- RIGHT: Trial progress — metadata only, no visual weight -->
     <div class="d2-col-right">
-      <div class="d2-trial-meta">
-        <div class="d2-row3-section-title">Trial Progress</div>
-        <div class="d2-trial-meta-row">
-          <span class="d2-trial-meta-key">Locked</span>
-          <span class="d2-trial-meta-val safe" id="d2-locked-num">—</span>
-        </div>
-        <div class="d2-trial-meta-row">
-          <span class="d2-trial-meta-key">Target</span>
-          <span class="d2-trial-meta-val" id="d2-target-num">—</span>
-        </div>
-        <div class="d2-trial-meta-row">
-          <span class="d2-trial-meta-key">Day</span>
-          <span class="d2-trial-meta-val" id="d2-trial-day-label-r">—/30</span>
-        </div>
-        <div class="d2-trial-bar-wrap" style="margin-top:10px">
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:8px;font-family:var(--font-display);letter-spacing:.16em;color:rgba(160,175,220,.3);text-transform:uppercase;margin-bottom:6px;">Trial</div>
+        <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:rgba(74,222,128,.7)" id="d2-locked-num">—</div>
+        <div style="font-size:9px;color:rgba(160,175,220,.35)">locked profit</div>
+        <div class="d2-trial-bar-wrap" style="margin-top:8px">
           <div class="d2-trial-bar" id="d2-trial-bar" style="width:0%"></div>
         </div>
-        <div style="font-size:9px;color:var(--text-dim);margin-top:4px;text-align:right" id="d2-trial-pct">—% of target</div>
+        <div style="font-size:9px;color:rgba(160,175,220,.3);margin-top:3px" id="d2-trial-pct">—%</div>
+        <div style="font-size:9px;color:rgba(160,175,220,.3);margin-top:2px" id="d2-trial-day-label-r">Day —/30</div>
+        <div style="display:none" id="d2-target-num">—</div>
       </div>
     </div>
 
@@ -4160,8 +4232,23 @@ function renderControl(data) {
   const d2RiskEl = document.getElementById('d2-risk-state');
   if (d2RiskEl) { d2RiskEl.textContent = rs; d2RiskEl.className = 'd2-risk-state ' + rs; }
   setEl('d2-risk-score', 'Score ' + score + '/100');
-  setEl('d2-objective', objective || 'Portfolio analysed — no directive available');
-  // Row 3 market / portfolio will be populated by renderPortfolioFromRecon
+
+  // Enforce directive language on objective
+  const rawObj = objective || 'Monitor current positions. No action required.';
+  const directiveObj = rawObj
+    .replace(/\bsuggests?\b/gi, 'requires').replace(/\bmay\b/gi, 'will')
+    .replace(/\bcould\b/gi, 'should').replace(/\bit is recommended to\b/gi, '')
+    .replace(/\bplease\b/gi, '').replace(/  +/g, ' ').trim();
+  setEl('d2-objective', directiveObj);
+
+  // Hannah orbital — reflect system state visually through ring speed + colour
+  const hannahWrap = document.querySelector('#screen-dashboard .dash-hannah-wrap');
+  if (hannahWrap) {
+    hannahWrap.classList.remove('state-safe','state-balanced','state-overexposed','state-high-risk');
+    const stMap = {SAFE:'state-safe',BALANCED:'state-balanced',OVEREXPOSED:'state-overexposed',HIGH_RISK:'state-high-risk'};
+    hannahWrap.classList.add(stMap[rs] || 'state-balanced');
+  }
+  // Row 3 market / portfolio populated by renderPortfolioFromRecon + loadMarketSignals
 
   // Engine badge
   const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
@@ -4180,7 +4267,7 @@ function renderControl(data) {
 
   if (reqList) {
     if (!reqActions.length) {
-      reqList.innerHTML = '<div class="hold-all-banner"><div class="hold-all-title">✓ SYSTEM BALANCED</div><div class="hold-all-sub">No action required. AlphaControl is actively monitoring your portfolio. It will surface a required action the moment conditions change.</div></div>';
+      reqList.innerHTML = '<div class="hold-all-banner"><div class="hold-all-title">✓ NO ACTION REQUIRED</div><div class="hold-all-sub">System is optimally positioned. Monitoring all positions. A required action will appear immediately when conditions change.</div></div>';
     } else {
       reqList.innerHTML = reqActions.map(a => renderActionCard(a)).join('');
     }
@@ -4211,7 +4298,7 @@ function renderControl(data) {
     if (allActions.length) {
       alertsEl.innerHTML = allActions.map(a => renderActionCard(a)).join('');
     } else {
-      alertsEl.innerHTML = '<div class="hold-all-banner" style="grid-column:1/-1"><div class="hold-all-title">✓ SYSTEM BALANCED</div><div class="hold-all-sub">No action required. AlphaControl is actively monitoring your portfolio. It will surface a required action the moment conditions change.</div></div>';
+      alertsEl.innerHTML = '<div class="hold-all-banner" style="grid-column:1/-1"><div class="hold-all-title">✓ NO ACTION REQUIRED</div><div class="hold-all-sub">System is optimally positioned. AlphaControl is monitoring all positions. A required action will appear here immediately when conditions change.</div></div>';
     }
   }
 
@@ -4267,22 +4354,29 @@ function renderActionCard(a, suggested=false) {
     ? '<div style="margin-top:10px;padding:6px 10px;background:rgba(220,38,38,.04);border-left:2px solid rgba(220,38,38,.3);border-radius:3px;font-size:11px;color:rgba(248,113,113,.72);line-height:1.45;"><span style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.1em;display:block;margin-bottom:2px;color:rgba(248,113,113,.45);">IF YOU DON\'T ACT</span>'+a.costOfInaction+'</div>'
     : '';
 
-  // Drawer — the intelligence layer. Deeper context, not just extra info.
+  // Drawer — intelligence layer. System reasoning, structured.
   const isPos = !((a.projectedState?.summary||'').toLowerCase().includes('no action')) && action !== 'hold';
-  const projHtml = a.projectedState?.summary
-    ? '<div class="ac-projected '+(isPos?'positive':'negative')+'" style="margin-bottom:8px"><div class="ac-projected-label">→ After this action</div><div class="ac-projected-text">'+a.projectedState.summary+'</div>'
-      +(a.projectedState.progressPct !== undefined ? '<div class="ac-progress-bar"><div class="ac-progress-fill" style="width:'+Math.min(100,a.projectedState.progressPct)+'%;background:'+(isPos?'var(--safe)':'var(--warn)')+'"></div></div>' : '')
+
+  const whyHtml = a.reason
+    ? '<div style="margin-bottom:10px"><div style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">WHY NOW</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.5">'+a.reason+'</div></div>'
+    : '';
+  const triggerHtml = a.impact
+    ? '<div style="margin-bottom:10px"><div style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">MARKET CONDITION</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.5">'+a.impact+'</div></div>'
+    : '';
+  const outcomeHtml = a.projectedState?.summary
+    ? '<div style="margin-bottom:10px"><div style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.14em;color:'+(isPos?'var(--safe)':'var(--warn)')+';text-transform:uppercase;margin-bottom:4px">EXPECTED OUTCOME</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.5">'+a.projectedState.summary+'</div>'
+      +(a.projectedState.progressPct !== undefined ? '<div class="ac-progress-bar" style="margin-top:6px"><div class="ac-progress-fill" style="width:'+Math.min(100,a.projectedState.progressPct)+'%;background:'+(isPos?'var(--safe)':'var(--warn)')+'"></div></div>' : '')
       +'</div>'
     : '';
-  const impactHtml = a.impact
-    ? '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5">'+a.impact+'</div>' : '';
-  const confHtml = conf
-    ? '<div style="font-size:10px;color:var(--purple);font-family:var(--font-mono);margin-bottom:4px">Confidence: <b>'+conf+'</b></div>' : '';
-  const typeHtml = action
-    ? '<div style="font-size:9px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:.1em;text-transform:uppercase;margin-top:4px">Type: '+action+'</div>' : '';
-  const drawerContent = projHtml + impactHtml + confHtml + typeHtml;
+  const ignoreHtml = a.costOfInaction
+    ? '<div><div style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.14em;color:#f87171;text-transform:uppercase;margin-bottom:4px">IF IGNORED</div><div style="font-size:11px;color:rgba(248,113,113,.8);line-height:1.5">'+a.costOfInaction+'</div></div>'
+    : '';
+  const confFooter = conf
+    ? '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(160,175,220,.08);font-size:9px;color:var(--text-dim);font-family:var(--font-mono)">System confidence: <span style="color:var(--purple)">'+conf+'</span></div>'
+    : '';
+  const drawerContent = whyHtml + triggerHtml + outcomeHtml + ignoreHtml + confFooter;
 
-  const expandBtn = drawerContent.trim()
+    const expandBtn = drawerContent.trim()
     ? '<button class="ac-expand-btn" onclick="(function(b){var d=document.getElementById(\''+cardId+'\');var open=d.classList.toggle(\'open\');b.classList.toggle(\'open\',open);b.querySelector(\'.ac-expand-lbl\').textContent=open?\'HIDE ANALYSIS\':\'FULL ANALYSIS\';})(this)"><span class="ac-expand-arrow">▼</span><span class="ac-expand-lbl">FULL ANALYSIS</span></button>'
       + '<div class="ac-analysis-drawer" id="'+cardId+'">'+drawerContent+'</div>'
     : '';
