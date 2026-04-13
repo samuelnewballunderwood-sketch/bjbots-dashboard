@@ -149,6 +149,12 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
       capital: cap, realised, floating, trueValue,
       strategy: b.strategy || 'dca',
       direction: b.direction || 'long',
+      marketType: b.marketType || 'spot',
+      active: b.active !== undefined ? b.active : false,
+      activeDeals: b.activeDeals || 0,
+      completedDeals: b.completedDeals || 0,
+      pair: b.pair || null,
+      enabled: b.active !== undefined ? b.active : false,
     });
   });
 
@@ -1279,6 +1285,9 @@ function buildLivePortfolio(tcBots, bnBots, recon) {
   }));
   tcSource.forEach(b => {
     const cap = b.capital || 0;
+    // Only count active bots in allocation — skip stopped bots
+    const isActive = b.active !== false && b.enabled !== false && cap > 0;
+    if (!isActive) return;
     const dir = b.direction || 'long';
     const meta = BOT_META[b.id];
     const sym = meta?.symbol || 'BTCUSDT';

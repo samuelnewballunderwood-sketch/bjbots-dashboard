@@ -2588,21 +2588,7 @@ body::after {
     <div class="ac2-left">
       <div class="d2-section-title">⚡ PENDING ACTIONS</div>
       <div id="required-actions-list-ac">
-        <div class="ac2-action-card urgent">
-          <div class="ac2-action-tag urgent">URGENT</div>
-          <div class="ac2-action-title">Reset XRP Spot Grid</div>
-          <div class="ac2-action-body">Grid near floor at $1.315 — 1.1% from freezing. Reset before next session or bot stalls.</div>
-        </div>
-        <div class="ac2-action-card scale">
-          <div class="ac2-action-tag scale">SCALE ↑</div>
-          <div class="ac2-action-title">Double BTC Hedge Bot</div>
-          <div class="ac2-action-body">Currently $1,300 base — doubling to $2,600 adds +0.11%/day to system average.</div>
-        </div>
-        <div class="ac2-action-card deploy">
-          <div class="ac2-action-tag deploy">DEPLOY</div>
-          <div class="ac2-action-title">Deploy $800 Freed Capital</div>
-          <div class="ac2-action-body">Capital freed from BNB DCA + BTC Futures stop. Split: Hedge + XRP DCA.</div>
-        </div>
+        <div style="color:var(--text-muted);font-size:11px;padding:10px 0">Loading actions…</div>
       </div>
     </div>
 
@@ -2616,7 +2602,7 @@ body::after {
         </div>
       </div>
       <div class="ac2-hannah-label">HANNAH — AI ENGINE</div>
-      <div class="ac2-hannah-sub" id="ac-analysis-text">Rate +0.155%/day solid but below quantum target. BTC Hedge massively underweighted. XRP grid critical.</div>
+      <div class="ac2-hannah-sub" id="ac-analysis-text">Loading analysis…</div>
 
       <!-- Inline chat -->
       <div class="ac2-chat-panel">
@@ -2635,8 +2621,8 @@ body::after {
       <!-- Quantum path -->
       <div class="ac2-qp">
         <div class="d2-section-title">QUANTUM PATH</div>
-        <div class="ac2-qp-row"><span class="ac2-qp-lbl">Current</span><div class="ac2-qp-bar-wrap"><div class="ac2-qp-fill cur" style="width:46%"></div></div><span class="ac2-qp-val safe">+0.155%</span></div>
-        <div class="ac2-qp-row"><span class="ac2-qp-lbl">Target</span><div class="ac2-qp-bar-wrap"><div class="ac2-qp-fill tgt" style="width:60%"></div></div><span class="ac2-qp-val">+0.200%</span></div>
+        <div class="ac2-qp-row"><span class="ac2-qp-lbl">Current</span><div class="ac2-qp-bar-wrap"><div class="ac2-qp-fill cur" id="qp-bar-cur" style="width:0%"></div></div><span class="ac2-qp-val safe" id="qp-val-cur">—</span></div>
+        <div class="ac2-qp-row"><span class="ac2-qp-lbl">Target</span><div class="ac2-qp-bar-wrap"><div class="ac2-qp-fill tgt" id="qp-bar-tgt" style="width:60%"></div></div><span class="ac2-qp-val" id="qp-val-tgt">+0.207%</span></div>
         <div class="ac2-qp-row"><span class="ac2-qp-lbl">Quantum</span><div class="ac2-qp-bar-wrap"><div class="ac2-qp-fill qtm" style="width:100%"></div></div><span class="ac2-qp-val warn">+0.333%</span></div>
       </div>
     </div>
@@ -2645,26 +2631,19 @@ body::after {
     <div class="ac2-right">
       <div class="d2-section-title">✓ COMPLETED TODAY</div>
       <div class="ac2-done-list" id="ac-completed-list">
-        <div class="ac2-done"><span class="ac2-done-time">00:11</span><span class="ac2-done-tag scale">SCALE</span><span class="ac2-done-text">BTC Hedge $900 → $1,300</span></div>
-        <div class="ac2-done"><span class="ac2-done-time">00:14</span><span class="ac2-done-tag scale">SCALE</span><span class="ac2-done-text">SOL DCA $100 → $300</span></div>
-        <div class="ac2-done"><span class="ac2-done-time">00:22</span><span class="ac2-done-tag reset">RESET</span><span class="ac2-done-text">SOL Spot Grid $72–$100</span></div>
-        <div class="ac2-done"><span class="ac2-done-time">00:22</span><span class="ac2-done-tag reset">RESET</span><span class="ac2-done-text">BNB Spot Grid $530–$680</span></div>
-        <div class="ac2-done"><span class="ac2-done-time">00:25</span><span class="ac2-done-tag stop">STOP</span><span class="ac2-done-text">BNB DCA Long — R3 idle rule</span></div>
-        <div class="ac2-done"><span class="ac2-done-time">00:29</span><span class="ac2-done-tag stop">STOP</span><span class="ac2-done-text">BTC Futures — R2 regime gate</span></div>
+        <div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions recorded yet today</div>
       </div>
 
       <div class="d2-section-title" style="margin-top:18px">☐ NEXT SESSION</div>
-      <div class="ac2-checklist">
-        <label class="ac2-check urgent"><input type="checkbox"> Reset XRP Grid — do first</label>
-        <label class="ac2-check"><input type="checkbox"> Check F&amp;G — if &lt;30 hold all longs</label>
-        <label class="ac2-check"><input type="checkbox"> Deploy $800 freed capital</label>
-        <label class="ac2-check"><input type="checkbox"> Verify SOL + BNB grids trading</label>
-        <label class="ac2-check"><input type="checkbox"> Check 48hr idle on all bots</label>
+      <div class="ac2-checklist" id="ac-next-session">
+        <label class="ac2-check"><input type="checkbox"> Check F&amp;G — regime gate</label>
+        <label class="ac2-check"><input type="checkbox"> Review R3 — 48hr idle bots</label>
+        <label class="ac2-check"><input type="checkbox"> Check open deal ages</label>
         <label class="ac2-check"><input type="checkbox"> Record locked profit delta</label>
       </div>
 
       <div class="ac2-impact-box">
-        <div class="d2-section-title">DAY 5 IMPACT</div>
+        <div class="d2-section-title" id="ac-day-label">DAY — IMPACT</div>
         <div class="ac2-impact-row">
           <div><div class="ac2-impact-val safe" id="ac-impact-rate">+0.024%</div><div class="ac2-impact-lbl">Added daily rate</div></div>
           <div><div class="ac2-impact-val safe" id="ac-impact-usd">+$2.20</div><div class="ac2-impact-lbl">Est. extra daily $</div></div>
@@ -4495,25 +4474,23 @@ function tvSymbol(b, isTc) {
 
 function tvMiniChartHTML(symbol, theme) {
   if (!symbol) return '';
-  const cfg = JSON.stringify({
-    symbol: 'BINANCE:' + symbol,
-    width: '100%', height: 120,
-    locale: 'en',
-    dateRange: '1D',
-    colorTheme: 'dark',
-    trendLineColor: 'rgba(45,212,191,0.8)',
-    underLineColor: 'rgba(45,212,191,0.08)',
-    underLineBottomColor: 'rgba(45,212,191,0)',
-    isTransparent: true,
-    autosize: true,
-    largeChartUrl: 'https://www.tradingview.com/chart/?symbol=BINANCE:' + symbol,
-    noTimeScale: false,
-    chartOnly: false,
-    hideLegend: true,
-  });
-  return '<div class="tv-chart-wrap"><div class="tv-chart-loading">Loading chart…</div>'
-    + '<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>'
-    + cfg + '<\/script></div>';
+  // Use iframe embed — dynamically injected <script> tags are blocked by browsers
+  const src = 'https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#'
+    + encodeURIComponent(JSON.stringify({
+        symbol: 'BINANCE:' + symbol,
+        width: '100%', height: 120,
+        locale: 'en', dateRange: '1D',
+        colorTheme: 'dark',
+        trendLineColor: 'rgba(45,212,191,0.8)',
+        underLineColor: 'rgba(45,212,191,0.08)',
+        underLineBottomColor: 'rgba(45,212,191,0)',
+        isTransparent: true, autosize: true, hideLegend: true,
+      }));
+  return '<div class="tv-chart-wrap">'
+    + '<iframe src="' + src + '" frameborder="0" scrolling="no" '
+    + 'style="width:100%;height:120px;border:none;display:block" loading="lazy" '
+    + 'allow="clipboard-write" referrerpolicy="no-referrer-when-downgrade"></iframe>'
+    + '</div>';
 }
 
 // ── EXECUTION LAYER — render bots ─────────────────────────────────────────
@@ -5569,25 +5546,38 @@ function _updateCtrlCards(data) {
   const gt   = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
   const rPnl = data.reconciliation?.totalRealised || 0;
   if (!gt) return;
-  const dailyProfit = gt * 0.00155;
+
+  // ── Real daily rate: locked profit / days elapsed ──────────────────────
+  const trialStart = new Date('2026-04-10');
+  const trialDay   = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
+  const daysElapsed = Math.max(1, trialDay - 1); // days of actual trading
+  const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
+  const actualDailyPct = gt > 0 ? (actualDailyUsd / gt) * 100 : 0;
+  const dailyProfit    = actualDailyUsd;
+  const dailyPct       = (actualDailyPct >= 0 ? '+' : '') + actualDailyPct.toFixed(3) + '%';
+
+  // Target daily rate needed
+  const target6 = gt * 0.06;
+  const daysLeft = Math.max(1, 30 - trialDay);
+  const neededDaily = Math.max(0, (target6 - rPnl) / daysLeft);
+  const neededPct   = gt > 0 ? (neededDaily / gt) * 100 : 0;
 
   const cv = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  cv('cv-daily',   '+' + fmtUSD(dailyProfit));
+  cv('cv-daily',   actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   cv('cv-capital', fmtUSD(gt));
   cv('cv-progress', (rPnl >= 0 ? '+' : '') + ((rPnl / gt) * 100).toFixed(2) + '%');
   cv('cv-locked',  fmtPnl(rPnl));
-  cv('cv-roi',     '+' + (0.00155 * 30 * 100).toFixed(1) + '%');
+  cv('cv-roi',     '+' + (actualDailyPct * 30).toFixed(1) + '%');
   setEl('header-total', fmtUSD(gt));
 
-  // Update R5 live
+  // R5 live
   const r5el = document.getElementById('ac2-r5-locked');
   if (r5el) r5el.textContent = fmtPnl(rPnl) + ' ✓';
 
-  // Update cv-trial2 and cv-target2 (orbital cards)
-  const _dayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
-  cv('cv-trial2',    _dayNow + ' / 30');
-  cv('cv-trial2-sub','Day ' + _dayNow);
-  cv('cv-target2',   '$' + (gt * 0.06).toFixed(0));
+  // cv-trial2 and cv-target2
+  cv('cv-trial2',     trialDay + ' / 30');
+  cv('cv-trial2-sub', 'Day ' + trialDay);
+  cv('cv-target2',    '$' + (gt * 0.06).toFixed(0));
 
 
   // Performance chart
@@ -5629,18 +5619,22 @@ function _updateCtrlCards(data) {
   const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
   const trialTarget   = (gt * 0.06).toFixed(0);
   const trialStretch  = (gt * 0.10).toFixed(0);
-  const monthlyRoi    = (0.00155 * 30 * 100).toFixed(1) + '%';
-  const dailyPct      = '+0.155%';
-  const winRate       = '82.5%';
+  const daysElapsed   = Math.max(1, trialDay - 1);
+  const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
+  const actualDailyPct = gt > 0 ? (actualDailyUsd / gt) * 100 : 0;
+  const daysLeft       = Math.max(1, 30 - trialDay);
+  const neededDailyUsd = Math.max(0, (gt * 0.06 - rPnl) / daysLeft);
+  const neededDailyPct = gt > 0 ? (neededDailyUsd / gt) * 100 : 0;
+  const dailyPct       = (actualDailyPct >= 0 ? '+' : '') + actualDailyPct.toFixed(3) + '%';
+  const monthlyRoi     = (actualDailyPct * 30).toFixed(1) + '%';
 
   // 6 orbital metric cards
-  setD('dm-daily-profit', '+' + fmtUSD(dailyProfit));
+  setD('dm-daily-profit', actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   setD('dm-capital',  fmtUSD(gt));
   setD('dm-trial-day', trialDay + '/30');
   setD('dm-target',   '$' + trialTarget);
   setD('dm-stretch',  '$' + trialStretch);
   setD('dm-locked',   fmtPnl(rPnl));
-  // Update locked pct sub
   if (gt > 0) setD('dm-locked-pct', '+' + ((rPnl/gt)*100).toFixed(2) + '% of capital');
 
   // Left KPI pair
@@ -5652,8 +5646,8 @@ function _updateCtrlCards(data) {
 
   // Bottom strip
   setD('dbk-roi',   monthlyRoi);
-  setD('dbk-wr',    winRate);
-  setD('dbk-daily', '+' + fmtUSD(dailyProfit));
+  setD('dbk-wr',    '—');
+  setD('dbk-daily', actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   setD('dbk-goal',  '$' + trialTarget);
 
   // Header extras
@@ -5665,23 +5659,44 @@ function _updateCtrlCards(data) {
   setD('bsum-capital',  fmtUSD(gt));
   setD('bsum-locked',   fmtPnl(rPnl));
   setD('bsum-floating', fmtPnl(0));
-  setD('bsum-daily',    '+' + fmtUSD(dailyProfit));
+  setD('bsum-daily',    actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
 
   // System status panel
   setD('dsp-system',  'OPERATIONAL');
-  setD('dsp-risk',    'LOW');
+  const sig2 = window._marketSignals;
+  const fgNow2 = sig2?.fearGreed?.value ?? null;
+  setD('dsp-risk', fgNow2 != null ? (fgNow2 <= 25 ? 'ELEVATED' : fgNow2 <= 45 ? 'MODERATE' : 'LOW') : 'LOW');
   setD('dsp-review',  new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
 
-  // Hannah mini msg
-  setD('dhm-msg', 'Capital stable at ' + fmtUSD(gt) + '. Daily rate tracking target.');
+  // Hannah mini msg — regime-aware and accurate
+  const r2active = fgNow2 != null && fgNow2 < 30;
+  const regimeMsg = r2active
+    ? 'R2 ACTIVE — F&G ' + fgNow2 + '. Longs blocked. Short grids running.'
+    : 'F&G ' + (fgNow2 ?? '—') + '. System operational.';
+  const paceMsg = neededDailyUsd > 0
+    ? ' Need ' + fmtUSD(neededDailyUsd) + '/day to hit target.'
+    : ' On pace.';
+  setD('dhm-msg', regimeMsg + paceMsg);
+  setD('ac-analysis-text', fmtPnl(rPnl) + ' locked · Day ' + trialDay + '/30 · ' + dailyPct + '/day avg · Need ' + fmtUSD(neededDailyUsd) + '/day');
 
-  // Action Centre impact box
-  setD('ac-impact-rate', dailyPct);
-  setD('ac-impact-usd',  '+' + fmtUSD(dailyProfit));
-
-  // Action Centre date
+  // Action Centre date + day label
   const acDate = document.getElementById('ac-date');
   if (acDate) acDate.textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  setD('ac-day-label', 'DAY ' + trialDay + ' IMPACT');
+
+  // Action Centre impact box — real numbers
+  setD('ac-impact-rate', dailyPct);
+  setD('ac-impact-usd',  actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
+
+  // Quantum Path live bars
+  const qpCurBar = document.getElementById('qp-bar-cur');
+  const qpCurVal = document.getElementById('qp-val-cur');
+  const qpTgtBar = document.getElementById('qp-bar-tgt');
+  const qpTgtVal = document.getElementById('qp-val-tgt');
+  if (qpCurBar) qpCurBar.style.width = Math.min(100, (actualDailyPct / 0.333) * 100).toFixed(1) + '%';
+  if (qpCurVal) { qpCurVal.textContent = dailyPct; qpCurVal.style.color = actualDailyPct >= neededDailyPct ? 'var(--safe)' : '#fbbf24'; }
+  if (qpTgtBar) qpTgtBar.style.width = Math.min(100, (neededDailyPct / 0.333) * 100).toFixed(1) + '%';
+  if (qpTgtVal) qpTgtVal.textContent = '+' + neededDailyPct.toFixed(3) + '%';
 
   // Trial progress bar
   const pct = Math.min(100, (rPnl / (gt * 0.06)) * 100);
@@ -5810,7 +5825,17 @@ function d2Activate() {
     if (state) state.style.display = 'none';
     const row = document.getElementById('d2-input-row');
     if (row) row.style.display = 'flex';
-    _d2Append('hannah', 'Connected! Monitoring your portfolio. What would you like to know?');
+    const sig = window._marketSignals;
+    const fg = sig?.fearGreed?.value ?? null;
+    const fgLbl = sig?.fearGreed?.label ?? '';
+    const r2 = fg != null && fg < 30;
+    const lockedEl = document.getElementById('dm-locked');
+    const locked = lockedEl?.textContent || '—';
+    let openMsg = 'Day ' + Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1)) + '/30. ';
+    if (r2) openMsg += 'R2 ACTIVE — F&G ' + fg + ' (' + fgLbl + '). Directional longs blocked. Short grids running. ';
+    else openMsg += 'F&G ' + (fg ?? '—') + '. ';
+    openMsg += locked + ' locked. Ask me anything.';
+    _d2Append('hannah', openMsg);
     const inp = document.getElementById('d2-input');
     if (inp) inp.focus();
     // also update ac2
@@ -5854,7 +5879,14 @@ function ac2Activate() {
     if (state) state.style.display = 'none';
     const row = document.getElementById('ac2-input-row');
     if (row) row.style.display = 'flex';
-    _ac2Append('hannah', 'Connected! Ask me about today\'s actions, bot performance, or your trial progress.');
+    const _sig2 = window._marketSignals;
+    const _fg2 = _sig2?.fearGreed?.value ?? null;
+    const _r2 = _fg2 != null && _fg2 < 30;
+    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
+    let _acMsg = 'Day ' + _day2 + '/30 · ';
+    _acMsg += _r2 ? 'R2 ACTIVE (F&G ' + _fg2 + ') — short grids running, longs blocked. ' : 'F&G ' + (_fg2 ?? '—') + '. ';
+    _acMsg += 'Ask me about pending actions, bot performance, or capital allocation.';
+    _ac2Append('hannah', _acMsg);
     document.getElementById('ac2-input') && document.getElementById('ac2-input').focus();
     // also update d2
     const d2State = document.getElementById('d2-activate-state');
