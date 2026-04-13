@@ -2391,7 +2391,7 @@ body::after {
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">ACTIVE BOTS</div>
-      <div class="d2-kpi-num teal" id="dash-bots-count">19</div>
+      <div class="d2-kpi-num teal" id="dash-bots-count">—</div>
       <div class="d2-kpi-sub">Binance + 3Commas</div>
     </div>
     <div class="d2-kpi-cell">
@@ -2685,7 +2685,7 @@ body::after {
   <div class="bots-summary-bar">
     <div class="bsum-cell">
       <div class="bsum-lbl">Active Bots</div>
-      <div class="bsum-val teal" id="bsum-active">19</div>
+      <div class="bsum-val teal" id="bsum-active">—</div>
     </div>
     <div class="bsum-cell">
       <div class="bsum-lbl">Capital Deployed</div>
@@ -4766,6 +4766,17 @@ async function refreshBots() {
     } catch(e) {}
     renderExecution(tcBots, bnBots, botScores, botEff);
     setEl('h-tc-val', tcBots.length > 0 ? tcBots.length + ' bots' : 'Connected');
+
+    // Update active bot count from live data
+    const tcActive = tcBots.filter(b => b.enabled !== false && (b.activeDeals > 0 || b.capital > 0)).length;
+    const bnActive = bnBots.filter(b => b.active !== false && b.capital > 0).length;
+    const totalActive = tcActive + bnActive;
+    if (totalActive > 0) {
+      const botCountEl = document.getElementById('dash-bots-count');
+      if (botCountEl) botCountEl.textContent = totalActive;
+      // Also update the header active bots count
+      setEl('bsum-active', totalActive);
+    }
   } catch(e) { console.error('Bot refresh error:', e); }
 }
 
