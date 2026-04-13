@@ -1355,8 +1355,6 @@ body::after {
   grid-template-columns: 220px 1fr 160px;
   border-bottom: 1px solid rgba(160,175,220,.08);
   min-height: 0;
-  max-height: 560px;
-  overflow: hidden;
 }
 .d2-row2 {
   padding: 22px 28px 18px;
@@ -5343,6 +5341,7 @@ function checkPw() {
     document.getElementById('app-shell').style.display  = 'block';
     sessionStorage.setItem('bjbots_auth', '1');
     showScreen('dashboard');
+    window.scrollTo(0, 0);
     setTimeout(loadTradeHistory, 3000);
     refreshAll();
     refreshStatus();
@@ -5360,6 +5359,7 @@ function checkPw() {
         refreshDecisions();
         refreshWallets();
       }
+      window.scrollTo(0, 0);
     }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
@@ -5388,6 +5388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pw-overlay').classList.add('hidden');
     document.getElementById('app-shell').style.display  = 'block';
     showScreen('dashboard');
+    window.scrollTo(0, 0);
     refreshAll();
     refreshStatus();
     setTimeout(loadTradeHistory, 3000);
@@ -5399,6 +5400,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const hasData = capital && capital !== '—' && capital !== '$0';
       if (hasData || _coldStart2 >= 12) { clearInterval(_cs2); if (!hasData) refreshAll(); }
       else { refreshDecisions(); refreshWallets(); }
+      window.scrollTo(0, 0);
     }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
