@@ -3645,6 +3645,10 @@ body::after {
   <div id="cs-active-bar"></div><div id="cs-reserved-bar"></div><div id="cs-idle-bar"></div>
   <div id="cs-free-bar"></div><div id="cs-futures-bar"></div>
   <div id="p-by-strategy"></div><div id="recon-dot"></div><div id="recon-mini-text"></div><div id="recon-mini-diff"></div>
+  <!-- Trial progress bar compat elements -->
+  <div id="tpb-locked"></div><div id="tpb-day"></div>
+  <div id="tpb-target"></div><div id="tpb-stretch"></div><div id="tpb-sub"></div>
+  <div id="tpb-fill" style="width:0%"></div>
 </div>
 
 </section>
@@ -5627,6 +5631,14 @@ function _updateCtrlCards(data) {
   setD('tpb-target',  '$' + trialTarget + ' target');
   setD('tpb-stretch', '$' + trialStretch + ' stretch');
   setD('tpb-sub',     pct.toFixed(0) + '% of trial target');
+
+  // Orbital trial cards (d2 section)
+  setD('d2-locked-num',      fmtPnl(rPnl));
+  setD('d2-target-num',      '$' + trialTarget);
+  setD('d2-trial-day-label', 'Day ' + trialDay + '/30');
+  setD('d2-trial-pct',       pct.toFixed(0) + '% of target');
+  const d2bar = document.getElementById('d2-trial-bar');
+  if (d2bar) d2bar.style.width = Math.min(100, pct).toFixed(1) + '%';
 
   // Mirror action cards to Action Centre
   setTimeout(() => {
