@@ -4769,6 +4769,9 @@ async function refreshBots() {
       botEff    = dec.efficiency || {};
     } catch(e) {}
     renderExecution(tcBots, bnBots, botScores, botEff);
+
+    // Refresh Quantum Rules panel now that _tcBots/_bnBots are populated
+    if (window._lastCtrlData) _updateCtrlCards(window._lastCtrlData);
     setEl('h-tc-val', tcBots.length > 0 ? tcBots.length + ' bots' : 'Connected');
 
     // Update active bot count from live data
@@ -5791,6 +5794,7 @@ function _updateCtrlCards(data) {
 (function() {
   const orig = window.renderControl;
   window.renderControl = function(data) {
+    window._lastCtrlData = data;
     if (orig) orig.call(this, data);
     _updateCtrlCards(data);
   };
