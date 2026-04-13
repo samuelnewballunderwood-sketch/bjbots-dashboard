@@ -5724,7 +5724,11 @@ function _updateCtrlCards(data) {
     const sig3 = window._marketSignals;
     const fg3  = sig3?.fearGreed?.value ?? null;
     const r2   = fg3 != null && fg3 < 30;
-    const allBots = [...(window._tcBots||[]), ...(window._bnBots||[])];
+    // Use reconciliation data as source of truth — always available, unlike _tcBots which requires refreshBots() to have run
+    const reconBots = data?.reconciliation?.tcBots || [];
+    const allBots = reconBots.length > 0
+      ? reconBots
+      : [...(window._tcBots||[]), ...(window._bnBots||[])];
     const rows = [];
     const activeGrids = allBots.filter(b => (b.strategy==='grid'||b.botType==='grid') && (b.capital||0) > 0);
     rows.push({ ok: activeGrids.length > 0, label: 'R1 · Grid Ranges', detail: activeGrids.length + ' grids active' });
@@ -6043,6 +6047,10 @@ function _mirrorHannahPhoto() {
     if (screen === 'dashboard') {
       _mirrorHannahPhoto();
       _drawDashChart();
+    }
+    if (screen === 'action' && window._lastCtrlData) {
+      // Refresh quantum rules panel immediately with fresh bot data
+      _updateCtrlCards(window._lastCtrlData);
     }
   };
 })();
