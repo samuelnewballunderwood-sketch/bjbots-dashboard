@@ -2634,12 +2634,9 @@ body::after {
         <div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions recorded yet today</div>
       </div>
 
-      <div class="d2-section-title" style="margin-top:18px">☐ NEXT SESSION</div>
-      <div class="ac2-checklist" id="ac-next-session">
-        <label class="ac2-check"><input type="checkbox"> Check F&amp;G — regime gate</label>
-        <label class="ac2-check"><input type="checkbox"> Review R3 — 48hr idle bots</label>
-        <label class="ac2-check"><input type="checkbox"> Check open deal ages</label>
-        <label class="ac2-check"><input type="checkbox"> Record locked profit delta</label>
+      <div class="d2-section-title" style="margin-top:18px">⚡ QUANTUM RULES — LIVE STATUS</div>
+      <div id="ac-quantum-status" style="display:flex;flex-direction:column;gap:6px">
+        <div style="color:var(--text-muted);font-size:11px;padding:6px 0">Loading rules status…</div>
       </div>
 
       <div class="ac2-impact-box">
@@ -5706,7 +5703,34 @@ function _updateCtrlCards(data) {
   setD('ac-impact-rate', dailyPct);
   setD('ac-impact-usd',  actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
 
-  // Quantum Path live bars
+  // ── Quantum Rules live status panel ──────────────────────────────────
+  const qsEl = document.getElementById('ac-quantum-status');
+  if (qsEl) {
+    const sig3 = window._marketSignals;
+    const fg3  = sig3?.fearGreed?.value ?? null;
+    const r2   = fg3 != null && fg3 < 30;
+    const allBots = [...(window._tcBots||[]), ...(window._bnBots||[])];
+    const rows = [];
+    const activeGrids = allBots.filter(b => (b.strategy==='grid'||b.botType==='grid') && (b.active||b.capital>0));
+    rows.push({ ok: activeGrids.length > 0, label: 'R1 · Grid Ranges', detail: activeGrids.length + ' grids active' });
+    rows.push({ ok: !r2, warn: r2, label: 'R2 · Regime Gate', detail: r2 ? 'ACTIVE — F&G ' + fg3 + ', longs blocked' : 'Clear — F&G ' + (fg3??'—') });
+    const idleBots = allBots.filter(b => b.active && b.activeDeals === 0 && b.capital > 0);
+    rows.push({ ok: idleBots.length === 0, warn: idleBots.length > 0, label: 'R3 · 48hr Idle', detail: idleBots.length === 0 ? 'All active bots cycling' : idleBots.length + ' idle: ' + idleBots.map(b=>b.name||b.pair).join(', ').slice(0,40) });
+    const dailyOk = actualDailyPct >= 0.05;
+    rows.push({ ok: dailyOk, warn: !dailyOk, label: 'R4 · Daily Rate', detail: dailyPct + '/day' + (dailyOk ? ' ✓' : ' — below 0.05%') });
+    rows.push({ ok: rPnl > 0, label: 'R5 · Locked Score', detail: fmtPnl(rPnl) + ' — ' + ((rPnl/(Math.max(gt*0.06,1)))*100).toFixed(0) + '% of 6% target' });
+    qsEl.innerHTML = rows.map(r => {
+      const color = r.ok ? 'var(--safe)' : r.warn ? '#f87171' : 'var(--text-muted)';
+      const dot = r.ok ? '●' : r.warn ? '⚠' : '○';
+      return '<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+        + '<span style="color:' + color + ';font-size:11px;margin-top:1px;flex-shrink:0">' + dot + '</span>'
+        + '<div><div style="font-size:11px;font-weight:600;color:' + color + '">' + r.label + '</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:1px">' + r.detail + '</div></div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── Quantum Path live bars ──────────────────────────────────────────
   const qpCurBar = document.getElementById('qp-bar-cur');
   const qpCurVal = document.getElementById('qp-val-cur');
   const qpTgtBar = document.getElementById('qp-bar-tgt');
