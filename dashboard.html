@@ -2303,6 +2303,7 @@ body::after {
 
 </head>
 <body>
+<script>if (history.scrollRestoration) history.scrollRestoration = 'manual';</script>
 
 <!-- PASSWORD SPLASH -->
 <div id="pw-overlay">
@@ -5379,6 +5380,9 @@ function checkPw() {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Disable browser scroll restoration — always start at top
+  if (history.scrollRestoration) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
   // Clear old cache
   const oldKeys = ['bjbots_hist_v1','bjbots_hist_v2'];
   oldKeys.forEach(k => { if(localStorage.getItem(k)) localStorage.removeItem(k); });
