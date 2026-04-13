@@ -6193,8 +6193,9 @@ function d2Activate() {
     else openMsg += 'F&G ' + (fg ?? '—') + '. ';
     openMsg += locked + ' locked. Ask me anything.';
     _d2Append('hannah', openMsg);
-    const inp = document.getElementById('d2-input');
-    if (inp) inp.focus();
+    // Don't auto-focus input — causes browser to scroll to it on load
+    // const inp = document.getElementById('d2-input');
+    // if (inp) inp.focus();
     // also update ac2
     const ac2State = document.getElementById('ac2-activate-state');
     const ac2Row = document.getElementById('ac2-input-row');
