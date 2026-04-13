@@ -309,18 +309,13 @@ body::after {
 }
 .action-card:hover { border-color: var(--border-mid); }
 
-/* CRITICAL — interruptive */
+/* CRITICAL — one clean animation only, no ring */
 .action-card.urgency-critical {
   border-left-color: #dc2626 !important;
-  background: rgba(220,38,38,.06) !important;
-  animation: crit-breathe 1.6s ease-in-out infinite;
+  background: rgba(220,38,38,.05) !important;
+  animation: crit-breathe 2s ease-in-out infinite;
 }
-.action-card.urgency-critical::after {
-  content: ''; position:absolute; inset:0; border-radius:var(--radius-md);
-  animation: crit-ring 1.6s ease-in-out infinite; pointer-events:none;
-}
-@keyframes crit-breathe { 0%,100%{background:rgba(220,38,38,.05)} 50%{background:rgba(220,38,38,.1)} }
-@keyframes crit-ring { 0%,100%{box-shadow:0 0 0 1px rgba(220,38,38,.2)} 50%{box-shadow:0 0 0 2px rgba(220,38,38,.4),0 0 20px rgba(220,38,38,.15)} }
+@keyframes crit-breathe { 0%,100%{background:rgba(220,38,38,.04)} 50%{background:rgba(220,38,38,.09)} }
 
 /* HIGH — serious, stable */
 .action-card.urgency-high {
@@ -337,42 +332,44 @@ body::after {
 }
 .action-card.suggested-card:hover { opacity: 1; }
 
-/* Action card internals */
-.ac-card-top { display:flex; align-items:center; gap:6px; margin-bottom:4px; flex-wrap:wrap; }
-.ac-type-badge {
-  font-family: var(--font-display); font-size: 8px; font-weight: 700;
-  letter-spacing: .12em; text-transform: uppercase; padding: 2px 6px;
-  border-radius: 3px;
-}
-.ac-type-badge.reduce   { background:rgba(220,38,38,.15);  color:#f87171; }
-.ac-type-badge.increase { background:rgba(74,222,128,.15); color:var(--safe); }
-.ac-type-badge.hold     { background:rgba(96,165,250,.12); color:var(--balanced); }
-.ac-type-badge.reallocate { background:rgba(167,139,250,.15); color:var(--purple); }
+/* Action card internals — clean three-pass hierarchy */
+.ac-card-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
 
+/* Urgency badge — only badge on face of card */
 .ac-urgency-badge {
-  font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 3px;
-  font-family: var(--font-body); letter-spacing: .06em; text-transform: uppercase;
+  font-size: 9px; font-weight: 800; padding: 3px 9px; border-radius: 3px;
+  font-family: var(--font-display); letter-spacing: .1em; text-transform: uppercase;
 }
-.ac-urgency-badge.critical { background:rgba(220,38,38,.25); color:#ef4444; animation:blink .9s infinite; }
-.ac-urgency-badge.high     { background:rgba(217,119,6,.2); color:#f59e0b; }
-.ac-urgency-badge.medium   { background:rgba(96,165,250,.12); color:var(--balanced); }
+.ac-urgency-badge.critical { background:rgba(220,38,38,.2); color:#ef4444; }
+.ac-urgency-badge.high     { background:rgba(217,119,6,.15); color:#f59e0b; }
+.ac-urgency-badge.medium   { background:rgba(96,165,250,.1); color:var(--balanced); }
 .ac-urgency-badge.low      { background:var(--bg-raised); color:var(--text-muted); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.45} }
 
-.ac-card-pin { font-size:8px; background:#dc2626; color:#fff; padding:2px 7px; border-radius:3px; font-weight:900; letter-spacing:.05em; animation:blink .9s infinite; font-family:var(--font-display); }
-.ac-obj-tag { font-size:9px; color:var(--text-muted); background:var(--bg-raised); padding:1px 6px; border-radius:3px; font-family:var(--font-mono); cursor:help; }
-.ac-timeframe { font-size:9px; color:var(--text-dim); font-family:var(--font-mono); display:flex;align-items:center;gap:3px; }
-.ac-conf { margin-left:auto; font-size:10px; color:var(--purple); font-family:var(--font-mono); font-weight:700; }
+/* Timeframe — right-aligned, quiet */
+.ac-timeframe { margin-left:auto; font-size:9px; color:var(--text-dim); font-family:var(--font-mono); }
 
-.ac-card-title { font-size:13px; font-weight:600; color:var(--text-primary); line-height:1.35; margin-bottom:3px; }
-.ac-card-amount { font-family:var(--font-mono); font-size:22px; font-weight:700; letter-spacing:-.5px; margin:2px 0 4px; }
-.ac-card-amount.reduce   { color:#dc2626; }
-.ac-card-amount.reallocate { color:#dc2626; }
-.ac-card-amount.increase { color:var(--safe); }
-.ac-card-amount.hold     { color:var(--text-muted); }
+/* These are now only in the drawer — hidden on card face */
+.ac-type-badge { display:none; }
+.ac-card-pin   { display:none; }
+.ac-obj-tag    { display:none; }
+.ac-conf       { display:none; }
+.ac-card-impact { display:none; }
 
-.ac-card-reason { font-size:11px; color:var(--text-secondary); line-height:1.45; margin-bottom:4px; }
-.ac-card-impact { font-size:10px; color:var(--text-muted); font-style:italic; }
+/* Objective — short directive line above title */
+.ac-objective-line {
+  font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-dim); font-family: var(--font-display); margin-bottom: 5px;
+}
+/* Primary title — large, dominant */
+.ac-card-title { font-size:15px; font-weight:700; color:var(--text-primary); line-height:1.3; margin-bottom:4px; }
+/* Dollar amount — the biggest element on the card */
+.ac-card-amount { font-family:var(--font-mono); font-size:28px; font-weight:700; letter-spacing:-.5px; margin:4px 0 6px; line-height:1; }
+.ac-card-amount.reduce     { color:#f87171; }
+.ac-card-amount.reallocate { color:#f87171; }
+.ac-card-amount.increase   { color:var(--safe); }
+.ac-card-amount.hold       { color:var(--text-muted); }
+/* Reason — very quiet, supporting only */
+.ac-card-reason { font-size:11px; color:var(--text-dim); line-height:1.5; margin-top:2px; }
 
 /* Projected state block */
 .ac-projected {
@@ -392,6 +389,30 @@ body::after {
 /* Cost of inaction */
 .ac-cost { display:inline-block; font-size:10px; font-weight:600; color:#dc2626; background:rgba(220,38,38,.06); border:1px solid rgba(220,38,38,.18); border-radius:4px; padding:3px 8px; margin-top:5px; }
 .ac-cost::before { content:'⚠ '; }
+
+/* Expandable analysis drawer */
+.ac-expand-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 10px; padding: 6px 0;
+  background: rgba(160,175,220,.05); border: 1px solid rgba(160,175,220,.12);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-dim); font-family: var(--font-display);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.ac-expand-btn:hover { background: rgba(160,175,220,.1); color: var(--text-secondary); border-color: rgba(160,175,220,.25); }
+.ac-expand-btn .ac-expand-arrow { transition: transform .2s; display: inline-block; }
+.ac-expand-btn.open .ac-expand-arrow { transform: rotate(180deg); }
+.ac-analysis-drawer {
+  display: none; margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(8,10,18,.6);
+  border: 1px solid rgba(160,175,220,.1);
+  border-radius: var(--radius-sm);
+  animation: drawer-in .15s ease;
+}
+.ac-analysis-drawer.open { display: block; }
+@keyframes drawer-in { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 
 /* Section labels */
 .section-label {
@@ -413,10 +434,10 @@ body::after {
 .hold-all-banner {
   background: linear-gradient(135deg,rgba(74,222,128,.07),rgba(74,222,128,.02));
   border: 1px solid rgba(74,222,128,.2); border-radius:var(--radius-lg);
-  padding: 28px; text-align:center;
+  padding: 24px 20px; text-align:left;
 }
-.hold-all-title { font-family:var(--font-display); font-size:20px; font-weight:900; color:var(--safe); margin-bottom:6px; letter-spacing:.08em; }
-.hold-all-sub { font-size:13px; color:var(--text-secondary); max-width:360px; margin:0 auto 16px; line-height:1.5; }
+.hold-all-title { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--safe); margin-bottom:6px; letter-spacing:.1em; opacity:.8; }
+.hold-all-sub { font-size:12px; color:var(--text-dim); max-width:380px; line-height:1.6; }
 
 /* ════════════════════════════════════════════════════════════
    LAYER 2 — PORTFOLIO
@@ -1288,34 +1309,36 @@ body::after {
 .d2-kpi-strip {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  border-bottom: 1px solid rgba(20,217,196,.2);
+  border-bottom: 1px solid rgba(160,175,220,.1);
   background: rgba(6,8,14,.9);
 }
 .d2-kpi-cell {
-  padding: 18px 20px;
-  border-right: 1px solid rgba(160,175,220,.12);
+  padding: 16px 18px;
+  border-right: 1px solid rgba(160,175,220,.08);
   text-align: center;
 }
 .d2-kpi-cell:last-child { border-right: none; }
-.d2-kpi-cell.highlight { background: rgba(34,197,94,.06); border-right-color: rgba(34,197,94,.2); }
-.d2-kpi-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 6px; font-family: var(--font-body); font-weight: 700; }
-.d2-kpi-num { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,.1); }
-.d2-kpi-num.safe { color: var(--safe); text-shadow: 0 0 20px rgba(34,197,94,.4); }
-.d2-kpi-num.warn { color: var(--warn); text-shadow: 0 0 20px rgba(245,158,11,.4); }
-.d2-kpi-num.teal { color: var(--teal); text-shadow: 0 0 20px rgba(20,217,196,.4); }
-.d2-kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+.d2-kpi-cell.highlight { background: rgba(34,197,94,.04); border-right-color: rgba(34,197,94,.15); }
+.d2-kpi-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 5px; font-family: var(--font-display); font-weight: 700; }
+.d2-kpi-num { font-family: var(--font-mono); font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.d2-kpi-num.safe { color: var(--safe); }
+.d2-kpi-num.warn { color: var(--warn); }
+.d2-kpi-num.teal { color: var(--teal); }
+/* Highlight cell — locked profit is the scoreboard, make it stand out */
+.d2-kpi-cell.highlight .d2-kpi-num { font-size: 28px; }
+.d2-kpi-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
 
 /* 3-column orbital dashboard layout */
 .d2-body-orbital {
   display: grid;
-  grid-template-columns: 1fr 440px 1fr;
+  grid-template-columns: minmax(340px, 1.7fr) 440px minmax(220px, 0.8fr);
   gap: 0;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 .d2-col-left {
-  padding: 20px 18px;
+  padding: 20px 20px;
   border-right: 1px solid var(--border-dim);
   overflow-y: auto;
   display: flex;
@@ -1332,9 +1355,10 @@ body::after {
   overflow-y: auto;
 }
 .d2-col-right {
-  padding: 20px 18px;
+  padding: 20px 16px;
   border-left: 1px solid var(--border-dim);
   overflow-y: auto;
+  opacity: 0.9;
 }
 .dash-hannah-label {
   text-align: center;
@@ -1605,34 +1629,37 @@ body::after {
 }
 .d2-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(160,175,220,.15); }
 
-/* Signals */
-.d2-signals { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+/* Signals — list items, not competing cards */
+.d2-signals { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
 .d2-signal {
   display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 14px; border-radius: 8px;
-  background: rgba(12,14,24,.95); border: 1px solid rgba(160,175,220,.14);
+  padding: 9px 12px; border-radius: 6px;
+  background: transparent; border: none;
+  border-bottom: 1px solid rgba(160,175,220,.07);
 }
-.d2-signal.done { border-color: rgba(34,197,94,.2); background: rgba(34,197,94,.03); }
-.d2-signal.warn { border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.04); }
+.d2-signal:last-child { border-bottom: none; }
+.d2-signal.done { background: transparent; }
+.d2-signal.warn { background: rgba(245,158,11,.03); }
 .d2-signal-tag {
-  font-size: 9px; font-weight: 700; font-family: var(--font-display);
-  letter-spacing: .06em; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+  font-size: 8px; font-weight: 700; font-family: var(--font-display);
+  letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; margin-top:1px;
 }
-.d2-signal-tag.done { background: rgba(34,197,94,.15); color: var(--safe); border: 1px solid rgba(34,197,94,.3); }
-.d2-signal-tag.warn { background: rgba(245,158,11,.15); color: var(--warn); border: 1px solid rgba(245,158,11,.3); }
-.d2-signal-text { font-size: 13px; color: var(--text-primary); line-height: 1.4; }
+.d2-signal-tag.done { background: rgba(34,197,94,.12); color: var(--safe); border: none; }
+.d2-signal-tag.warn { background: rgba(245,158,11,.12); color: var(--warn); border: none; }
+.d2-signal-text { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
 
-/* Status grid */
-.d2-status-grid { display: flex; flex-direction: column; gap: 6px; }
+/* Status grid — supporting data, quiet */
+.d2-status-grid { display: flex; flex-direction: column; gap: 2px; }
 .d2-status-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 14px; border-radius: 8px;
-  background: rgba(12,14,24,.95); border: 1px solid rgba(160,175,220,.14);
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(160,175,220,.07);
 }
-.d2-status-key { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
-.d2-status-val { font-size: 14px; font-weight: 700; color: #ffffff; }
-.d2-status-val.safe { color: var(--safe); text-shadow: 0 0 12px rgba(34,197,94,.3); }
-.d2-status-val.warn { color: var(--warn); text-shadow: 0 0 12px rgba(245,158,11,.3); }
+.d2-status-row:last-child { border-bottom: none; }
+.d2-status-key { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+.d2-status-val { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.d2-status-val.safe { color: var(--safe); }
+.d2-status-val.warn { color: var(--warn); }
 
 /* Trial block */
 .d2-trial-block {
@@ -1654,35 +1681,37 @@ body::after {
    ════════════════════════════════════════════════════════════ */
 .ac2-rules-strip {
   display: grid; grid-template-columns: repeat(5,1fr);
-  border-bottom: 1px solid rgba(160,175,220,.12);
-  background: rgba(8,10,18,.8);
+  border-bottom: 1px solid rgba(160,175,220,.08);
+  background: transparent;
 }
 .ac2-rule {
-  padding: 12px 16px; border-right: 1px solid rgba(160,175,220,.08);
+  padding: 10px 14px; border-right: 1px solid rgba(160,175,220,.06);
 }
 .ac2-rule:last-child { border-right: none; }
-.ac2-rule-name { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; font-weight: 600; }
-.ac2-rule-val { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+.ac2-rule-name { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; font-weight: 600; font-family: var(--font-display); }
+.ac2-rule-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
 .ac2-rule-val.ok { color: var(--safe); }
 .ac2-rule-val.warn { color: #f87171; }
 .ac2-rule-note { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
 .ac2-body {
-  display: grid; grid-template-columns: 300px 1fr 300px;
+  display: grid; grid-template-columns: 1fr 320px 280px;
   min-height: calc(100vh - 220px);
 }
 .ac2-left {
-  padding: 20px 18px;
+  padding: 20px 20px;
   border-right: 1px solid rgba(160,175,220,.1);
   overflow-y: auto;
 }
 .ac2-centre {
-  padding: 20px; display: flex; flex-direction: column;
-  align-items: center; gap: 12px;
+  padding: 16px; display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
   border-right: 1px solid rgba(160,175,220,.1);
+  opacity: 0.92;
 }
 .ac2-right {
-  padding: 20px 18px; overflow-y: auto;
+  padding: 20px 16px; overflow-y: auto;
+  opacity: 0.88;
 }
 
 /* Action cards */
@@ -1724,8 +1753,8 @@ body::after {
   opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 .ac2-talk-ring.talking { opacity: 1; animation: talk-beat .7s ease-in-out infinite; }
-.ac2-hannah-label { font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: .16em; color: var(--teal); text-align: center; }
-.ac2-hannah-sub { font-size: 12px; color: var(--text-secondary); text-align: center; max-width: 340px; line-height: 1.5; }
+.ac2-hannah-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: .18em; color: rgba(20,217,196,.6); text-align: center; }
+.ac2-hannah-sub { font-size: 11px; color: var(--text-dim); text-align: center; max-width: 300px; line-height: 1.5; }
 
 /* Action centre chat */
 .ac2-chat-panel {
@@ -2367,7 +2396,7 @@ body::after {
      ════════════════════════════════════════════════════════════════════ -->
 <section id="screen-dashboard" class="screen-panel">
 
-  <!-- ── TOP KPI STRIP ── -->
+  <!-- ── KPI STRIP (unchanged) ── -->
   <div class="d2-kpi-strip">
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">TOTAL CAPITAL</div>
@@ -2381,7 +2410,7 @@ body::after {
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">DAILY RATE</div>
-      <div class="d2-kpi-num safe" id="dm-daily-profit">+$8.15</div>
+      <div class="d2-kpi-num safe" id="dm-daily-profit">—</div>
       <div class="d2-kpi-sub">live avg/day</div>
     </div>
     <div class="d2-kpi-cell">
@@ -2401,32 +2430,26 @@ body::after {
     </div>
   </div>
 
-  <!-- ── MAIN BODY — 3-column orbital layout ── -->
-  <div class="d2-body-orbital">
+  <!-- ══ ROW 1: context | Hannah | trial ══ -->
+  <div class="d2-row1">
 
-    <!-- LEFT COLUMN: Signals only -->
+    <!-- LEFT: Risk state + objective — compact, contextual -->
     <div class="d2-col-left">
-
-      <!-- AI Signals — populated dynamically from /api/decisions -->
-      <div class="d2-section-title">⚡ AI SIGNALS TODAY</div>
-      <div class="d2-signals" id="dash-alerts">
-        <div class="d2-signal" style="opacity:.5">
-          <span class="d2-signal-tag">—</span>
-          <span class="d2-signal-text">Loading signals…</span>
-        </div>
+      <div class="d2-risk-block">
+        <div class="d2-risk-state SAFE" id="d2-risk-state">—</div>
+        <div class="d2-risk-score" id="d2-risk-score">Score —</div>
       </div>
+      <div class="d2-objective" id="d2-objective">Analysing portfolio…</div>
     </div>
 
-    <!-- CENTRE COLUMN: Hannah orbital -->
+    <!-- CENTRE: Hannah orbital — unchanged, dominant -->
     <div class="d2-col-centre">
       <div class="dash-hannah-wrap">
-        <!-- Orbital rings -->
         <div class="dash-orbital-ring r1"></div>
         <div class="dash-orbital-ring r2"></div>
         <div class="dash-orbital-ring r3"></div>
         <div class="dash-glow"></div>
 
-        <!-- 6 metric cards -->
         <div class="dash-metric-card dm1">
           <div class="dm-lbl">Daily Profit</div>
           <div class="dm-val pos" id="cv-daily">—</div>
@@ -2440,7 +2463,7 @@ body::after {
         <div class="dash-metric-card dm3">
           <div class="dm-lbl">Trial Day</div>
           <div class="dm-val" id="cv-trial">— / 30</div>
-          <div class="dm-sub" id="cv-trial-sub">Loading…</div>
+          <div class="dm-sub" id="cv-trial-sub">—</div>
         </div>
         <div class="dash-metric-card dm4">
           <div class="dm-lbl">Target</div>
@@ -2458,7 +2481,6 @@ body::after {
           <div class="dm-sub">Locked</div>
         </div>
 
-        <!-- Hannah portrait -->
         <div class="dash-hannah-portrait">
           <div class="dash-portrait-inner">
             <div class="br-bl"></div><div class="br-br"></div>
@@ -2470,7 +2492,6 @@ body::after {
         </div>
       </div>
 
-      <!-- Hannah name + status below orbital -->
       <div class="dash-hannah-label">
         <div class="dash-hannah-name-txt">HANNAH</div>
         <div class="dash-hannah-sub-row">
@@ -2479,7 +2500,6 @@ body::after {
         </div>
       </div>
 
-      <!-- Chat panel below Hannah -->
       <div class="d2-chat-panel" style="width:100%;margin-top:14px;">
         <div class="d2-chat-msgs" id="d2-chat-msgs">
           <div class="d2-msg hannah">I'm monitoring your portfolio in real time. I'll flag required actions, explain what the system is seeing, and answer any questions.</div>
@@ -2495,55 +2515,136 @@ body::after {
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: Status + Trial -->
+    <!-- RIGHT: Trial progress — quiet metadata -->
     <div class="d2-col-right">
+      <div class="d2-trial-meta">
+        <div class="d2-row3-section-title">Trial Progress</div>
+        <div class="d2-trial-meta-row">
+          <span class="d2-trial-meta-key">Locked</span>
+          <span class="d2-trial-meta-val safe" id="d2-locked-num">—</span>
+        </div>
+        <div class="d2-trial-meta-row">
+          <span class="d2-trial-meta-key">Target</span>
+          <span class="d2-trial-meta-val" id="d2-target-num">—</span>
+        </div>
+        <div class="d2-trial-meta-row">
+          <span class="d2-trial-meta-key">Day</span>
+          <span class="d2-trial-meta-val" id="d2-trial-day-label-r">—/30</span>
+        </div>
+        <div class="d2-trial-bar-wrap" style="margin-top:10px">
+          <div class="d2-trial-bar" id="d2-trial-bar" style="width:0%"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:4px;text-align:right" id="d2-trial-pct">—% of target</div>
+      </div>
+    </div>
 
-      <!-- System status -->
-      <div class="d2-section-title">◉ SYSTEM STATUS</div>
-      <div class="d2-status-grid">
-        <div class="d2-status-row">
-          <span class="d2-status-key">Binance</span>
-          <span class="d2-status-val safe" id="sys-binance">● Connected</span>
-        </div>
-        <div class="d2-status-row">
-          <span class="d2-status-key">3Commas</span>
-          <span class="d2-status-val safe" id="sys-3commas">● Connected</span>
-        </div>
-        <div class="d2-status-row">
-          <span class="d2-status-key">Risk Level</span>
-          <span class="d2-status-val warn" id="dsp-risk">LOW</span>
-        </div>
-        <div class="d2-status-row">
-          <span class="d2-status-key">Next Review</span>
-          <span class="d2-status-val" id="dsp-review">17:45</span>
+  </div><!-- /d2-row1 -->
+
+  <!-- ══ ROW 2: REQUIRED ACTIONS — dominant ══ -->
+  <div class="d2-row2">
+    <div class="d2-row2-header">
+      <div class="d2-row2-title">⚡ REQUIRED ACTIONS</div>
+      <div class="d2-row2-sub" id="d2-action-count">What the system needs you to do now</div>
+    </div>
+    <div class="d2-actions-grid" id="dash-alerts">
+      <div style="color:var(--text-dim);font-size:11px;padding:8px 0;grid-column:1/-1">Syncing with decision engine…</div>
+    </div>
+  </div>
+
+  <!-- ══ ROW 3: SUPPORTING DATA — secondary ══ -->
+  <div class="d2-row3">
+    <div class="d2-row3-grid">
+
+      <div>
+        <div class="d2-row3-section-title">System Status</div>
+        <div class="d2-status-grid">
+          <div class="d2-status-row">
+            <span class="d2-status-key">Binance</span>
+            <span class="d2-status-val safe" id="sys-binance">● Connected</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">3Commas</span>
+            <span class="d2-status-val safe" id="sys-3commas">● Connected</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Risk Level</span>
+            <span class="d2-status-val warn" id="dsp-risk">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Next Review</span>
+            <span class="d2-status-val" id="dsp-review">—</span>
+          </div>
         </div>
       </div>
 
-      <!-- Trial progress -->
-      <div class="d2-section-title" style="margin-top:20px">◎ TRIAL PROGRESS</div>
-      <div class="d2-trial-block">
-        <div class="d2-trial-nums">
-          <div>
-            <div class="d2-trial-big safe" id="d2-locked-num">—</div>
-            <div class="d2-trial-label">Locked profit</div>
+      <div>
+        <div class="d2-row3-section-title">Portfolio</div>
+        <div class="d2-status-grid">
+          <div class="d2-status-row">
+            <span class="d2-status-key">Spot</span>
+            <span class="d2-status-val" id="r3-spot">—</span>
           </div>
-          <div>
-            <div class="d2-trial-big" id="d2-target-num">—</div>
-            <div class="d2-trial-label">6% target</div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Futures</span>
+            <span class="d2-status-val" id="r3-futures">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Long exp.</span>
+            <span class="d2-status-val" id="r3-long">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Hedge exp.</span>
+            <span class="d2-status-val" id="r3-hedge">—</span>
           </div>
         </div>
-        <div class="d2-trial-bar-wrap">
-          <div class="d2-trial-bar" id="d2-trial-bar" style="width:23%"></div>
-          <div class="d2-trial-mark" style="left:60%" title="Stretch target"></div>
+      </div>
+
+      <div>
+        <div class="d2-row3-section-title">Market</div>
+        <div class="d2-status-grid">
+          <div class="d2-status-row">
+            <span class="d2-status-key">Fear &amp; Greed</span>
+            <span class="d2-status-val warn" id="r3-fg">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Regime</span>
+            <span class="d2-status-val" id="r3-regime">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">BTC Dom.</span>
+            <span class="d2-status-val" id="r3-dom">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Funding</span>
+            <span class="d2-status-val" id="r3-funding">—</span>
+          </div>
         </div>
-        <div class="d2-trial-footer">
-          <span id="d2-trial-pct">—% of target</span>
-          <span id="d2-trial-day-label">Day —/30</span>
+      </div>
+
+      <div>
+        <div class="d2-row3-section-title">Trial Detail</div>
+        <div class="d2-status-grid">
+          <div class="d2-status-row">
+            <span class="d2-status-key">Daily rate</span>
+            <span class="d2-status-val safe" id="r3-daily">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Pace</span>
+            <span class="d2-status-val" id="r3-pace">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">Days left</span>
+            <span class="d2-status-val" id="r3-days">—</span>
+          </div>
+          <div class="d2-status-row">
+            <span class="d2-status-key">On track</span>
+            <span class="d2-status-val" id="r3-ontrack">—</span>
+          </div>
         </div>
       </div>
 
     </div>
-  </div>
+  </div><!-- /d2-row3 -->
 
 </section>
 
@@ -2584,9 +2685,12 @@ body::after {
   <!-- Main body -->
   <div class="ac2-body">
 
-    <!-- LEFT: pending actions -->
+    <!-- LEFT: pending actions — primary -->
     <div class="ac2-left">
-      <div class="d2-section-title">⚡ PENDING ACTIONS</div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(248,113,113,.2);">
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.14em;color:#f87171;">⚡ REQUIRED ACTIONS</div>
+        <div style="font-size:10px;color:var(--text-dim);font-family:var(--font-mono)">What to do now</div>
+      </div>
       <div id="required-actions-list-ac">
         <div style="color:var(--text-muted);font-size:11px;padding:10px 0">Syncing with decision engine…</div>
       </div>
@@ -2601,7 +2705,7 @@ body::after {
           <img id="ac-hannah-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='60' fill='%230d1420'/%3E%3Ccircle cx='60' cy='46' r='22' fill='%231a2540'/%3E%3Cellipse cx='60' cy='96' rx='32' ry='24' fill='%231a2540'/%3E%3Ccircle cx='60' cy='46' r='19' fill='%2322304e'/%3E%3C/svg%3E" class="ac2-photo" alt="Hannah" />
         </div>
       </div>
-      <div class="ac2-hannah-label">HANNAH — AI ENGINE</div>
+      <div class="ac2-hannah-label">HANNAH · EXPLANATION LAYER</div>
       <div class="ac2-hannah-sub" id="ac-analysis-text">Reading live market data…</div>
 
       <!-- Inline chat -->
@@ -4052,6 +4156,13 @@ function renderControl(data) {
   if (anchor) { anchorEl.textContent = anchor; anchorEl.style.display='block'; }
   if (factors) setEl('ctrl-factors', factors);
 
+  // ── New dashboard Row 1 elements ──────────────────────────────────
+  const d2RiskEl = document.getElementById('d2-risk-state');
+  if (d2RiskEl) { d2RiskEl.textContent = rs; d2RiskEl.className = 'd2-risk-state ' + rs; }
+  setEl('d2-risk-score', 'Score ' + score + '/100');
+  setEl('d2-objective', objective || 'Portfolio analysed — no directive available');
+  // Row 3 market / portfolio will be populated by renderPortfolioFromRecon
+
   // Engine badge
   const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
   setEl('engine-ts', 'Engine ran ' + ts);
@@ -4069,7 +4180,7 @@ function renderControl(data) {
 
   if (reqList) {
     if (!reqActions.length) {
-      reqList.innerHTML = '<div class="hold-all-banner"><div class="hold-all-title">✓ ALL CLEAR</div><div class="hold-all-sub">Portfolio is balanced. No required actions. Monitor and hold current allocations.</div></div>';
+      reqList.innerHTML = '<div class="hold-all-banner"><div class="hold-all-title">✓ SYSTEM BALANCED</div><div class="hold-all-sub">No action required. AlphaControl is actively monitoring your portfolio. It will surface a required action the moment conditions change.</div></div>';
     } else {
       reqList.innerHTML = reqActions.map(a => renderActionCard(a)).join('');
     }
@@ -4087,28 +4198,20 @@ function renderControl(data) {
   // Target state
   if (data.targetState) renderTargetState(data.targetState, data.targetAdjBasis);
 
-  // ── Populate AI Signals Today panel from live decisions ──────────────────
+  // ── Row 2: Required Actions — full action cards ───────────────────
   const alertsEl = document.getElementById('dash-alerts');
   if (alertsEl) {
-    const allActions = [...(data.requiredActions||[]), ...(data.suggestedActions||[])];
+    const reqActions = (data.requiredActions||[]).filter(a => ['CRITICAL','HIGH'].includes((a.urgency||'').toUpperCase()));
+    const allActions = reqActions.length ? reqActions : (data.requiredActions||[]);
+    // Update sub-header count
+    const countEl = document.getElementById('d2-action-count');
+    if (countEl) countEl.textContent = allActions.length
+      ? allActions.length + ' action' + (allActions.length > 1 ? 's' : '') + ' require' + (allActions.length === 1 ? 's' : '') + ' your attention'
+      : 'What the system needs you to do now';
     if (allActions.length) {
-      alertsEl.innerHTML = allActions.slice(0,4).map(a => {
-        const urgency = (a.urgency||'').toUpperCase();
-        const tag = urgency === 'CRITICAL' ? 'URGENT' : urgency === 'HIGH' ? 'HIGH' : 'INFO';
-        const cls = urgency === 'CRITICAL' ? 'warn' : urgency === 'HIGH' ? 'warn' : 'done';
-        const rawText = a.action ? `${a.action}: ${a.reason||a.title||''}` : (a.title||a.reason||'');
-        // Clean up raw floats — round any number with >2 decimal places
-        const text = rawText.replace(/\$?([\d]{1,6})\.\d{3,}/g, (m, n) => {
-          const num = parseFloat(m.replace('$',''));
-          return (m.startsWith('$') ? '$' : '') + Math.round(num).toLocaleString();
-        }).slice(0, 80);
-        return `<div class="d2-signal ${cls}">
-          <span class="d2-signal-tag ${cls}">${tag}</span>
-          <span class="d2-signal-text">${text}</span>
-        </div>`;
-      }).join('');
+      alertsEl.innerHTML = allActions.map(a => renderActionCard(a)).join('');
     } else {
-      alertsEl.innerHTML = '<div class="d2-signal done"><span class="d2-signal-tag done">CLEAR</span><span class="d2-signal-text">No required actions — system balanced</span></div>';
+      alertsEl.innerHTML = '<div class="hold-all-banner" style="grid-column:1/-1"><div class="hold-all-title">✓ SYSTEM BALANCED</div><div class="hold-all-sub">No action required. AlphaControl is actively monitoring your portfolio. It will surface a required action the moment conditions change.</div></div>';
     }
   }
 
@@ -4149,35 +4252,59 @@ function renderActionCard(a, suggested=false) {
   const urgency = (a.urgency||'').toLowerCase();
   const action  = (a.action||'').toLowerCase();
   const amount  = a.amount ? fmtUSD(a.amount) : '';
-  const pct     = a.pct ? '(' + a.pct + '%)' : '';
-  const conf    = a.confidence ? 'Confidence: ' + a.confidence + '%' : '';
+  const pct     = a.pct ? '('+a.pct+'%)' : '';
+  const conf    = a.confidence ? a.confidence+'%' : '';
+  const isCrit  = urgency === 'critical';
+  const cardId  = 'card-' + Math.random().toString(36).slice(2,8);
 
-  // Projected state block
-  let projHtml = '';
-  if (a.projectedState?.summary) {
-    const isPos = !a.projectedState.summary.toLowerCase().includes('no action') && action !== 'hold';
-    projHtml = '<div class="ac-projected '+(isPos?'positive':'negative')+'"><div class="ac-projected-label">→ After this action</div><div class="ac-projected-text">'+a.projectedState.summary+'</div>'+(a.projectedState.progressPct !== undefined ? '<div class="ac-progress-bar"><div class="ac-progress-fill" style="width:'+Math.min(100,a.projectedState.progressPct)+'%;background:'+(isPos?'var(--safe)':'var(--warn)')+'"></div></div>' : '')+'</div>';
-  }
+  // Objective → short directive line above the action title
+  const objectiveLine = a.objective
+    ? '<div class="ac-objective-line">'+a.objective.replace(/_/g,' ').toUpperCase()+'</div>'
+    : '';
 
-  const costHtml = a.costOfInaction ? '<div class="ac-cost">'+a.costOfInaction+'</div>' : '';
-  const isCrit   = urgency === 'critical';
-  const isReq    = ['critical','high'].includes(urgency);
+  // Inaction consequence — always on the card face, visually secondary
+  const inactionHtml = a.costOfInaction
+    ? '<div style="margin-top:10px;padding:6px 10px;background:rgba(220,38,38,.04);border-left:2px solid rgba(220,38,38,.3);border-radius:3px;font-size:11px;color:rgba(248,113,113,.72);line-height:1.45;"><span style="font-size:8px;font-weight:700;font-family:var(--font-display);letter-spacing:.1em;display:block;margin-bottom:2px;color:rgba(248,113,113,.45);">IF YOU DON\'T ACT</span>'+a.costOfInaction+'</div>'
+    : '';
+
+  // Drawer — the intelligence layer. Deeper context, not just extra info.
+  const isPos = !((a.projectedState?.summary||'').toLowerCase().includes('no action')) && action !== 'hold';
+  const projHtml = a.projectedState?.summary
+    ? '<div class="ac-projected '+(isPos?'positive':'negative')+'" style="margin-bottom:8px"><div class="ac-projected-label">→ After this action</div><div class="ac-projected-text">'+a.projectedState.summary+'</div>'
+      +(a.projectedState.progressPct !== undefined ? '<div class="ac-progress-bar"><div class="ac-progress-fill" style="width:'+Math.min(100,a.projectedState.progressPct)+'%;background:'+(isPos?'var(--safe)':'var(--warn)')+'"></div></div>' : '')
+      +'</div>'
+    : '';
+  const impactHtml = a.impact
+    ? '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;line-height:1.5">'+a.impact+'</div>' : '';
+  const confHtml = conf
+    ? '<div style="font-size:10px;color:var(--purple);font-family:var(--font-mono);margin-bottom:4px">Confidence: <b>'+conf+'</b></div>' : '';
+  const typeHtml = action
+    ? '<div style="font-size:9px;color:var(--text-dim);font-family:var(--font-display);letter-spacing:.1em;text-transform:uppercase;margin-top:4px">Type: '+action+'</div>' : '';
+  const drawerContent = projHtml + impactHtml + confHtml + typeHtml;
+
+  const expandBtn = drawerContent.trim()
+    ? '<button class="ac-expand-btn" onclick="(function(b){var d=document.getElementById(\''+cardId+'\');var open=d.classList.toggle(\'open\');b.classList.toggle(\'open\',open);b.querySelector(\'.ac-expand-lbl\').textContent=open?\'HIDE ANALYSIS\':\'FULL ANALYSIS\';})(this)"><span class="ac-expand-arrow">▼</span><span class="ac-expand-lbl">FULL ANALYSIS</span></button>'
+      + '<div class="ac-analysis-drawer" id="'+cardId+'">'+drawerContent+'</div>'
+    : '';
 
   return '<div class="action-card '+(suggested?'suggested-card ':'')+'urgency-'+urgency+'">'
+    // Row 1: urgency + timeframe — nothing else
     + '<div class="ac-card-top">'
-    + '<span class="ac-type-badge '+action+'">'+action.toUpperCase()+'</span>'
-    + '<span class="ac-urgency-badge '+urgency+'">'+urgency.toUpperCase()+'</span>'
-    + (isCrit ? '<span class="ac-card-pin">CRITICAL</span>' : '')
-    + (isReq && !suggested ? '<span class="ac-card-pin" style="background:#1e3a5f;color:#60a5fa;animation:none">REQUIRED</span>' : '')
-    + (a.timeframe ? '<span class="ac-timeframe">⏱ '+a.timeframe+'</span>' : '')
-    + (a.objective ? '<span class="ac-obj-tag">'+a.objective+'</span>' : '')
-    + (conf ? '<span class="ac-conf">'+conf+'</span>' : '')
+    + '<span class="ac-urgency-badge '+urgency+'">'+(isCrit?'CRITICAL':urgency.toUpperCase())+'</span>'
+    + (a.timeframe ? '<span class="ac-timeframe">'+a.timeframe+'</span>' : '')
     + '</div>'
-    + '<div class="ac-card-title">' + (a.text||'') + '</div>'
-    + (amount ? '<div class="ac-card-amount '+action+'">'+amount+' '+pct+'</div>' : '')
+    // Objective directive
+    + objectiveLine
+    // Action title — dominant
+    + '<div class="ac-card-title">'+(a.text||'')+'</div>'
+    // Dollar amount — biggest element on card
+    + (amount ? '<div class="ac-card-amount '+action+'">'+amount+' <span style="font-size:16px;opacity:.55;font-weight:500">'+pct+'</span></div>' : '')
+    // Reason — very quiet
     + (a.reason ? '<div class="ac-card-reason">'+a.reason+'</div>' : '')
-    + (a.impact ? '<div class="ac-card-impact">'+a.impact+'</div>' : '')
-    + projHtml + costHtml
+    // Inaction — always visible on card
+    + inactionHtml
+    // Expand → full analysis drawer
+    + expandBtn
     + '</div>';
 }
 
@@ -4228,6 +4355,12 @@ function renderPortfolioFromRecon(r) {
   setEl('p-grand-total', fmtUSD(grandTotal));
   setEl('kpi-capital',   fmtUSD(grandTotal));
   setEl('header-total',  fmtUSD(grandTotal));
+
+  // ── Row 3 portfolio data ───────────────────────────────────────────
+  const spotVal = r.spotTotal || (r.spotFree + r.spotLocked) || 0;
+  const futVal  = r.futuresTotal || 0;
+  setEl('r3-spot',    fmtUSD(spotVal));
+  setEl('r3-futures', fmtUSD(futVal));
 
   const recon = r.reconciled ? '✓ Reconciled' : '⚠ Gap $' + Math.abs(r.difference||0).toFixed(2);
   setEl('p-recon-status', recon);
@@ -4436,6 +4569,10 @@ function renderPortfolioFromPortfolio(p, market) {
   const sBar = document.getElementById('p-short-bar');
   if (lBar) lBar.style.width = Math.min(100,lPct)+'%';
   if (sBar) sBar.style.width = Math.min(100,sPct)+'%';
+
+  // ── Row 3 portfolio exposure ────────────────────────────────────
+  setEl('r3-long',  lPct + '%');
+  setEl('r3-hedge', sPct + '%');
 
   // Bias
   const biasEl = document.getElementById('p-bias');
@@ -4841,6 +4978,21 @@ async function loadMarketSignals() {
       fundEl.style.color = f != null ? (f > 0.01 ? '#f87171' : f < -0.005 ? '#4ade80' : 'var(--teal)') : '';
     }
     setEl('mkt-regime', regime);
+
+    // ── Row 3 market data ────────────────────────────────────────────
+    const fgR3 = document.getElementById('r3-fg');
+    if (fgR3 && fgVal != null) {
+      fgR3.textContent = 'F&G ' + fgVal;
+      fgR3.style.color = fgVal <= 25 ? '#f87171' : fgVal <= 45 ? '#fbbf24' : fgVal >= 75 ? '#4ade80' : 'var(--teal)';
+    }
+    setEl('r3-regime',  regime || '—');
+    setEl('r3-dom',     s.btcDominance ? s.btcDominance + '%' : '—');
+    const fundR3 = document.getElementById('r3-funding');
+    if (fundR3 && s.fundingRate != null) {
+      const f3 = s.fundingRate;
+      fundR3.textContent = (f3 >= 0 ? '+' : '') + f3.toFixed(4) + '%';
+      fundR3.style.color = f3 > 0.01 ? '#f87171' : f3 < -0.005 ? '#4ade80' : 'var(--teal)';
+    }
 
     // Grid suitability based on regime + volatility
     const btcChange = window._lastBotData?.market?.btcChange24h ?? 0;
@@ -5809,6 +5961,15 @@ function _updateCtrlCards(data) {
   setD('d2-trial-pct',       pct.toFixed(0) + '% of target');
   const d2bar = document.getElementById('d2-trial-bar');
   if (d2bar) d2bar.style.width = Math.min(100, pct).toFixed(1) + '%';
+
+  // Row 1 right — trial metadata
+  setD('d2-trial-day-label-r', trialDay + '/30');
+
+  // Row 3 trial detail
+  setD('r3-daily',   fmtPnl(actualDailyUsd) + '/day');
+  setD('r3-days',    (30 - trialDay) + ' remaining');
+  setD('r3-ontrack', pct >= 30 ? '✓ Yes' : '⚠ Below pace');
+  setD('r3-pace',    actualDailyPct.toFixed(3) + '%/day');
 
   // Mirror action cards to Action Centre
   setTimeout(() => {
