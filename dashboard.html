@@ -5083,6 +5083,21 @@ function checkPw() {
     setTimeout(loadTradeHistory, 3000);
     refreshAll();
     refreshStatus();
+    // Cold-start retry: Render proxy takes 15-60s to wake up
+    // Retry every 5s until capital data arrives, then switch to normal 60s interval
+    let _coldStartRetries = 0;
+    const _coldStart = setInterval(() => {
+      _coldStartRetries++;
+      const capital = document.getElementById('header-total')?.textContent;
+      const hasData = capital && capital !== '—' && capital !== '$0';
+      if (hasData || _coldStartRetries >= 12) {
+        clearInterval(_coldStart);
+        if (!hasData) refreshAll(); // final attempt
+      } else {
+        refreshDecisions();
+        refreshWallets();
+      }
+    }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
     setInterval(refreshStatus, 5 * 60 * 1000); // re-check mode every 5 min
@@ -5113,6 +5128,15 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshAll();
     refreshStatus();
     setTimeout(loadTradeHistory, 3000);
+    // Cold-start retry
+    let _coldStart2 = 0;
+    const _cs2 = setInterval(() => {
+      _coldStart2++;
+      const capital = document.getElementById('header-total')?.textContent;
+      const hasData = capital && capital !== '—' && capital !== '$0';
+      if (hasData || _coldStart2 >= 12) { clearInterval(_cs2); if (!hasData) refreshAll(); }
+      else { refreshDecisions(); refreshWallets(); }
+    }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
     setInterval(refreshStatus, 5 * 60 * 1000);
@@ -5616,16 +5640,10 @@ function _updateCtrlCards(data) {
 
   // ── Mirror to Dashboard KPI cards ──
   const setD = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
   const trialTarget   = (gt * 0.06).toFixed(0);
   const trialStretch  = (gt * 0.10).toFixed(0);
-  const daysElapsed   = Math.max(1, trialDay - 1);
-  const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
-  const actualDailyPct = gt > 0 ? (actualDailyUsd / gt) * 100 : 0;
-  const daysLeft       = Math.max(1, 30 - trialDay);
   const neededDailyUsd = Math.max(0, (gt * 0.06 - rPnl) / daysLeft);
   const neededDailyPct = gt > 0 ? (neededDailyUsd / gt) * 100 : 0;
-  const dailyPct       = (actualDailyPct >= 0 ? '+' : '') + actualDailyPct.toFixed(3) + '%';
   const monthlyRoi     = (actualDailyPct * 30).toFixed(1) + '%';
 
   // 6 orbital metric cards
