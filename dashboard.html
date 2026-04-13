@@ -2396,8 +2396,8 @@ body::after {
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">MARKET REGIME</div>
-      <div class="d2-kpi-num warn">F&amp;G 26</div>
-      <div class="d2-kpi-sub">Extreme Fear</div>
+      <div class="d2-kpi-num warn" id="dm-fg-val">F&amp;G —</div>
+      <div class="d2-kpi-sub" id="dm-fg-label">Loading…</div>
     </div>
   </div>
 
@@ -4120,10 +4120,15 @@ function renderControl(data) {
         const urgency = (a.urgency||'').toUpperCase();
         const tag = urgency === 'CRITICAL' ? 'URGENT' : urgency === 'HIGH' ? 'HIGH' : 'INFO';
         const cls = urgency === 'CRITICAL' ? 'warn' : urgency === 'HIGH' ? 'warn' : 'done';
-        const text = a.action ? `${a.action}: ${a.reason||a.title||''}` : (a.title||a.reason||'');
+        const rawText = a.action ? `${a.action}: ${a.reason||a.title||''}` : (a.title||a.reason||'');
+        // Clean up raw floats — round any number with >2 decimal places
+        const text = rawText.replace(/\$?([\d]{1,6})\.\d{3,}/g, (m, n) => {
+          const num = parseFloat(m.replace('$',''));
+          return (m.startsWith('$') ? '$' : '') + Math.round(num).toLocaleString();
+        }).slice(0, 80);
         return `<div class="d2-signal ${cls}">
           <span class="d2-signal-tag ${cls}">${tag}</span>
-          <span class="d2-signal-text">${text.slice(0,80)}</span>
+          <span class="d2-signal-text">${text}</span>
         </div>`;
       }).join('');
     } else {
@@ -4152,6 +4157,11 @@ function renderControl(data) {
     window._lastPrices = data.prices; // store for asset list rendering
     setEl('header-btc', '$' + (data.prices.BTC||data.prices.BTCUSDT||0).toLocaleString('en-US',{maximumFractionDigits:0}));
     setEl('header-eth', '$' + (data.prices.ETH||data.prices.ETHUSDT||0).toLocaleString('en-US',{maximumFractionDigits:0}));
+    // Re-render asset list now that prices are available
+    if (window._lastSpotBalances?.length) {
+      const gt = data.reconciliation?.grandTotal || 0;
+      _renderAssetList(gt);
+    }
   }
 
   // Pass to other layers
@@ -4511,7 +4521,15 @@ let _tcBots = [], _bnBots = [], _botScores = {}, _botEff = {};
 let _currentFilter = 'all';
 
 function renderExecution(tcData, bnData, scores, eff) {
-  _tcBots = tcData || []; _bnBots = bnData || [];
+  // Filter out dead bots — disabled AND zero capital AND zero profit (truly gone)
+  // Keep bots that have profit history even if now disabled (for record)
+  const tcFiltered = (tcData || []).filter(b => {
+    if (b.active) return true; // always show active
+    if ((b.profit || b.realised || 0) > 0.01) return true; // has profit history — show
+    if ((b.capital || 0) > 0) return true; // has capital deployed — show
+    return false; // disabled + no capital + no profit = truly dead, hide
+  });
+  _tcBots = tcFiltered; _bnBots = bnData || [];
   _botScores = scores || {}; _botEff = eff || {};
   filterBots(_currentFilter);
 }
@@ -4799,6 +4817,19 @@ async function loadMarketSignals() {
       fgEl.style.color = v <= 25 ? '#f87171' : v <= 45 ? '#fbbf24' : v >= 75 ? '#4ade80' : 'var(--text-bright)';
     }
     window._marketSignals = s;
+
+    // ── Update main dashboard Market Regime card ─────────────────────────
+    const fgVal = s.fearGreed?.value ?? null;
+    const fgLbl2 = s.fearGreed?.label ?? s.fearGreed?.classification ?? 'Unknown';
+    const fgNumEl = document.getElementById('dm-fg-val');
+    if (fgNumEl && fgVal != null) {
+      fgNumEl.textContent = 'F&G ' + fgVal;
+      fgNumEl.style.color = fgVal <= 25 ? '#f87171' : fgVal <= 45 ? '#fbbf24' : fgVal >= 75 ? '#4ade80' : 'var(--teal)';
+    }
+    setEl('dm-fg-label', fgLbl2);
+    // Also update the cv16 market regime if it exists
+    const cv16Regime = document.getElementById('cv16-regime');
+    if (cv16Regime) cv16Regime.textContent = fgLbl2;
 
     // ── Populate new Market screen ──────────────────────────────────────
     const fg = s.fearGreed?.value ?? null;
