@@ -2554,30 +2554,30 @@ body::after {
 
   <!-- Rules strip -->
   <div class="ac2-rules-strip">
-    <div class="ac2-rule ok">
+    <div class="ac2-rule" id="strip-r1">
       <div class="ac2-rule-name">R1 · Grid Range</div>
-      <div class="ac2-rule-val ok" id="r1-val">8/9 ✓</div>
-      <div class="ac2-rule-note">XRP at risk</div>
+      <div class="ac2-rule-val" id="strip-r1-val">—</div>
+      <div class="ac2-rule-note" id="strip-r1-note">Loading…</div>
     </div>
-    <div class="ac2-rule warn">
+    <div class="ac2-rule" id="strip-r2">
       <div class="ac2-rule-name">R2 · Regime Gate</div>
-      <div class="ac2-rule-val warn">F&amp;G 26 ✗</div>
-      <div class="ac2-rule-note">No new longs</div>
+      <div class="ac2-rule-val" id="strip-r2-val">—</div>
+      <div class="ac2-rule-note" id="strip-r2-note">Loading…</div>
     </div>
-    <div class="ac2-rule ok">
+    <div class="ac2-rule" id="strip-r3">
       <div class="ac2-rule-name">R3 · 48hr Idle</div>
-      <div class="ac2-rule-val ok">Clear ✓</div>
-      <div class="ac2-rule-note">$80 DCA stopped</div>
+      <div class="ac2-rule-val" id="strip-r3-val">—</div>
+      <div class="ac2-rule-note" id="strip-r3-note">Loading…</div>
     </div>
-    <div class="ac2-rule ok">
+    <div class="ac2-rule" id="strip-r4">
       <div class="ac2-rule-name">R4 · Capital Eff.</div>
-      <div class="ac2-rule-val ok">0.155%/d ✓</div>
-      <div class="ac2-rule-note">Above threshold</div>
+      <div class="ac2-rule-val" id="strip-r4-val">—</div>
+      <div class="ac2-rule-note" id="strip-r4-note">Loading…</div>
     </div>
-    <div class="ac2-rule ok">
+    <div class="ac2-rule" id="strip-r5">
       <div class="ac2-rule-name">R5 · Locked Score</div>
-      <div class="ac2-rule-val ok" id="ac2-r5-locked">— ✓</div>
-      <div class="ac2-rule-note">All locked counts</div>
+      <div class="ac2-rule-val" id="ac2-r5-locked">—</div>
+      <div class="ac2-rule-note" id="strip-r5-note">All locked counts</div>
     </div>
   </div>
 
@@ -3306,7 +3306,7 @@ body::after {
       <div class="cv16-card cv16-card-1">
         <div class="cv16-card-lbl">Daily Profit</div>
         <div class="cv16-card-val cv-pos" id="cv-daily">—</div>
-        <div class="cv16-card-sub">+0.155%/day</div>
+        <div class="cv16-card-sub" id="cv16-daily-sub">live avg/day</div>
       </div>
       <div class="cv16-card cv16-card-2">
         <div class="cv16-card-lbl">Capital</div>
@@ -5718,29 +5718,62 @@ function _updateCtrlCards(data) {
   setD('ac-impact-rate', dailyPct);
   setD('ac-impact-usd',  actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
 
-  // ── Quantum Rules live status panel ──────────────────────────────────
+  // ── Quantum Rules — header strip + side panel, fully live ───────────────
+  const sig3      = window._marketSignals;
+  const fg3       = sig3?.fearGreed?.value ?? null;
+  const r2        = fg3 != null && fg3 < 30;
+  const reconBots = data?.reconciliation?.tcBots || [];
+  const allBots   = reconBots.length > 0 ? reconBots : [...(window._tcBots||[]), ...(window._bnBots||[])];
+
+  const activeGrids = allBots.filter(b => b.strategy === 'grid' && (b.capital||0) > 0);
+  // R3: only flag bots that are explicitly enabled (active/enabled=true) AND have 0 active deals
+  // DCA bots paused by design (active=false) should NOT count as idle violations
+  const idleBots  = allBots.filter(b =>
+    (b.capital||0) > 0 &&
+    b.strategy !== 'grid' &&
+    (b.activeDeals||0) === 0 &&
+    (b.enabled === true || b.active === true)
+  );
+  const dailyOk   = actualDailyPct >= 0.05;
+  const r5pct     = gt > 0 ? ((rPnl / (gt * 0.06)) * 100).toFixed(0) : '0';
+
+  // Helper to update a strip rule cell
+  function updateStrip(id, valId, noteId, ok, val, note) {
+    const el = document.getElementById(id);
+    const vEl = document.getElementById(valId);
+    const nEl = document.getElementById(noteId);
+    if (el)  el.className  = 'ac2-rule ' + (ok ? 'ok' : 'warn');
+    if (vEl) { vEl.className = 'ac2-rule-val ' + (ok ? 'ok' : 'warn'); vEl.textContent = val; }
+    if (nEl) nEl.textContent = note;
+  }
+  updateStrip('strip-r1','strip-r1-val','strip-r1-note',
+    activeGrids.length > 0, activeGrids.length + '/3 ' + (activeGrids.length > 0 ? '✓' : '✗'),
+    activeGrids.length > 0 ? 'Grids running' : 'No grids active');
+  updateStrip('strip-r2','strip-r2-val','strip-r2-note',
+    !r2, 'F&G ' + (fg3 ?? '—') + (r2 ? ' ✗' : ' ✓'),
+    r2 ? 'No new longs' : 'Longs allowed');
+  updateStrip('strip-r3','strip-r3-val','strip-r3-note',
+    idleBots.length === 0, idleBots.length === 0 ? 'Clear ✓' : idleBots.length + ' idle ✗',
+    idleBots.length === 0 ? 'All cycling' : idleBots.map(b => b.name||b.pair).join(', ').slice(0,25));
+  updateStrip('strip-r4','strip-r4-val','strip-r4-note',
+    dailyOk, actualDailyPct.toFixed(3) + '%/d ' + (dailyOk ? '✓' : '✗'),
+    dailyOk ? 'Above threshold' : 'Below 0.05%');
+  updateStrip('strip-r5','ac2-r5-locked','strip-r5-note',
+    rPnl > 0, fmtPnl(rPnl) + (rPnl > 0 ? ' ✓' : ''), r5pct + '% of target');
+
+  // Side panel
   const qsEl = document.getElementById('ac-quantum-status');
   if (qsEl) {
-    const sig3 = window._marketSignals;
-    const fg3  = sig3?.fearGreed?.value ?? null;
-    const r2   = fg3 != null && fg3 < 30;
-    // Use reconciliation data as source of truth — always available, unlike _tcBots which requires refreshBots() to have run
-    const reconBots = data?.reconciliation?.tcBots || [];
-    const allBots = reconBots.length > 0
-      ? reconBots
-      : [...(window._tcBots||[]), ...(window._bnBots||[])];
-    const rows = [];
-    const activeGrids = allBots.filter(b => (b.strategy==='grid'||b.botType==='grid') && (b.capital||0) > 0);
-    rows.push({ ok: activeGrids.length > 0, label: 'R1 · Grid Ranges', detail: activeGrids.length + ' grids active' });
-    rows.push({ ok: !r2, warn: r2, label: 'R2 · Regime Gate', detail: r2 ? 'ACTIVE — F&G ' + fg3 + ', longs blocked' : 'Clear — F&G ' + (fg3??'—') });
-    const idleBots = allBots.filter(b => (b.capital||0) > 0 && (b.activeDeals||0) === 0 && (b.strategy||'')!=='grid');
-    rows.push({ ok: idleBots.length === 0, warn: idleBots.length > 0, label: 'R3 · 48hr Idle', detail: idleBots.length === 0 ? 'All active bots cycling' : idleBots.length + ' idle: ' + idleBots.map(b=>b.name||b.pair).join(', ').slice(0,40) });
-    const dailyOk = actualDailyPct >= 0.05;
-    rows.push({ ok: dailyOk, warn: !dailyOk, label: 'R4 · Daily Rate', detail: dailyPct + '/day' + (dailyOk ? ' ✓' : ' — below 0.05%') });
-    rows.push({ ok: rPnl > 0, label: 'R5 · Locked Score', detail: fmtPnl(rPnl) + ' — ' + ((rPnl/(Math.max(gt*0.06,1)))*100).toFixed(0) + '% of 6% target' });
+    const rows = [
+      { ok: activeGrids.length > 0, label: 'R1 · Grid Ranges',  detail: activeGrids.length + ' grids active' },
+      { ok: !r2, warn: r2,          label: 'R2 · Regime Gate',  detail: r2 ? 'ACTIVE — F&G ' + fg3 + ', longs blocked' : 'Clear — F&G ' + (fg3??'—') },
+      { ok: idleBots.length === 0, warn: idleBots.length > 0, label: 'R3 · 48hr Idle', detail: idleBots.length === 0 ? 'All active bots cycling' : idleBots.length + ' idle: ' + idleBots.map(b=>b.name||b.pair).join(', ').slice(0,40) },
+      { ok: dailyOk, warn: !dailyOk, label: 'R4 · Daily Rate',  detail: dailyPct + '/day' + (dailyOk ? ' ✓' : ' — below 0.05%') },
+      { ok: rPnl > 0,                label: 'R5 · Locked Score', detail: fmtPnl(rPnl) + ' — ' + r5pct + '% of 6% target' },
+    ];
     qsEl.innerHTML = rows.map(r => {
       const color = r.ok ? 'var(--safe)' : r.warn ? '#f87171' : 'var(--text-muted)';
-      const dot = r.ok ? '●' : r.warn ? '⚠' : '○';
+      const dot   = r.ok ? '●' : r.warn ? '⚠' : '○';
       return '<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
         + '<span style="color:' + color + ';font-size:11px;margin-top:1px;flex-shrink:0">' + dot + '</span>'
         + '<div><div style="font-size:11px;font-weight:600;color:' + color + '">' + r.label + '</div>'
