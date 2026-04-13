@@ -28,21 +28,30 @@ function json(data, status=200) { return new Response(JSON.stringify(data), { st
 // not theory. The system should be opinionated and strong.
 // ============================================================
 const BOT_META = {
-  16801943: { name:'BTC Long Futures Bot',    capital:350, direction:'long',  strategy:'dca',    venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:15 },
-  16801248: { name:'BTC Hedge Bot',           capital:250, direction:'short', strategy:'dca',    venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:15 },
-  16801317: { name:'BTC Break Out Bot',       capital:100, direction:'long',  strategy:'dca',    venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:8  },
-  16801290: { name:'USDT Stable Coin Engine', capital:100, direction:'long',  strategy:'dca',    venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:8  },
-  194116:   { name:'BTC Binance Signal Bot',  capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:5  },
-  194115:   { name:'ETH Binance Signal Bot',  capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', maxAllocationPct:5  },
-  16805646: { name:'Long MA Cross 30m',       capital:100, direction:'long',  strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:5  },
-  16805638: { name:'Short RSI/BB (ETH)',      capital:100, direction:'short', strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', maxAllocationPct:5  },
-  16805637: { name:'Short RSI/BB (BTC)',      capital:100, direction:'short', strategy:'signal', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:5  },
-  'eth-grid-trades':     { name:'ETH/USDT Spot Grid',   capital:400, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'ETHUSDT', roi:0.83,  scoreType:'spot-grid',    maxAllocationPct:18 },
-  'btc-dca-trades':      { name:'BTC/USDT Spot DCA',    capital:300, direction:'long', strategy:'dca',  venue:'binance', marketType:'spot',    symbol:'BTCUSDT', roi:2.54,  scoreType:'spot-dca',     maxAllocationPct:15 },
-  'bnb-grid-trades':     { name:'BNB/USDT Spot Grid',   capital:300, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'BNBUSDT', roi:0.39,  scoreType:'spot-grid',    maxAllocationPct:12 },
-  'sol-grid-trades':     { name:'SOL/USDT Spot Grid',   capital:220, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'SOLUSDT', roi:1.83,  scoreType:'spot-grid',    maxAllocationPct:10 },
-  'xrp-grid-trades':     { name:'XRP/USDT Spot Grid',   capital:249, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'XRPUSDT', roi:-0.32, scoreType:'spot-grid',    maxAllocationPct:10 },
-  'ethusdt-perp-trades': { name:'ETHUSDT Futures Grid', capital:700, direction:'long', strategy:'grid', venue:'binance', marketType:'futures', symbol:'ETHUSDT', roi:1.51,  scoreType:'futures-grid', maxAllocationPct:25 },
+  // ── 3Commas DCA bots (current active portfolio as of April 13 2026) ──
+  16806296: { name:'ETH/USDT DCA Long',    capital:1000, direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', maxAllocationPct:20 },
+  16807404: { name:'BTC/USDT DCA Long',    capital:700,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:15 },
+  16806276: { name:'SOL/USDT DCA Long',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'SOLUSDT', maxAllocationPct:12 },
+  16808289: { name:'XRP/USDT DCA Long',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'XRPUSDT', maxAllocationPct:12 },
+  16808275: { name:'BNB/USDT DCA Long',    capital:100,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'BNBUSDT', maxAllocationPct:5  },
+  16809699: { name:'ETH Hedge Bot',        capital:80,   direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', maxAllocationPct:5  },
+  16801317: { name:'BTC Break Out Bot',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:10 },
+  // ── Stopped/legacy bots (kept for profit history, not active) ──
+  16801943: { name:'BTC Long Futures Bot', capital:0,    direction:'long',  strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:0  },
+  16801248: { name:'BTC Hedge Bot',        capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:0  },
+  16812336: { name:'BNB Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BNBUSDT', maxAllocationPct:0  },
+  16812326: { name:'SOL Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'SOLUSDT', maxAllocationPct:0  },
+  // ── 3Commas Grid bots (current as of April 13) ──
+  2758668:  { name:'ETH SHORT x3 Grid',    capital:800,  direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:15 },
+  2758366:  { name:'BTC SHORT x3 Grid',    capital:1700, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:25 },
+  2757088:  { name:'BTC/USDT LONG Grid',   capital:293,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:2.6, scoreType:'spot-grid', maxAllocationPct:10 },
+  // ── Binance native bots (legacy, mapped by trade symbol) ──
+  'eth-grid-trades':     { name:'ETH/USDT Spot Grid',   capital:400, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
+  'btc-dca-trades':      { name:'BTC/USDT Spot DCA',    capital:300, direction:'long', strategy:'dca',  venue:'binance', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-dca',     maxAllocationPct:0  },
+  'bnb-grid-trades':     { name:'BNB/USDT Spot Grid',   capital:300, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'BNBUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
+  'sol-grid-trades':     { name:'SOL/USDT Spot Grid',   capital:220, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'SOLUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
+  'xrp-grid-trades':     { name:'XRP/USDT Spot Grid',   capital:249, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'XRPUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
+  'ethusdt-perp-trades': { name:'ETHUSDT Futures Grid', capital:0,   direction:'long', strategy:'grid', venue:'binance', marketType:'futures', symbol:'ETHUSDT', roi:0,    scoreType:'futures-grid', maxAllocationPct:0  },
 };
 
 // Reallocation controls
@@ -1487,7 +1496,7 @@ async function getDecisions(env){
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
     const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
-    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon});
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{}});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }
@@ -1546,18 +1555,6 @@ export default {
         if(!botId||!['enable','disable'].includes(action)) return json({error:'Usage: POST /api/bot/:id/enable|disable'},400);
         await logAction(env,{type:'bot_action',botId,action,timestamp:new Date().toISOString(),botMeta:getBotMeta(parseInt(botId)||botId)});
         return await botAction(env,botId,action);
-      }
-      if(path==='/api/chat-dual'&&request.method==='POST'){
-        try {
-          const body = await request.text();
-          const r = await fetch('https://tc-proxy-eu.onrender.com/api/chat-dual', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body,
-          });
-          const data = await r.json();
-          return json(data);
-        } catch(e) { return json({ error: e.message, answer: "Hannah is unavailable right now. Try again in a moment." }, 500); }
       }
       if(path==='/'||path==='/index.html') return await serveHTML();
       return new Response('Not found',{status:404});

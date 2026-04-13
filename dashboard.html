@@ -2407,24 +2407,12 @@ body::after {
     <!-- LEFT COLUMN: Signals only -->
     <div class="d2-col-left">
 
-      <!-- AI Signals -->
+      <!-- AI Signals — populated dynamically from /api/decisions -->
       <div class="d2-section-title">⚡ AI SIGNALS TODAY</div>
       <div class="d2-signals" id="dash-alerts">
-        <div class="d2-signal done">
-          <span class="d2-signal-tag done">DONE</span>
-          <span class="d2-signal-text">BTC Hedge Bot scaled $900 → $1,300</span>
-        </div>
-        <div class="d2-signal done">
-          <span class="d2-signal-tag done">DONE</span>
-          <span class="d2-signal-text">SOL DCA scaled $100 → $300</span>
-        </div>
-        <div class="d2-signal done">
-          <span class="d2-signal-tag done">DONE</span>
-          <span class="d2-signal-text">SOL Spot Grid reset $72–$100</span>
-        </div>
-        <div class="d2-signal warn">
-          <span class="d2-signal-tag warn">PENDING</span>
-          <span class="d2-signal-text">XRP Grid near floor $1.315 — reset required</span>
+        <div class="d2-signal" style="opacity:.5">
+          <span class="d2-signal-tag">—</span>
+          <span class="d2-signal-text">Loading signals…</span>
         </div>
       </div>
     </div>
@@ -2457,12 +2445,12 @@ body::after {
         <div class="dash-metric-card dm4">
           <div class="dm-lbl">Target</div>
           <div class="dm-val" id="cv-target">—</div>
-          <div class="dm-sub">10% goal</div>
+          <div class="dm-sub">6% goal</div>
         </div>
         <div class="dash-metric-card dm5">
           <div class="dm-lbl">Stretch</div>
           <div class="dm-val warn" id="cv-stretch">$527</div>
-          <div class="dm-sub">10% goal</div>
+          <div class="dm-sub">6% goal</div>
         </div>
         <div class="dash-metric-card dm6">
           <div class="dm-lbl">Progress</div>
@@ -2541,7 +2529,7 @@ body::after {
           </div>
           <div>
             <div class="d2-trial-big" id="d2-target-num">—</div>
-            <div class="d2-trial-label">10% target</div>
+            <div class="d2-trial-label">6% target</div>
           </div>
         </div>
         <div class="d2-trial-bar-wrap">
@@ -3357,12 +3345,12 @@ body::after {
       <div class="cv16-card cv16-card-4">
         <div class="cv16-card-lbl">Target</div>
         <div class="cv16-card-val" id="cv-target2">—</div>
-        <div class="cv16-card-sub">10% goal</div>
+        <div class="cv16-card-sub">6% goal</div>
       </div>
       <div class="cv16-card cv16-card-5">
         <div class="cv16-card-lbl">Stretch</div>
         <div class="cv16-card-val cv-warn" id="cv-stretch">$775</div>
-        <div class="cv16-card-sub">10% goal</div>
+        <div class="cv16-card-sub">6% goal</div>
       </div>
       <div class="cv16-card cv16-card-6">
         <div class="cv16-card-lbl">Progress</div>
@@ -3602,8 +3590,8 @@ body::after {
         <div id="p-locked-bar" style="height:100%;background:linear-gradient(90deg,var(--safe),rgba(74,222,128,.5));border-radius:3px;transition:width .5s;width:0%"></div>
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text-muted)">
-        <span id="p-bar-pct">0% of 10% target</span>
-        <span id="p-bar-daily">Need $30.70/day</span>
+        <span id="p-bar-pct">0% of 6% target</span>
+        <span id="p-bar-daily">Need $19/day</span>
       </div>
     </div>
 
@@ -4123,6 +4111,35 @@ function renderControl(data) {
   // Target state
   if (data.targetState) renderTargetState(data.targetState, data.targetAdjBasis);
 
+  // ── Populate AI Signals Today panel from live decisions ──────────────────
+  const alertsEl = document.getElementById('dash-alerts');
+  if (alertsEl) {
+    const allActions = [...(data.requiredActions||[]), ...(data.suggestedActions||[])];
+    if (allActions.length) {
+      alertsEl.innerHTML = allActions.slice(0,4).map(a => {
+        const urgency = (a.urgency||'').toUpperCase();
+        const tag = urgency === 'CRITICAL' ? 'URGENT' : urgency === 'HIGH' ? 'HIGH' : 'INFO';
+        const cls = urgency === 'CRITICAL' ? 'warn' : urgency === 'HIGH' ? 'warn' : 'done';
+        const text = a.action ? `${a.action}: ${a.reason||a.title||''}` : (a.title||a.reason||'');
+        return `<div class="d2-signal ${cls}">
+          <span class="d2-signal-tag ${cls}">${tag}</span>
+          <span class="d2-signal-text">${text.slice(0,80)}</span>
+        </div>`;
+      }).join('');
+    } else {
+      alertsEl.innerHTML = '<div class="d2-signal done"><span class="d2-signal-tag done">CLEAR</span><span class="d2-signal-text">No required actions — system balanced</span></div>';
+    }
+  }
+
+  // ── Active bot count — count only enabled bots ───────────────────────────
+  const tcActive = (window._tcBots||[]).filter(b => b.active || b.activeDeals > 0).length;
+  const bnActive = (window._bnBots||[]).filter(b => b.active).length;
+  const totalActive = tcActive + bnActive;
+  if (totalActive > 0) {
+    const botCountEl = document.getElementById('dash-bots-count');
+    if (botCountEl) botCountEl.textContent = totalActive;
+  }
+
   // Header total
   const total = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
   if (total) setEl('header-total', fmtUSD(total));
@@ -4343,14 +4360,14 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   // Trial progress
   const trialStart   = new Date('2026-04-10');
   const dayNum       = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
-  const target10pct  = grandTotal * 0.10;
-  const pctOfTarget  = target10pct > 0 ? Math.min(100, (totalLocked / target10pct) * 100) : 0;
+  const target6pct   = grandTotal * 0.06;
+  const pctOfTarget  = target6pct > 0 ? Math.min(100, (totalLocked / target6pct) * 100) : 0;
   const daysLeft     = Math.max(1, 30 - dayNum);
-  const dailyNeeded  = Math.max(0, (target10pct - totalLocked) / daysLeft);
+  const dailyNeeded  = Math.max(0, (target6pct - totalLocked) / daysLeft);
 
-  setEl('p-target-val',    fmtUSD(target10pct));
+  setEl('p-target-val',    fmtUSD(target6pct));
   setEl('p-locked-pct-lbl', pctOfTarget.toFixed(1) + '% of target · Day ' + dayNum + '/30');
-  setEl('p-bar-pct',       pctOfTarget.toFixed(0) + '% of 10% target');
+  setEl('p-bar-pct',       pctOfTarget.toFixed(0) + '% of 6% target');
   setEl('p-bar-daily',     'Need ' + fmtUSD(dailyNeeded) + '/day');
 
   const bar = document.getElementById('p-locked-bar');
@@ -5456,7 +5473,7 @@ async function hannahSend() {
     '',
     '=== TRIAL PROGRESS ===',
     `Trial Day: ${dayNum}/30 | Locked So Far: ${lockedEl}`,
-    `Target: 10% = ~$920 | Daily Required: $30.70/day`,
+    `Target: 10% = ~$920 | Daily Required: $19/day`,
     '',
     '=== 3COMMAS BOTS ===',
     tcBotLines || '  (no data)',
@@ -5528,7 +5545,7 @@ function _updateCtrlCards(data) {
   const _dayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
   cv('cv-trial2',    _dayNow + ' / 30');
   cv('cv-trial2-sub','Day ' + _dayNow);
-  cv('cv-target2',   '$' + (gt * 0.10).toFixed(0));
+  cv('cv-target2',   '$' + (gt * 0.06).toFixed(0));
 
 
   // Performance chart
@@ -5568,8 +5585,8 @@ function _updateCtrlCards(data) {
   // ── Mirror to Dashboard KPI cards ──
   const setD = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
-  const trialTarget   = (gt * 0.10).toFixed(0);
-  const trialStretch  = (gt * 0.15).toFixed(0);
+  const trialTarget   = (gt * 0.06).toFixed(0);
+  const trialStretch  = (gt * 0.10).toFixed(0);
   const monthlyRoi    = (0.00155 * 30 * 100).toFixed(1) + '%';
   const dailyPct      = '+0.155%';
   const winRate       = '82.5%';
@@ -5623,7 +5640,7 @@ function _updateCtrlCards(data) {
   if (acDate) acDate.textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
 
   // Trial progress bar
-  const pct = Math.min(100, (rPnl / (gt * 0.10)) * 100);
+  const pct = Math.min(100, (rPnl / (gt * 0.06)) * 100);
   const fill = document.getElementById('tpb-fill');
   if (fill) fill.style.width = pct.toFixed(1) + '%';
   setD('tpb-locked',  fmtPnl(rPnl) + ' locked');
