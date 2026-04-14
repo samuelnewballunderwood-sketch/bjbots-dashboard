@@ -34,20 +34,20 @@ const BOT_META = {
   16806276: { name:'SOL/USDT DCA Long',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'SOLUSDT', maxAllocationPct:12 },
   16808289: { name:'XRP/USDT DCA Long',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'XRPUSDT', maxAllocationPct:12 },
   16808275: { name:'BNB/USDT DCA Long',    capital:100,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'BNBUSDT', maxAllocationPct:5  },
-  16809699: { name:'ETH Hedge Bot',        capital:80,   direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', maxAllocationPct:5  },
-  16801317: { name:'BTC Break Out Bot',    capital:500,  direction:'long',  strategy:'dca', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', maxAllocationPct:10 },
+  16809699: { name:'ETH Hedge Bot',        capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', maxAllocationPct:0  },
   // ── Stopped/legacy bots (kept for profit history, not active) ──
   16801943: { name:'BTC Long Futures Bot', capital:0,    direction:'long',  strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:0  },
   16801248: { name:'BTC Hedge Bot',        capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:0  },
   16812336: { name:'BNB Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BNBUSDT', maxAllocationPct:0  },
   16812326: { name:'SOL Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'SOLUSDT', maxAllocationPct:0  },
-  // ── 3Commas Grid bots (current as of April 14 — post regime switch) ──
-  2757088:  { name:'BTC/USDT LONG Grid $292',  capital:293,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:3.48, scoreType:'spot-grid',    maxAllocationPct:10 },
-  2759001:  { name:'BTC/USDT LONG Grid $1K',   capital:1000, direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
-  2759002:  { name:'ETH/USDT LONG Grid $991',  capital:991,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
-  // ── Closed SHORT grids (April 14 — regime switch to BULL) ──
-  2758668:  { name:'ETH SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:0 },
-  2758366:  { name:'BTC SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:0 },
+  // ── 3Commas Grid bots (live as of April 14 — confirmed via /debug-tc) ──
+  2752385:  { name:'BTC/USDT LONG Grid $298',  capital:298,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:5  },
+  2759318:  { name:'BTC/USDT LONG Grid $910',  capital:910,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
+  2759323:  { name:'ETH/USDT LONG Grid $920',  capital:920,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
+  // ── Closed grids (capital=0, kept for history) ──
+  2757088:  { name:'BTC/USDT Grid (CLOSED)',   capital:0,    direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
+  2758668:  { name:'ETH SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', roi:0,    scoreType:'futures-grid', maxAllocationPct:0  },
+  2758366:  { name:'BTC SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', roi:0,    scoreType:'futures-grid', maxAllocationPct:0  },
   // ── Binance native bots (legacy, mapped by trade symbol) ──
   'eth-grid-trades':     { name:'ETH/USDT Spot Grid',   capital:400, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
   'btc-dca-trades':      { name:'BTC/USDT Spot DCA',    capital:300, direction:'long', strategy:'dca',  venue:'binance', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-dca',     maxAllocationPct:0  },
@@ -1541,7 +1541,7 @@ async function getDecisions(env){
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
     const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
-    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{}});
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{},market});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }

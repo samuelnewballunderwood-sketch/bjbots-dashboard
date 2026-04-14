@@ -4993,10 +4993,8 @@ async function refreshWallets() {
     if (total > 0) {
       setEl('p-spot-pct',    Math.round((spotTotal/total)*100) + '% of total');
       setEl('p-futures-pct', Math.round((futMargin/total)*100) + '% of total');
-      // Update KPI strip and header with live wallet total
-      setEl('dm-capital',   fmtUSD(total));
-      setEl('header-total', fmtUSD(total));
-      setEl('cv-capital',   fmtUSD(total));
+      // NOTE: dm-capital is set by _updateCtrlCards from reconciliation grandTotal
+      // Do NOT set it here — refreshWallets may complete before futures loads
     }
     // Trigger asset list re-render
     _renderAssetList(total);
@@ -5049,7 +5047,7 @@ async function refreshBots() {
     setEl('h-tc-val', tcBots.length > 0 ? tcBots.length + ' bots' : 'Connected');
 
     // Update active bot count from live data
-    const tcActive = tcBots.filter(b => b.enabled !== false && (b.activeDeals > 0 || b.capital > 0)).length;
+    const tcActive = tcBots.filter(b => b.active === true).length;
     const bnActive = bnBots.filter(b => b.active !== false && b.capital > 0).length;
     const totalActive = tcActive + bnActive;
     if (totalActive > 0) {
@@ -5070,7 +5068,7 @@ async function loadMarketSignals() {
     const s = await res.json();
     // Update old Context layer elements (kept for compatibility)
     setEl('ctx-fg-value',  s.fearGreed?.value ?? '—');
-    setEl('ctx-fg-label',  s.fearGreed?.label ?? s.fearGreed?.classification ?? '—');
+    setEl('ctx-fg-label', (s.fearGreed?.label ?? '—') + ' · ' + (s.fearGreed?.source ?? 'alt.me'));
     setEl('ctx-regime',    s.regime ?? '—');
     setEl('ctx-btc-dom',   s.btcDominance ? s.btcDominance + '%' : '—');
     setEl('ctx-funding',   s.fundingRate != null ? s.fundingRate.toFixed(4) + '%' : '—');
@@ -5082,15 +5080,17 @@ async function loadMarketSignals() {
     window._marketSignals = s;
 
     // ── Update main dashboard Market Regime card ─────────────────────────
-    const fgVal = s.fearGreed?.value ?? null;
+    const fgVal  = s.fearGreed?.value ?? null;
+    const fgBase = s.fearGreed?.base ?? fgVal;
+    const fgSrc  = s.fearGreed?.source ?? 'alt.me';
     const fgLbl2 = s.fearGreed?.label ?? s.fearGreed?.classification ?? 'Unknown';
     const fgNumEl = document.getElementById('dm-fg-val');
     if (fgNumEl && fgVal != null) {
       fgNumEl.textContent = 'F&G ' + fgVal;
       fgNumEl.style.color = fgVal <= 25 ? '#f87171' : fgVal <= 45 ? '#fbbf24' : fgVal >= 75 ? '#4ade80' : 'var(--teal)';
     }
-    setEl('dm-fg-label', fgLbl2);
-    // Also update the cv16 market regime if it exists
+    // Label shows classification + source so Sam knows which provider
+    setEl('dm-fg-label', fgLbl2 + ' · ' + fgSrc);
     const cv16Regime = document.getElementById('cv16-regime');
     if (cv16Regime) cv16Regime.textContent = fgLbl2;
 
@@ -5106,7 +5106,7 @@ async function loadMarketSignals() {
       fgEl2.textContent = fg;
       fgEl2.style.color = fg <= 25 ? '#f87171' : fg <= 45 ? '#fbbf24' : fg >= 75 ? '#4ade80' : 'var(--teal)';
     }
-    setEl('mkt-fg-label',   fgLabel);
+    setEl('mkt-fg-label', fgLabel + ' · ' + (s.fearGreed?.source ?? 'alt.me'));
     setEl('mkt-btc-dom',    s.btcDominance ? s.btcDominance + '%' : '—');
     const fundEl = document.getElementById('mkt-funding');
     if (fundEl) {
