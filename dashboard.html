@@ -311,16 +311,20 @@ body::after {
 
 /* CRITICAL — one clean animation only, no ring */
 .action-card.urgency-critical {
+  border-color: rgba(220,38,38,.35) !important;
   border-left-color: #dc2626 !important;
-  background: rgba(220,38,38,.05) !important;
+  background: rgba(220,38,38,.07) !important;
   animation: crit-breathe 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(220,38,38,.08), inset 0 0 30px rgba(220,38,38,.03);
 }
-@keyframes crit-breathe { 0%,100%{background:rgba(220,38,38,.04)} 50%{background:rgba(220,38,38,.09)} }
+@keyframes crit-breathe { 0%,100%{background:rgba(220,38,38,.06)} 50%{background:rgba(220,38,38,.11)} }
 
 /* HIGH — serious, stable */
 .action-card.urgency-high {
+  border-color: rgba(217,119,6,.35) !important;
   border-left-color: #d97706 !important;
-  background: rgba(217,119,6,.04) !important;
+  background: rgba(217,119,6,.06) !important;
+  box-shadow: 0 0 16px rgba(217,119,6,.06);
 }
 /* MEDIUM */
 .action-card.urgency-medium { border-left-color: var(--balanced) !important; }
@@ -985,10 +989,10 @@ body::after {
 }
 .dash-btn-connector.bottom { background:rgba(96,165,250,.3); }
 
-/* Hannah orbital wrap */
+/* Hannah orbital wrap — landscape so side cards clear portrait entirely */
 .dash-hannah-wrap {
   position:relative;
-  width:440px; height:440px; flex-shrink:0;
+  width:580px; height:300px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
 }
 .dash-orbital-ring {
@@ -997,16 +1001,16 @@ body::after {
   pointer-events:none;
 }
 .dash-orbital-ring.r1 {
-  width:400px; height:106px; margin-left:-200px; margin-top:-53px;
+  width:520px; height:100px; margin-left:-260px; margin-top:-50px;
   border-color:rgba(45,212,191,.28);
   animation:ring-spin 22s linear infinite;
 }
 .dash-orbital-ring.r2 {
-  width:328px; height:86px; margin-left:-164px; margin-top:-43px;
+  width:420px; height:80px; margin-left:-210px; margin-top:-40px;
   animation:ring-spin 32s linear infinite reverse;
 }
 .dash-orbital-ring.r3 {
-  width:256px; height:68px; margin-left:-128px; margin-top:-34px;
+  width:320px; height:62px; margin-left:-160px; margin-top:-31px;
   border-color:rgba(45,212,191,.10);
   animation:ring-spin 44s linear infinite;
 }
@@ -1052,18 +1056,19 @@ body::after {
   content:''; position:absolute; width:5px; height:5px; border-radius:50%;
   background:rgba(45,212,191,.45); box-shadow:0 0 6px rgba(45,212,191,.35);
 }
-/* Positions — 6-card radial layout, clear of Hannah portrait */
-.dm1 { top:14px;  left:30px;  }   /* top-left    — Daily Profit */
+/* Positions — landscape 580×300 container, Hannah portrait 148px centred at (290,150)
+   Portrait occupies x:166-414, y:76-224. Cards placed clear of this zone. */
+.dm1 { top:8px;   left:60px;  }   /* top-left    — Daily Profit */
 .dm1::after { right:-3px; top:50%; margin-top:-2px; }
-.dm2 { top:14px;  right:30px; }   /* top-right   — Capital */
+.dm2 { top:8px;   right:60px; }   /* top-right   — Capital */
 .dm2::after { left:-3px; top:50%; margin-top:-2px; }
-.dm3 { top:50%;   left:0px;   transform:translateY(-50%); } /* mid-left — Trial Day */
+.dm3 { top:50%;   left:6px;   transform:translateY(-50%); } /* mid-left — Trial Day */
 .dm3::after { right:-3px; top:50%; margin-top:-2px; }
-.dm4 { top:50%;   right:0px;  transform:translateY(-50%); } /* mid-right — Target */
+.dm4 { top:50%;   right:6px;  transform:translateY(-50%); } /* mid-right — Target */
 .dm4::after { left:-3px; top:50%; margin-top:-2px; }
-.dm5 { bottom:14px; left:30px;  }  /* bot-left   — Stretch */
+.dm5 { bottom:8px;  left:60px;  }  /* bot-left   — Stretch */
 .dm5::after { right:-3px; top:50%; margin-top:-2px; }
-.dm6 { bottom:14px; right:30px; }  /* bot-right  — Progress */
+.dm6 { bottom:8px;  right:60px; }  /* bot-right  — Progress */
 .dm6::after { left:-3px; top:50%; margin-top:-2px; }
 
 .dm-lbl { font-size:7.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; font-family:var(--font-body); white-space:nowrap; }
@@ -2162,8 +2167,8 @@ body::after {
 }
 .ac-activate-btn:hover { background: rgba(45,212,191,.2); }
 
-/* Dashboard Hannah portrait — slightly larger */
-.dash-hannah-wrap { width: 340px !important; height: 340px !important; }
+/* Dashboard Hannah portrait — larger orbital container */
+.dash-hannah-wrap { width: 440px !important; height: 440px !important; }
 .dash-photo { width: 160px !important; height: 160px !important; }
 
 .pw-logo-wrap {
@@ -2634,17 +2639,17 @@ body::after {
       </div>
     </div>
 
-    <!-- RIGHT: Trial progress — metadata only, no visual weight -->
+    <!-- RIGHT: Trial progress — crisp, readable -->
     <div class="d2-col-right">
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div style="font-size:8px;font-family:var(--font-display);letter-spacing:.16em;color:rgba(160,175,220,.3);text-transform:uppercase;margin-bottom:6px;">Trial</div>
-        <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:rgba(74,222,128,.7)" id="d2-locked-num">—</div>
-        <div style="font-size:9px;color:rgba(160,175,220,.35)">locked profit</div>
-        <div class="d2-trial-bar-wrap" style="margin-top:8px">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:8px;font-family:var(--font-display);letter-spacing:.16em;color:rgba(160,175,220,.5);text-transform:uppercase;margin-bottom:4px;">Trial</div>
+        <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:rgba(74,222,128,.9);letter-spacing:-.01em;" id="d2-locked-num">—</div>
+        <div style="font-size:10px;color:rgba(160,175,220,.55);letter-spacing:.04em;">locked profit</div>
+        <div class="d2-trial-bar-wrap" style="margin-top:6px">
           <div class="d2-trial-bar" id="d2-trial-bar" style="width:0%"></div>
         </div>
-        <div style="font-size:9px;color:rgba(160,175,220,.3);margin-top:3px" id="d2-trial-pct">—%</div>
-        <div style="font-size:9px;color:rgba(160,175,220,.3);margin-top:2px" id="d2-trial-day-label-r">Day —/30</div>
+        <div style="font-size:10px;color:rgba(160,175,220,.6);margin-top:4px;font-family:var(--font-mono);" id="d2-trial-pct">—%</div>
+        <div style="font-size:10px;color:rgba(160,175,220,.45);margin-top:1px;font-family:var(--font-mono);" id="d2-trial-day-label-r">Day —/30</div>
         <div style="display:none" id="d2-target-num">—</div>
       </div>
     </div>
@@ -4863,7 +4868,7 @@ function renderTcBotCard(b) {
     + '<div class="bot-divider"></div>'
     + '<div class="bot-stats">'
     + '<div class="stat"><span class="stat-label">Capital</span><span class="stat-value" style="color:#60a5fa">' + fmtUSD(capital) + '</span></div>'
-    + '<div class="stat"><span class="stat-label">Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + fmtPnl(profit) + '</span></div>'
+    + '<div class="stat"><span class="stat-label">Profit</span><span class="stat-value" style="color:' + (profit>0?'var(--safe)':profit<0?'#f87171':'var(--text-dim)') + '">' + (profit === 0 ? '—' : fmtPnl(profit)) + '</span></div>'
     + '<div class="stat"><span class="stat-label">Trades</span><span class="stat-value">' + (b.completedDeals || b.trades || 0) + '</span></div>'
     + '</div>'
     + '<div class="pnl-bar"><div class="pnl-fill ' + (profit>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(profit/Math.max(capital,1)*100)) + '%"></div></div>'
@@ -4895,7 +4900,7 @@ function renderBnBotCard(b) {
 
   return '<div class="bot-card ' + strat + '" data-bot-id="' + b.id + '" data-venue="binance">'
     + '<div class="bot-card-header">'
-    + '<div class="bot-name">' + pair + (capSource === 'futures-estimate' ? ' <span style="font-size:9px;color:var(--warn);opacity:.7">~est</span>' : '') + '</div>'
+    + '<div class="bot-name">' + pair + '</div>'
     + '<div class="bot-header-right">'
     + '<span class="status-badge status-' + status + '">' + status.toUpperCase() + '</span>'
     + '<div class="ai-score-wrap"><span class="ai-lbl">AI</span><span class="ai-score ' + scoreClass(score) + '">' + scoreLabel(score) + '</span></div>'
@@ -4910,7 +4915,7 @@ function renderBnBotCard(b) {
     + '<div class="bot-divider"></div>'
     + '<div class="bot-stats">'
     + '<div class="stat"><span class="stat-label">Capital</span><span class="stat-value" style="color:#60a5fa">' + fmtUSD(capital) + '</span></div>'
-    + '<div class="stat"><span class="stat-label">Locked Profit</span><span class="stat-value" style="color:' + (profit>=0?'var(--safe)':'#f87171') + '">' + fmtPnl(profit) + '</span></div>'
+    + '<div class="stat"><span class="stat-label">Locked Profit</span><span class="stat-value" style="color:' + (profit>0?'var(--safe)':profit<0?'#f87171':'var(--text-dim)') + '">' + (profit === 0 ? '—' : fmtPnl(profit)) + '</span></div>'
     + '<div class="stat"><span class="stat-label">Trades</span><span class="stat-value">' + trades + '</span></div>'
     + '</div>'
     + '<div class="pnl-bar"><div class="pnl-fill ' + (profit>=0?'positive':'negative') + '" style="width:' + Math.min(100, Math.abs(profit/Math.max(capital,1)*100)) + '%"></div></div>'
@@ -6184,15 +6189,24 @@ function _updateCtrlCards(data) {
 (function() {
   const orig = window.renderControl;
   window.renderControl = function(data) {
-    // Seed F&G header immediately from decisions market payload
+    // Seed F&G header immediately from decisions market payload — before loadMarketSignals completes
     if (data.market?.fearGreed != null) {
       const fgV = data.market.fearGreed;
+      // Update the main KPI header
+      const fgNumEl = document.getElementById('dm-fg-val');
+      if (fgNumEl) {
+        fgNumEl.textContent = 'F&G ' + fgV;
+        fgNumEl.style.color = fgV <= 25 ? '#f87171' : fgV <= 45 ? '#fbbf24' : fgV >= 75 ? '#4ade80' : 'var(--teal)';
+      }
+      const fgLblEl = document.getElementById('dm-fg-label');
+      const fgLabel = fgV <= 25 ? 'Extreme Fear' : fgV <= 45 ? 'Fear' : fgV <= 55 ? 'Neutral' : fgV <= 75 ? 'Greed' : 'Extreme Greed';
+      if (fgLblEl) fgLblEl.textContent = fgLabel + ' · alt.me+intraday';
+      // Update Row 3 status bar
       const fgR3 = document.getElementById('r3-fg');
       if (fgR3) {
         fgR3.textContent = 'F&G ' + fgV;
         fgR3.style.color = fgV <= 25 ? '#f87171' : fgV <= 45 ? '#fbbf24' : fgV >= 75 ? '#4ade80' : 'var(--teal)';
       }
-      const fgLabel = fgV <= 25 ? 'Extreme Fear' : fgV <= 45 ? 'Fear' : fgV <= 55 ? 'Neutral' : fgV <= 75 ? 'Greed' : 'Extreme Greed';
       setEl('r3-regime', data.market?.regime || '—');
     }
     window._lastCtrlData = data;
