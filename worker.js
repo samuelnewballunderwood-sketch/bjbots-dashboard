@@ -41,10 +41,13 @@ const BOT_META = {
   16801248: { name:'BTC Hedge Bot',        capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', maxAllocationPct:0  },
   16812336: { name:'BNB Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'BNBUSDT', maxAllocationPct:0  },
   16812326: { name:'SOL Short Hedge Bot',  capital:0,    direction:'short', strategy:'dca', venue:'3commas', marketType:'futures', symbol:'SOLUSDT', maxAllocationPct:0  },
-  // ── 3Commas Grid bots (current as of April 13) ──
-  2758668:  { name:'ETH SHORT x3 Grid',    capital:800,  direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:15 },
-  2758366:  { name:'BTC SHORT x3 Grid',    capital:1700, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:25 },
-  2757088:  { name:'BTC/USDT LONG Grid',   capital:293,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:2.6, scoreType:'spot-grid', maxAllocationPct:10 },
+  // ── 3Commas Grid bots (current as of April 14 — post regime switch) ──
+  2757088:  { name:'BTC/USDT LONG Grid $292',  capital:293,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:3.48, scoreType:'spot-grid',    maxAllocationPct:10 },
+  2759001:  { name:'BTC/USDT LONG Grid $1K',   capital:1000, direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
+  2759002:  { name:'ETH/USDT LONG Grid $991',  capital:991,  direction:'long',  strategy:'grid', venue:'3commas', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:15 },
+  // ── Closed SHORT grids (April 14 — regime switch to BULL) ──
+  2758668:  { name:'ETH SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'ETHUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:0 },
+  2758366:  { name:'BTC SHORT x3 Grid (CLOSED)', capital:0, direction:'short', strategy:'grid', venue:'3commas', marketType:'futures', symbol:'BTCUSDT', roi:0, scoreType:'futures-grid', maxAllocationPct:0 },
   // ── Binance native bots (legacy, mapped by trade symbol) ──
   'eth-grid-trades':     { name:'ETH/USDT Spot Grid',   capital:400, direction:'long', strategy:'grid', venue:'binance', marketType:'spot',    symbol:'ETHUSDT', roi:0,    scoreType:'spot-grid',    maxAllocationPct:0  },
   'btc-dca-trades':      { name:'BTC/USDT Spot DCA',    capital:300, direction:'long', strategy:'dca',  venue:'binance', marketType:'spot',    symbol:'BTCUSDT', roi:0,    scoreType:'spot-dca',     maxAllocationPct:0  },
@@ -1518,7 +1521,7 @@ async function getDecisions(env){
       ...(bnData.market||{regime:'Unknown',volatility:'Unknown',btcChange24h:0}),
       fearGreed,
       regime: fearGreed != null
-        ? (fearGreed <= 25 ? 'Bear' : fearGreed <= 45 ? 'Bear' : fearGreed >= 75 ? 'Bull' : 'Sideways')
+        ? (fearGreed < 30 ? 'Bear' : fearGreed >= 60 ? 'Bull' : 'Sideways')
         : (bnData.market?.regime || 'Unknown'),
     };
     const dataIntegrity={hasTCBots:(tcData.bots||[]).length>0,hasBNBots:(bnData.bots||[]).length>0,hasHedge:portfolio.shortCapital>0,exposureValid:portfolio.totalAllocated>100};
@@ -1597,6 +1600,15 @@ export default {
         if(!botId||!['enable','disable'].includes(action)) return json({error:'Usage: POST /api/bot/:id/enable|disable'},400);
         await logAction(env,{type:'bot_action',botId,action,timestamp:new Date().toISOString(),botMeta:getBotMeta(parseInt(botId)||botId)});
         return await botAction(env,botId,action);
+      }
+      // Grid bot actions — routed to proxy grid-bot endpoint
+      if(path.startsWith('/api/grid-bot/')&&request.method==='POST'){
+        const parts=path.split('/'),botId=parts[3],action=parts[4];
+        if(!botId||!['enable','disable'].includes(action)) return json({error:'Usage: POST /api/grid-bot/:id/enable|disable'},400);
+        const url=`https://tc-proxy-eu.onrender.com/grid-bot/${botId}/${action}`;
+        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'}});
+        const data=await res.json();
+        return json(data);
       }
       if(path==='/'||path==='/index.html') return await serveHTML();
       return new Response('Not found',{status:404});

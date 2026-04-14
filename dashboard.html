@@ -4622,7 +4622,7 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   }
 
   // Trial progress
-  const trialStart   = new Date('2026-04-10');
+  const trialStart   = new Date('2026-04-11');
   const dayNum       = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
   const target6pct   = grandTotal * 0.06;
   const pctOfTarget  = target6pct > 0 ? Math.min(100, (totalLocked / target6pct) * 100) : 0;
@@ -4777,13 +4777,13 @@ let _tcBots = [], _bnBots = [], _botScores = {}, _botEff = {};
 let _currentFilter = 'all';
 
 function renderExecution(tcData, bnData, scores, eff) {
-  // Filter out dead bots — disabled AND zero capital AND zero profit (truly gone)
-  // Keep bots that have profit history even if now disabled (for record)
+  // Filter out dead bots — only show bots that are currently active OR have capital deployed
+  // Deleted bots won't appear in the API response at all, so this catches any stale cache
   const tcFiltered = (tcData || []).filter(b => {
-    if (b.active) return true; // always show active
-    if ((b.profit || b.realised || 0) > 0.01) return true; // has profit history — show
-    if ((b.capital || 0) > 0) return true; // has capital deployed — show
-    return false; // disabled + no capital + no profit = truly dead, hide
+    if (b.active) return true;           // active = always show
+    if ((b.capital || 0) > 0) return true; // capital deployed = show
+    if (b.activeDeals > 0) return true;  // open deals = show
+    return false;                         // disabled + no capital + no deals = hide
   });
   _tcBots = tcFiltered; _bnBots = bnData || [];
   _botScores = scores || {}; _botEff = eff || {};
@@ -4993,6 +4993,10 @@ async function refreshWallets() {
     if (total > 0) {
       setEl('p-spot-pct',    Math.round((spotTotal/total)*100) + '% of total');
       setEl('p-futures-pct', Math.round((futMargin/total)*100) + '% of total');
+      // Update KPI strip and header with live wallet total
+      setEl('dm-capital',   fmtUSD(total));
+      setEl('header-total', fmtUSD(total));
+      setEl('cv-capital',   fmtUSD(total));
     }
     // Trigger asset list re-render
     _renderAssetList(total);
@@ -5405,10 +5409,12 @@ function checkPw() {
     }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
+    setInterval(refreshBots, 5 * 60 * 1000); // bot list live every 5 min
     setInterval(refreshStatus, 5 * 60 * 1000); // re-check mode every 5 min
     // Regime monitor — check F&G every 30 min, fire alert on crossing
     checkRegime();
     setInterval(checkRegime, 30 * 60 * 1000);
+    setInterval(loadMarketSignals, 60000); // F&G live every 60s
     renderHistory();
     // Mirror Hannah photo after login
     requestAnimationFrame(() => { setTimeout(_mirrorHannahPhoto, 200); });
@@ -5461,9 +5467,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5000);
     _decisionInterval = setInterval(refreshDecisions, 60000);
     setInterval(refreshWallets, 30000);
+    setInterval(refreshBots, 5 * 60 * 1000); // bot list live every 5 min
     setInterval(refreshStatus, 5 * 60 * 1000);
     checkRegime();
     setInterval(checkRegime, 30 * 60 * 1000);
+    setInterval(loadMarketSignals, 60000); // F&G live every 60s
     renderHistory();
     // Auto-activate Hannah on session restore
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
@@ -5811,7 +5819,7 @@ async function hannahSend() {
   const upnlEl   = document.getElementById('ctx-upnl')?.textContent || '?';
 
   // Trial
-  const trialStart = new Date('2026-04-10');
+  const trialStart = new Date('2026-04-11');
   const dayNum = Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1;
   const lockedEl = document.getElementById('d2-locked-num')?.textContent || document.getElementById('dash-locked')?.textContent || '?';
 
@@ -5892,11 +5900,21 @@ async function hannahSend() {
 function _updateCtrlCards(data) {
   if (!data) return;
   const gt   = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
-  const rPnl = data.reconciliation?.totalRealised || 0;
+  // Base realised from reconciliation
+  let rPnl = data.reconciliation?.totalRealised || 0;
+  // Add grid bot profits from live bot data (proxy may not include these in reconciliation)
+  const gridProfit = (window._tcBots || [])
+    .filter(b => b.botType === 'grid' || b.strategy === 'grid')
+    .reduce((sum, b) => sum + (parseFloat(b.profit) || 0), 0);
+  if (gridProfit > 0 && rPnl >= 0) {
+    // Only add if reconciliation doesn't already include it (check magnitude)
+    const reconHasGrids = rPnl > gridProfit * 0.5;
+    if (!reconHasGrids) rPnl += gridProfit;
+  }
   if (!gt) return;
 
   // ── Real daily rate: locked profit / days elapsed ──────────────────────
-  const trialStart = new Date('2026-04-10');
+  const trialStart = new Date('2026-04-11');
   const trialDay   = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
   const daysElapsed = Math.max(1, trialDay - 1); // days of actual trading
   const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
@@ -6012,9 +6030,13 @@ function _updateCtrlCards(data) {
 
   // Hannah mini msg — regime-aware and accurate
   const r2active = fgNow2 != null && fgNow2 < 30;
+  const activeGrids2 = (window._tcBots||[]).filter(b=>b.active&&b.strategy==='grid');
+  const longGs = activeGrids2.filter(b=>b.direction==='long').length;
+  const shortGs = activeGrids2.filter(b=>b.direction==='short').length;
+  const botSummary = longGs > 0 ? longGs + ' LONG grid' + (longGs>1?'s':'') + ' running.' : shortGs > 0 ? shortGs + ' SHORT grid' + (shortGs>1?'s':'') + ' running.' : '';
   const regimeMsg = r2active
-    ? 'R2 ACTIVE — F&G ' + fgNow2 + '. Longs blocked. Short grids running.'
-    : 'F&G ' + (fgNow2 ?? '—') + '. System operational.';
+    ? 'R2 ACTIVE — F&G ' + fgNow2 + '. Longs blocked. ' + botSummary
+    : 'F&G ' + (fgNow2 ?? '—') + ' — R2 lifted. ' + botSummary;
   const paceMsg = neededDailyUsd > 0
     ? ' Need ' + fmtUSD(neededDailyUsd) + '/day to hit target.'
     : ' On pace.';
@@ -6252,7 +6274,7 @@ async function approveRegimeAction(type) {
     // Disable each target bot
     const results = [];
     for (const bot of targets) {
-      const r = await fetch(PROXY + '/grid-bot/' + bot.id + '/disable', { method: 'POST' });
+      const r = await fetch('/api/grid-bot/' + bot.id + '/disable', { method: 'POST' });
       const d = await r.json();
       results.push({ name: bot.name || bot.id, success: d.success, error: d.error });
     }
@@ -6417,25 +6439,43 @@ function d2Activate() {
     if (state) state.style.display = 'none';
     const row = document.getElementById('d2-input-row');
     if (row) row.style.display = 'flex';
-    const sig = window._marketSignals;
-    const fg = sig?.fearGreed?.value ?? null;
-    const fgLbl = sig?.fearGreed?.label ?? '';
-    const r2 = fg != null && fg < 30;
+
+    // Use live F&G — prefer decisions payload (freshest), fall back to market signals cache
+    const ctrl = window._lastCtrlData;
+    const sig  = window._marketSignals;
+    const fg    = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? null;
+    const fgLbl = sig?.fearGreed?.label ?? (fg != null ? (fg < 20 ? 'Extreme Fear' : fg < 30 ? 'Fear' : fg < 60 ? 'Neutral' : 'Greed') : '');
+    const r2    = fg != null && fg < 30;
+    const regime = ctrl?.market?.regime || (fg != null ? (fg < 30 ? 'Bear' : fg >= 60 ? 'Bull' : 'Sideways') : 'Unknown');
+
+    // Active bots summary
+    const activeBots  = (window._tcBots || []).filter(b => b.active);
+    const activeGrids = activeBots.filter(b => b.strategy === 'grid');
+    const activeDca   = activeBots.filter(b => b.strategy === 'dca');
+    const shortGrids  = activeGrids.filter(b => b.direction === 'short');
+    const longGrids   = activeGrids.filter(b => b.direction === 'long');
+
     const lockedEl = document.getElementById('dm-locked');
-    const locked = lockedEl?.textContent || '—';
-    let openMsg = 'Day ' + Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1)) + '/30. ';
-    if (r2) openMsg += 'R2 ACTIVE — F&G ' + fg + ' (' + fgLbl + '). Directional longs blocked. Short grids running. ';
-    else openMsg += 'F&G ' + (fg ?? '—') + '. ';
+    const locked   = lockedEl?.textContent || '—';
+    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+
+    let openMsg = 'Day ' + trialDay + '/30. ';
+    if (fg != null) {
+      openMsg += 'F&G ' + fg + ' (' + fgLbl + '). ';
+      if (r2) openMsg += 'R2 ACTIVE — directional longs blocked. ';
+      else    openMsg += 'R2 lifted — regime ' + regime + '. ';
+    }
+    if (longGrids.length)  openMsg += longGrids.length + ' LONG grid' + (longGrids.length > 1 ? 's' : '') + ' running. ';
+    if (shortGrids.length) openMsg += shortGrids.length + ' SHORT grid' + (shortGrids.length > 1 ? 's' : '') + ' running. ';
+    if (activeDca.length)  openMsg += activeDca.length + ' DCA bot' + (activeDca.length > 1 ? 's' : '') + ' active. ';
     openMsg += locked + ' locked. Ask me anything.';
+
     _d2Append('hannah', openMsg);
-    // Don't auto-focus input — causes browser to scroll to it on load
-    // const inp = document.getElementById('d2-input');
-    // if (inp) inp.focus();
     // also update ac2
     const ac2State = document.getElementById('ac2-activate-state');
-    const ac2Row = document.getElementById('ac2-input-row');
+    const ac2Row   = document.getElementById('ac2-input-row');
     if (ac2State) ac2State.style.display = 'none';
-    if (ac2Row) ac2Row.style.display = 'flex';
+    if (ac2Row)   ac2Row.style.display = 'flex';
   }).catch(err => {
     if (state) state.innerHTML = '<div style="font-size:11px;color:#f87171">Failed: ' + err.message + '</div><button class="d2-activate-btn" onclick="d2Activate()" style="margin-top:8px">Retry</button>';
   });
@@ -6475,7 +6515,7 @@ function ac2Activate() {
     const _sig2 = window._marketSignals;
     const _fg2 = _sig2?.fearGreed?.value ?? null;
     const _r2 = _fg2 != null && _fg2 < 30;
-    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
+    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
     let _acMsg = 'Day ' + _day2 + '/30 · ';
     _acMsg += _r2 ? 'R2 ACTIVE (F&G ' + _fg2 + ') — short grids running, longs blocked. ' : 'F&G ' + (_fg2 ?? '—') + '. ';
     _acMsg += 'Ask me about pending actions, bot performance, or capital allocation.';
@@ -6589,7 +6629,7 @@ function _mirrorHannahPhoto() {
 // Initialise on load — no stale defaults
 document.addEventListener('DOMContentLoaded', () => {
   // Set trial day immediately on load from calculation
-  const _trialDayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-10').getTime()) / 86400000) + 1));
+  const _trialDayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
   ['dm-trial-day','cv-trial','cv-trial2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = _trialDayNow + ' / 30';
