@@ -5551,7 +5551,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Flow: user types → AI responds via hannah-proxy → ElevenLabs
 //       converts AI response to PCM16 → Simli speaks it
 // ══════════════════════════════════════════════════════════════════
-const HANNAH_PROXY = '';
+const HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com';
 const _SIMLI_KEY   = 'rwq4j9njja9lg0q9d45b9';
 const _SIMLI_FACE  = 'cace3ef7-a4c4-425d-a8cf-a5358eb0c427';
 const _EL_KEY      = 'sk_ff8bfc6a100041f7f1a8deecd344751943573cc708f37b22';
@@ -5871,7 +5871,7 @@ async function hannahSend() {
 
 
   try {
-    // ─── Step 1: Get AI response from Hannah proxy ─────────────────
+    // ─── Step 1: Get AI response from Frankfurt proxy ──────────────
     _hStatus('Thinking…');
     const res = await fetch(HANNAH_PROXY + '/api/chat-dual', {
       method: 'POST',
@@ -5884,6 +5884,7 @@ async function hannahSend() {
     });
     const data = await res.json();
     const answer = data.answer || data.text || "I'm not sure — try again.";
+
 
     // Remove thinking, show answer in transcript
     if (thinking && thinking.parentNode) thinking.remove();
@@ -6518,14 +6519,51 @@ function d2Activate() {
 
 async function d2Send() {
   const inp = document.getElementById('d2-input');
-  if (!inp || !inp.value.trim() || !_hannahConn) return;
+  if (!inp || !inp.value.trim()) return;
   const text = inp.value.trim(); inp.value = '';
   _d2Append('user', text);
-  const cv16inp = document.getElementById('cv16-input');
-  if (cv16inp) {
-    cv16inp.value = text;
-    hannahSend();
-    _watchForHannahReply('d2');
+
+  // Route through cv16 if Hannah is connected (gets voice too)
+  if (_hannahConn) {
+    const cv16inp = document.getElementById('cv16-input');
+    if (cv16inp) {
+      cv16inp.value = text;
+      hannahSend();
+      _watchForHannahReply('d2');
+      return;
+    }
+  }
+
+  // Direct Anthropic call — works even without Hannah activation
+  const thinking = _d2Append('thinking', '⚡ Thinking…');
+  try {
+    const sig  = window._marketSignals || {};
+    const totalCap = document.getElementById('header-total')?.textContent || '?';
+    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+    const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
+    const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} locked=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
+    const pCtx = `Capital: ${totalCap} | F&G: ${sig.fearGreed?.value ?? '?'} ${sig.fearGreed?.label ?? ''} | Regime: ${sig.regime ?? '?'} | Trial Day: ${trialDay}/30 | Locked: ${lockedEl} | Active bots: ${tcBotLines || 'loading'}`;
+
+    const res = await fetch(HANNAH_PROXY + '/api/chat-dual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: _hannahHistory.slice(-6),
+        portfolioContext: pCtx,
+      }),
+    });
+    const data = await res.json();
+    const answer = data.answer || data.text || "Connection issue — try again.";
+    if (thinking && thinking.parentNode) thinking.remove();
+    _d2Append('hannah', answer);
+    _hannahHistory.push({ role: 'user', content: text });
+    _hannahHistory.push({ role: 'assistant', content: answer });
+    if (_hannahHistory.length > 12) _hannahHistory = _hannahHistory.slice(-12);
+  } catch(err) {
+    if (thinking && thinking.parentNode) thinking.remove();
+    _d2Append('hannah', 'Connection issue — try again.');
+    console.error('d2Send error:', err);
   }
 }
 
