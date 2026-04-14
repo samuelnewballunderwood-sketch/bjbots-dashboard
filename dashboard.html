@@ -988,7 +988,7 @@ body::after {
 /* Hannah orbital wrap */
 .dash-hannah-wrap {
   position:relative;
-  width:340px; height:340px; flex-shrink:0;
+  width:440px; height:440px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
 }
 .dash-orbital-ring {
@@ -997,16 +997,16 @@ body::after {
   pointer-events:none;
 }
 .dash-orbital-ring.r1 {
-  width:308px; height:82px; margin-left:-154px; margin-top:-41px;
+  width:400px; height:106px; margin-left:-200px; margin-top:-53px;
   border-color:rgba(45,212,191,.28);
   animation:ring-spin 22s linear infinite;
 }
 .dash-orbital-ring.r2 {
-  width:252px; height:66px; margin-left:-126px; margin-top:-33px;
+  width:328px; height:86px; margin-left:-164px; margin-top:-43px;
   animation:ring-spin 32s linear infinite reverse;
 }
 .dash-orbital-ring.r3 {
-  width:196px; height:52px; margin-left:-98px; margin-top:-26px;
+  width:256px; height:68px; margin-left:-128px; margin-top:-34px;
   border-color:rgba(45,212,191,.10);
   animation:ring-spin 44s linear infinite;
 }
@@ -1043,27 +1043,27 @@ body::after {
 /* Metric cards around Hannah */
 .dash-metric-card {
   position:absolute;
-  width:115px; z-index:8;
+  width:122px; z-index:8;
   background:rgba(14,16,26,.94); border:1px solid var(--border-dim);
-  border-radius:var(--radius-md); padding:9px 11px; text-align:center;
+  border-radius:var(--radius-md); padding:10px 12px; text-align:center;
   backdrop-filter:blur(8px);
 }
 .dash-metric-card::after {
   content:''; position:absolute; width:5px; height:5px; border-radius:50%;
   background:rgba(45,212,191,.45); box-shadow:0 0 6px rgba(45,212,191,.35);
 }
-/* Positions */
-.dm1 { top:28px; left:18px; }
+/* Positions — 6-card radial layout, clear of Hannah portrait */
+.dm1 { top:14px;  left:30px;  }   /* top-left    — Daily Profit */
 .dm1::after { right:-3px; top:50%; margin-top:-2px; }
-.dm2 { top:28px; right:18px; }
+.dm2 { top:14px;  right:30px; }   /* top-right   — Capital */
 .dm2::after { left:-3px; top:50%; margin-top:-2px; }
-.dm3 { top:168px; left:4px; }
+.dm3 { top:50%;   left:0px;   transform:translateY(-50%); } /* mid-left — Trial Day */
 .dm3::after { right:-3px; top:50%; margin-top:-2px; }
-.dm4 { top:168px; right:4px; }
+.dm4 { top:50%;   right:0px;  transform:translateY(-50%); } /* mid-right — Target */
 .dm4::after { left:-3px; top:50%; margin-top:-2px; }
-.dm5 { bottom:68px; left:18px; }
+.dm5 { bottom:14px; left:30px;  }  /* bot-left   — Stretch */
 .dm5::after { right:-3px; top:50%; margin-top:-2px; }
-.dm6 { bottom:68px; right:18px; }
+.dm6 { bottom:14px; right:30px; }  /* bot-right  — Progress */
 .dm6::after { left:-3px; top:50%; margin-top:-2px; }
 
 .dm-lbl { font-size:7.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:3px; font-family:var(--font-body); white-space:nowrap; }
@@ -4855,7 +4855,7 @@ function renderTcBotCard(b) {
     + '</div></div>'
     + '<div class="bot-tags">'
     + '<span class="tag tag-' + strat + '">' + strat.toUpperCase() + '</span>'
-    + '<span class="tag tag-' + (b.marketType||'spot') + '">' + (b.marketType||'SPOT').toUpperCase() + '</span>'
+    + '<span class="tag tag-' + (strat === 'dca' && !(b.pair||'').includes('260925') && b.marketType !== 'futures' ? 'spot' : (b.marketType||'spot')) + '">' + (strat === 'dca' && !(b.pair||'').includes('260925') && b.marketType !== 'futures' ? 'SPOT' : (b.marketType||'SPOT').toUpperCase()) + '</span>'
     + '<span class="tag tag-' + dir + '">' + dir.toUpperCase() + '</span>'
     + '<span class="tag tag-3commas">3Commas</span>'
     + '</div>'
@@ -5226,6 +5226,13 @@ async function loadMarketPairs() {
     if (!grid) return;
 
     const pairs = Object.values(pairMap)
+      .filter(({ sym, key, bots, capital }) => {
+        // Skip dead futures quarterly contracts (260925) and perp-only with no data
+        if (sym.includes('260925') || sym.includes('PERP')) return false;
+        // Skip pairs with zero capital, no bots, and no live price data
+        if (capital === 0 && bots.length === 0 && !changes[key]) return false;
+        return true;
+      })
       .sort((a,b) => (b.capital - a.capital) || a.sym.localeCompare(b.sym));
 
     grid.style.gridTemplateColumns = `repeat(${Math.min(pairs.length, 6)}, 1fr)`;
@@ -5931,6 +5938,9 @@ function _updateCtrlCards(data) {
   const cv = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   cv('cv-daily',   actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   cv('cv-capital', fmtUSD(gt));
+  cv('cv-trial',   trialDay + ' / 30');
+  cv('cv-target',  '$' + (gt * 0.06).toFixed(0));
+  cv('cv-stretch', neededDaily > 0 ? '$' + neededDaily.toFixed(0) + '/d' : '✓');
   cv('cv-progress', (rPnl >= 0 ? '+' : '') + ((rPnl / gt) * 100).toFixed(2) + '%');
   cv('cv-locked',  fmtPnl(rPnl));
   cv('cv-roi',     '+' + (actualDailyPct * 30).toFixed(1) + '%');
@@ -6174,6 +6184,17 @@ function _updateCtrlCards(data) {
 (function() {
   const orig = window.renderControl;
   window.renderControl = function(data) {
+    // Seed F&G header immediately from decisions market payload
+    if (data.market?.fearGreed != null) {
+      const fgV = data.market.fearGreed;
+      const fgR3 = document.getElementById('r3-fg');
+      if (fgR3) {
+        fgR3.textContent = 'F&G ' + fgV;
+        fgR3.style.color = fgV <= 25 ? '#f87171' : fgV <= 45 ? '#fbbf24' : fgV >= 75 ? '#4ade80' : 'var(--teal)';
+      }
+      const fgLabel = fgV <= 25 ? 'Extreme Fear' : fgV <= 45 ? 'Fear' : fgV <= 55 ? 'Neutral' : fgV <= 75 ? 'Greed' : 'Extreme Greed';
+      setEl('r3-regime', data.market?.regime || '—');
+    }
     window._lastCtrlData = data;
     if (orig) orig.call(this, data);
     _updateCtrlCards(data);
@@ -6640,11 +6661,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   setTimeout(_mirrorHannahPhoto, 500);
 });
-
-</script>
-
-</body>
-</html>
 
 </script>
 
