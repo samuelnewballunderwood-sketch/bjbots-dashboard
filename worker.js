@@ -392,15 +392,19 @@ function computeTargetState({ regime, volatility, riskState, fearGreed }) {
   const adjustments = [];
 
   // ── Quantum Rules regime override — takes precedence over everything ──
-  // R2: F&G < 30 = EXTREME_FEAR/FEAR regime = 0% directional longs
+  // R2: F&G < 30 = EXTREME_FEAR/FEAR regime
+  // NOTE: "no new directional longs" — existing grids/DCA deals run to completion
+  // Target is to reduce NEW allocation to longs, not close existing positions
   const fg = fearGreed ?? 50;
   if (fg < 30) {
-    // BEAR/EXTREME FEAR: no long exposure permitted (R2 active)
-    base.longPct  = 0;
-    base.shortPct = 40;
-    base.gridPct  = 50; // neutral grids OK
-    base.dcaPct   = 0;  // no DCA longs
-    adjustments.push('R2 ACTIVE (F&G=' + fg + '): long=0%, hedge=40%, grids=50%, DCA=0%');
+    // R2 ACTIVE: no new long entries, light hedge, grids OK (neutral)
+    // We set long=40 because existing grid capital IS deployed long — it shouldn't be zeroed
+    // The action centre should say "don't add new longs" not "close everything"
+    base.longPct  = 40;  // existing grids are acceptable, no new DCA longs
+    base.shortPct = 15;  // light hedge — 15% is realistic, 40% would mean closing all grids
+    base.gridPct  = 50;  // neutral grids OK — they profit in ranging markets
+    base.dcaPct   = 0;   // no new DCA long entries
+    adjustments.push('R2 ACTIVE (F&G=' + fg + '): no new DCA longs, light hedge 15%, grids OK');
     return { targets: base, adjustments, basedOn: { regime, volatility, riskState, fearGreed: fg } };
   } else if (fg < 50) {
     // FEAR: reduced longs, elevated shorts
@@ -1020,6 +1024,36 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }));
   }
 
+  // ── DCA bot at max safety orders — critical alert ───────────────
+  // When a DCA bot has consumed all safety orders, it can't average down further
+  // and is fully exposed to the current price. This needs immediate visibility.
+  const DCA_MAX_SO = { 16806276: 5, 16807404: 5, 16808289: 5, 16806296: 5, 16808275: 3 };
+  const maxSoBots = tcBots.filter(b => {
+    const maxSO = DCA_MAX_SO[b.id];
+    return maxSO && b.activeDeals >= 1 && b.completedDeals >= maxSO;
+  });
+  // Also check by comparing activeDeals to a threshold — any DCA with open deal and high deal count
+  const deepDcaBots = tcBots.filter(b =>
+    b.strategy === 'dca' && b.activeDeals >= 1 && b.active === false
+  );
+  const atRiskBots = [...new Map([...maxSoBots, ...deepDcaBots].map(b => [b.id, b])).values()];
+  if (atRiskBots.length > 0) {
+    atRiskBots.forEach(b => {
+      const capAtRisk = b.capital || 0;
+      required.push(makeDecision({
+        actionType: 'monitor', category: 'required',
+        text: b.name + ' at max safety orders — deal open, bot stopped',
+        reason: b.name + ' has consumed all safety orders with an open deal. Bot is stopped. Deal will run to take-profit or manual close. No further averaging possible.',
+        amount: capAtRisk, amountPct: totalAllocated ? Math.round((capAtRisk / totalAllocated) * 100) : 0,
+        targetBotIds: [b.id],
+        urgency: 'critical', timeframe: 'immediate',
+        expectedImpact: 'Monitor until TP hit or consider manual close if loss deepens',
+        costOfInaction: 'Position continues to float — no further downside protection available',
+        objective: 'dca_depth', confidence: 95,
+      }));
+    });
+  }
+
   // Idle signal bots
   const signalBotIds = [194116, 194115];
   const signalIdle   = tcBots.filter(b => signalBotIds.includes(b.id) && b.completedDeals===0 && b.activeDeals===0);
@@ -1038,19 +1072,19 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }));
   }
 
-  // Extreme long bias (critical threshold)
-  if (longPct > 85) {
+  // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
+  if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
     const gap      = Math.max(0, hedgeCap - portfolio.shortCapital);
     required.push(makeDecision({
       actionType:'increase', category:'required',
-      text:'Increase hedge by $' + gap + ' — portfolio ' + longPct + '% long (critical)',
-      reason:'Extreme long bias. Target hedge: ' + targets.shortPct + '% ($' + hedgeCap + '). Current: $' + portfolio.shortCapital + '.',
+      text:'Consider light hedge — portfolio ' + longPct + '% long with F&G ' + (market.fearGreed ?? '?'),
+      reason:'Portfolio is ' + longPct + '% long in Extreme Fear conditions. A light hedge of ' + targets.shortPct + '% ($' + hedgeCap + ') would reduce downside. Current hedge: $' + portfolio.shortCapital + '. Note: existing grids and DCA deals should NOT be closed — this refers to adding new hedge positions only.',
       amount:gap, amountPct:Math.round((gap/totalAllocated)*100), targetBotIds:[16801248],
-      urgency:'critical', timeframe:'immediate',
-      expectedImpact:'Reduces catastrophic downside exposure',
-      costOfInaction:inactionCost(gap,'critical'),
-      objective:'hedge_exposure', confidence:90,
+      urgency:'high', timeframe:'4h',
+      expectedImpact:'Reduces downside exposure by ~' + targets.shortPct + '% if market drops',
+      costOfInaction:inactionCost(gap,'high'),
+      objective:'hedge_exposure', confidence:75,
     }));
   }
 
