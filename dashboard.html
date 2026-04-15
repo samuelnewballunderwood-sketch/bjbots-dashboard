@@ -2628,13 +2628,13 @@ body::after {
         <div class="d2-chat-msgs" id="d2-chat-msgs">
           <div class="d2-msg hannah">I'm monitoring your portfolio in real time. I'll flag required actions, explain what the system is seeing, and answer any questions.</div>
         </div>
-        <div class="d2-chat-input-row" id="d2-input-row" style="display:none">
+        <div class="d2-chat-input-row" id="d2-input-row">
           <input class="d2-input" id="d2-input" placeholder="Ask Hannah anything…" onkeydown="if(event.key==='Enter')d2Send()" />
           <button class="d2-send-btn" onclick="d2Send()">▶</button>
         </div>
-        <div class="d2-activate-state" id="d2-activate-state">
-          <button class="d2-activate-btn" onclick="d2Activate()">⚡ ACTIVATE HANNAH</button>
-          <div class="d2-activate-sub">Connect AI · ElevenLabs voice · Simli avatar</div>
+        <div class="d2-activate-state" id="d2-activate-state" style="margin-top:6px;">
+          <button class="d2-activate-btn" onclick="d2Activate()">⚡ ACTIVATE VOICE + AVATAR</button>
+          <div class="d2-activate-sub">Enable ElevenLabs voice · Simli avatar · Full AI mode</div>
         </div>
       </div>
     </div>
@@ -5432,6 +5432,9 @@ function checkPw() {
     requestAnimationFrame(() => { setTimeout(_mirrorHannahPhoto, 200); });
     // Auto-activate Hannah — no button press needed
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 1500);
+    // Retry if Simli didn't connect first time
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 8000);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 20000);
     // Pre-warm hannah proxy
     fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
   } else {
@@ -5487,6 +5490,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory();
     // Auto-activate Hannah on session restore
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
+    // Retry if Simli didn't connect first time
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 9000);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 22000);
     // Pre-warm hannah proxy
     fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
   }
@@ -5803,10 +5809,9 @@ async function hannahSend() {
   if (!text) return;
   if (input) input.value = '';
 
-  if (!_hannahConn) {
-    _hStatus('Not connected — click Activate first');
-    _hAppend('hannah', '⚡ Please activate Hannah first before speaking.');
-    return;
+  // If Simli not yet connected, trigger activation silently in background (don't block)
+  if (!_hannahConn && !_hannahBusy) {
+    hannahActivate().catch(() => {});
   }
 
   _hannahBusy = true;
@@ -5895,8 +5900,10 @@ async function hannahSend() {
     _hannahHistory.push({ role: 'assistant', content: answer });
     if (_hannahHistory.length > 12) _hannahHistory = _hannahHistory.slice(-12);
 
-    // ─── Step 2: Speak the AI answer via ElevenLabs + Simli ────────
-    await _speakText(answer);
+    // ─── Step 2: Speak the AI answer via ElevenLabs + Simli (if connected) ─
+    if (_hannahConn && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+      await _speakText(answer);
+    }
 
   } catch(err) {
     if (thinking && thinking.parentNode) thinking.remove();
