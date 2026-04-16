@@ -5676,7 +5676,15 @@ async function hannahActivate() {
           acFrame.appendChild(v2);
         }
       } else if (evt.track.kind === 'audio') {
-        const a = new Audio(); a.srcObject = new MediaStream([evt.track]); a.play().catch(()=>{});
+        const a = new Audio();
+        a.srcObject = new MediaStream([evt.track]);
+        // Store reference so we can call play() from a user gesture context
+        window._simliAudio = a;
+        // Try playing immediately (works if user already interacted)
+        a.play().catch(() => {
+          // Autoplay blocked — will be unblocked on next user interaction
+          console.warn('Simli audio autoplay blocked — will play on next interaction');
+        });
       }
     };
 
@@ -5812,6 +5820,11 @@ async function hannahSend() {
   // If Simli not yet connected, trigger activation silently in background (don't block)
   if (!_hannahConn && !_hannahBusy) {
     hannahActivate().catch(() => {});
+  }
+
+  // Unlock audio context on user gesture
+  if (window._simliAudio && window._simliAudio.paused) {
+    window._simliAudio.play().catch(() => {});
   }
 
   _hannahBusy = true;
@@ -6476,6 +6489,10 @@ function _d2Append(role, text) {
 }
 
 function d2Activate() {
+  // Unlock audio context immediately on click — user gesture required for autoplay
+  if (window._simliAudio && window._simliAudio.paused) {
+    window._simliAudio.play().catch(() => {});
+  }
   const state = document.getElementById('d2-activate-state');
   if (state) state.innerHTML = '<div style="font-size:12px;color:var(--teal)">⚡ Connecting…</div>';
   hannahActivate().then(() => {
@@ -6528,28 +6545,31 @@ async function d2Send() {
   const inp = document.getElementById('d2-input');
   if (!inp || !inp.value.trim()) return;
   const text = inp.value.trim(); inp.value = '';
-  _d2Append('user', text);
 
-  // Route through cv16 if Hannah is connected (gets voice too)
-  if (_hannahConn) {
-    const cv16inp = document.getElementById('cv16-input');
-    if (cv16inp) {
-      cv16inp.value = text;
-      hannahSend();
-      _watchForHannahReply('d2');
-      return;
-    }
+  // Unlock audio context on every user gesture — fixes browser autoplay block
+  if (window._simliAudio && window._simliAudio.paused) {
+    window._simliAudio.play().catch(() => {});
+  }
+  // Also unlock Web Audio context if suspended
+  if (window._audioCtx && window._audioCtx.state === 'suspended') {
+    window._audioCtx.resume().catch(() => {});
   }
 
-  // Direct Anthropic call — works even without Hannah activation
+  _d2Append('user', text);
+
+  // Always use direct proxy for text reply — routing through hannahSend
+  // loses the reply in cv16-transcript which d2 chat can't read
   const thinking = _d2Append('thinking', '⚡ Thinking…');
   try {
     const sig  = window._marketSignals || {};
+    const ctrl = window._lastCtrlData;
     const totalCap = document.getElementById('header-total')?.textContent || '?';
     const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
     const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
-    const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} locked=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
-    const pCtx = `Capital: ${totalCap} | F&G: ${sig.fearGreed?.value ?? '?'} ${sig.fearGreed?.label ?? ''} | Regime: ${sig.regime ?? '?'} | Trial Day: ${trialDay}/30 | Locked: ${lockedEl} | Active bots: ${tcBotLines || 'loading'}`;
+    const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} profit=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
+    const fg = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? '?';
+    const regime = ctrl?.market?.regime ?? sig?.regime ?? '?';
+    const pCtx = `Capital: ${totalCap} | F&G: ${fg} | Regime: ${regime} | Trial Day: ${trialDay}/30 | Locked: ${lockedEl} | Active bots: ${tcBotLines || 'loading'}`;
 
     const res = await fetch(HANNAH_PROXY + '/api/chat-dual', {
       method: 'POST',
@@ -6567,6 +6587,11 @@ async function d2Send() {
     _hannahHistory.push({ role: 'user', content: text });
     _hannahHistory.push({ role: 'assistant', content: answer });
     if (_hannahHistory.length > 12) _hannahHistory = _hannahHistory.slice(-12);
+
+    // If Simli is connected, also speak the answer
+    if (_hannahConn && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+      _speakText(answer).catch(() => {});
+    }
   } catch(err) {
     if (thinking && thinking.parentNode) thinking.remove();
     _d2Append('hannah', 'Connection issue — try again.');
