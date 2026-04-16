@@ -5567,6 +5567,22 @@ let _simliWs        = null;
 let _simliPc        = null;
 let _hannahConn     = false;
 let _hannahBusy     = false;
+let _speakReader    = null; // current ElevenLabs stream reader — cancel to interrupt
+
+// Interrupt Hannah mid-speech and reset for next message
+function _interruptHannah() {
+  if (_speakReader) {
+    try { _speakReader.cancel(); } catch(e) {}
+    _speakReader = null;
+  }
+  // Send silence to Simli to stop lip movement
+  if (_simliWs && _simliWs.readyState === WebSocket.OPEN) {
+    try { _simliWs.send(new Uint8Array(3200).buffer); } catch(e) {}
+  }
+  _hannahBusy = false;
+  _hTalking(false);
+  _hStatus('Connected · ask me anything');
+}
 let _hannahHistory  = [];
 let _hannahOpen     = false; // for old floating panel compat
 
@@ -5775,12 +5791,15 @@ async function _speakText(text) {
 
     const CHUNK = 6000;
     const reader = elRes.body.getReader();
+    _speakReader = reader; // store so _interruptHannah can cancel it
     let buf = new Uint8Array(0);
     let totalBytes = 0;
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+      // Check if we were interrupted
+      if (_speakReader !== reader) break;
       const merged = new Uint8Array(buf.length + value.length);
       merged.set(buf); merged.set(value, buf.length);
       buf = merged; totalBytes += value.length;
@@ -5790,11 +5809,12 @@ async function _speakText(text) {
         buf = buf.slice(CHUNK);
       }
     }
-    // Flush remainder
-    if (buf.length > 0 && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+    // Flush remainder (only if not interrupted)
+    if (_speakReader === reader && buf.length > 0 && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
       const pad = new Uint8Array(CHUNK); pad.set(buf);
       _simliWs.send(pad.buffer);
     }
+    _speakReader = null;
     // Deactivate talking ring after estimated duration
     const dur = (totalBytes / 32000) * 1000 + 500;
     setTimeout(() => { _hTalking(false); _hStatus('Connected · ask me anything'); }, dur);
@@ -5826,6 +5846,9 @@ async function hannahSend() {
   if (window._simliAudio && window._simliAudio.paused) {
     window._simliAudio.play().catch(() => {});
   }
+
+  // Interrupt if Hannah is mid-speech — stop and answer new question immediately
+  if (_hannahBusy) _interruptHannah();
 
   _hannahBusy = true;
   _hAppend('user', text);
@@ -6554,6 +6577,9 @@ async function d2Send() {
   if (window._audioCtx && window._audioCtx.state === 'suspended') {
     window._audioCtx.resume().catch(() => {});
   }
+
+  // Interrupt if Hannah is currently speaking — stop and answer new question
+  if (_hannahBusy) _interruptHannah();
 
   _d2Append('user', text);
 
