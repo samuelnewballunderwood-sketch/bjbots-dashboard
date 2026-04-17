@@ -4627,7 +4627,7 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   }
 
   // Trial progress
-  const trialStart   = new Date('2026-04-11');
+  const trialStart   = new Date('2026-04-12');
   const dayNum       = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
   const target6pct   = grandTotal * 0.06;
   const pctOfTarget  = target6pct > 0 ? Math.min(100, (totalLocked / target6pct) * 100) : 0;
@@ -5872,7 +5872,7 @@ async function hannahSend() {
   const upnlEl   = document.getElementById('ctx-upnl')?.textContent || '?';
 
   // Trial
-  const trialStart = new Date('2026-04-11');
+  const trialStart = new Date('2026-04-12');
   const dayNum = Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1;
   const lockedEl = document.getElementById('d2-locked-num')?.textContent || document.getElementById('dash-locked')?.textContent || '?';
 
@@ -5970,7 +5970,7 @@ function _updateCtrlCards(data) {
   if (!gt) return;
 
   // ── Real daily rate: locked profit / days elapsed ──────────────────────
-  const trialStart = new Date('2026-04-11');
+  const trialStart = new Date('2026-04-12');
   const trialDay   = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
   const daysElapsed = Math.max(1, trialDay - 1); // days of actual trading
   const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
@@ -6540,7 +6540,7 @@ function d2Activate() {
 
     const lockedEl = document.getElementById('dm-locked');
     const locked   = lockedEl?.textContent || '—';
-    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
 
     let openMsg = 'Day ' + trialDay + '/30. ';
     if (fg != null) {
@@ -6590,7 +6590,7 @@ async function d2Send() {
     const sig  = window._marketSignals || {};
     const ctrl = window._lastCtrlData;
     const totalCap = document.getElementById('header-total')?.textContent || '?';
-    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
     const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
     const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} profit=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
     const fg = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? '?';
@@ -6646,7 +6646,7 @@ function ac2Activate() {
     const _sig2 = window._marketSignals;
     const _fg2 = _sig2?.fearGreed?.value ?? null;
     const _r2 = _fg2 != null && _fg2 < 30;
-    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
     let _acMsg = 'Day ' + _day2 + '/30 · ';
     _acMsg += _r2 ? 'R2 ACTIVE (F&G ' + _fg2 + ') — short grids running, longs blocked. ' : 'F&G ' + (_fg2 ?? '—') + '. ';
     _acMsg += 'Ask me about pending actions, bot performance, or capital allocation.';
@@ -6760,7 +6760,7 @@ function _mirrorHannahPhoto() {
 // Initialise on load — no stale defaults
 document.addEventListener('DOMContentLoaded', () => {
   // Set trial day immediately on load from calculation
-  const _trialDayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-11').getTime()) / 86400000) + 1));
+  const _trialDayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
   ['dm-trial-day','cv-trial','cv-trial2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = _trialDayNow + ' / 30';

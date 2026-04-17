@@ -161,75 +161,13 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
     });
   });
 
-  // Binance native: derive from locked spot assets + futures margin
-  // Each bot owns the locked portion of its trading pair
-  const SYMBOL_TO_BOT = {
-    'ETHUSDT': 'eth-grid-trades',
-    'BTCUSDT': 'btc-dca-trades',
-    'BNBUSDT': 'bnb-grid-trades',
-    'SOLUSDT': 'sol-grid-trades',
-    'XRPUSDT': 'xrp-grid-trades',
-  };
-  // For Binance native bots, use actual locked wallet balances as source of truth
-  // Per-bot capital is estimated from which asset each bot trades
-  // Total bnCapital = spotLocked (what wallets actually show in bot orders)
-  const ASSET_TO_BOT = {
-    'BTC': 'btc-dca-trades',
-    'ETH': 'eth-grid-trades',
-    'SOL': 'sol-grid-trades',
-    'XRP': 'xrp-grid-trades',
-    'BNB': 'bnb-grid-trades',
-  };
-  // Map locked assets to their bots
-  const assetToBotCapital = {};
-  spot.breakdown.forEach(a => {
-    if (a.lockedUsd > 0 && ASSET_TO_BOT[a.asset]) {
-      assetToBotCapital[ASSET_TO_BOT[a.asset]] = a.lockedUsd;
-    }
-  });
-  // Also assign locked USDT proportionally to bots that trade USDT pairs
-  // USDT locked ($433) is split across grid bot USDT order reserves
-  const lockedUSDT = spot.breakdown.find(a => a.asset === 'USDT');
-  const lockedUsdtVal = lockedUSDT ? lockedUSDT.lockedUsd : 0;
-
-  let bnCapital = 0;
+  // ── 4b. BINANCE NATIVE BOTS ──────────────────────────────────────
+  // Binance native bots have been fully migrated to 3Commas.
+  // All locked wallet assets (BTC/ETH/SOL/XRP/USDT) belong to 3Commas grid bots.
+  // Do NOT create phantom Binance native bot entries — that causes double-counting.
+  const bnCapital     = 0;
   const bnBotBreakdown = [];
-  (bnBots || []).forEach(b => {
-    const meta = BOT_META[b.id];
-    if (!meta) return;
-    let capital = 0;
-    let capitalSource = 'estimated';
-    if (meta.marketType === 'futures') {
-      // Futures grid — can't split from pooled margin, use proportion of futures wallet
-      // ETHUSDT futures grid is the only futures native bot
-      capital = futuresTotal * 0.60; // ~60% of futures is this bot (best estimate)
-      capitalSource = 'futures-estimate';
-    } else {
-      // Use actual locked balance for this bot's base asset
-      const liveCap = assetToBotCapital[b.id];
-      if (liveCap !== undefined) {
-        capital = liveCap;
-        capitalSource = 'live-locked';
-      } else {
-        // No locked balance — bot may be idle or USDT-only
-        // Use a portion of locked USDT if bot has trades
-        capital = b.trades > 0 ? Math.min(meta.capital, lockedUsdtVal * 0.3) : 0;
-        capitalSource = 'usdt-estimate';
-      }
-    }
-    const roi = meta.roi || 0;
-    const realised  = Math.round((roi / 100) * (meta.capital || capital) * 100) / 100;
-    const floating  = 0;
-    const trueValue = capital + realised;
-    bnCapital += capital;
-    bnBotBreakdown.push({
-      id: b.id, name: meta.name,
-      capital, capitalSource, realised, floating, trueValue,
-      strategy: meta.strategy,
-      direction: meta.direction,
-      trades: b.trades,
-    });
-  });
+  const bnRealised    = 0;
   // Override bnCapital with actual spot locked total for reconciliation accuracy
   // This is what Binance actually shows as "in bots" — the per-bot split is estimated
   const bnCapitalTrue = spotLocked; // source of truth from wallet
@@ -258,9 +196,8 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
   // ── 7. PNL BREAKDOWN ──────────────────────────────────────────
   // Realised: from completed trades (3Commas profit + Binance grid profit)
   // Floating: open position PnL (futures unrealized + 3Commas open deals)
-  const bnRealised     = bnBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
   const tcRealised     = tcBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
-  const totalRealised  = Math.round((bnRealised + tcRealised) * 100) / 100;
+  const totalRealised  = Math.round(tcRealised * 100) / 100;
   const tcFloating     = tcBotBreakdown.reduce((s, b) => s + (b.floating || 0), 0);
   const totalFloating  = Math.round((futuresUnrealized + tcFloating) * 100) / 100;
   const totalPnl       = Math.round((totalRealised + totalFloating) * 100) / 100;
