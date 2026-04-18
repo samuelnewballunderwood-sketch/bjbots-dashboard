@@ -5488,11 +5488,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(checkRegime, 30 * 60 * 1000);
     setInterval(loadMarketSignals, 60000); // F&G live every 60s
     renderHistory();
-    // Auto-activate Hannah on session restore
-    setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 2000);
+    // Auto-activate Hannah on session restore — cadence matches fresh-login path
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 1500);
     // Retry if Simli didn't connect first time
-    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 9000);
-    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 22000);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 8000);
+    setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 20000);
     // Pre-warm hannah proxy
     fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
   }
@@ -5558,10 +5558,17 @@ document.addEventListener('DOMContentLoaded', () => {
 //       converts AI response to PCM16 → Simli speaks it
 // ══════════════════════════════════════════════════════════════════
 const HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com';
-const _SIMLI_KEY   = 'rwq4j9njja9lg0q9d45b9';
-const _SIMLI_FACE  = 'cace3ef7-a4c4-425d-a8cf-a5358eb0c427';
-const _EL_KEY      = 'sk_ff8bfc6a100041f7f1a8deecd344751943573cc708f37b22';
-const _EL_VOICE    = 'FX7Ed0mBTbZ495AXR8ky';
+// Hannah keys (Simli + ElevenLabs) are fetched from the Frankfurt proxy's
+// /api/config endpoint on first use and held in memory only — never in page
+// source. Cached after first successful fetch; cleared on page refresh.
+let _hannahCfg = null;
+async function _loadHannahCfg() {
+  if (_hannahCfg) return _hannahCfg;
+  const r = await fetch(HANNAH_PROXY + '/api/config');
+  if (!r.ok) throw new Error('Hannah config fetch failed: HTTP ' + r.status);
+  _hannahCfg = await r.json();
+  return _hannahCfg;
+}
 
 let _simliWs        = null;
 let _simliPc        = null;
@@ -5641,11 +5648,14 @@ async function hannahActivate() {
   _hStatus('Requesting session…');
 
   try {
-    // 1. Session token
+    // Load Simli/ElevenLabs config from proxy (cached after first call)
+    const cfg = await _loadHannahCfg();
+
+    // 1. Session token — maxIdleTime 3600 so Hannah doesn't drop after 5 min silence
     const tokRes = await fetch('https://api.simli.ai/compose/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-simli-api-key': _SIMLI_KEY },
-      body: JSON.stringify({ faceId: _SIMLI_FACE, handleSilence: true, maxSessionLength: 3600, maxIdleTime: 300, audioInputFormat: 'pcm16' }),
+      headers: { 'Content-Type': 'application/json', 'x-simli-api-key': cfg.simliKey },
+      body: JSON.stringify({ faceId: cfg.simliFace, handleSilence: true, maxSessionLength: 3600, maxIdleTime: 3600, audioInputFormat: 'pcm16' }),
     });
     const tokData = await tokRes.json();
     const token = tokData.session_token || tokData.token;
@@ -5654,7 +5664,7 @@ async function hannahActivate() {
     // 2. ICE servers
     let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
     try {
-      const iceRes = await fetch('https://api.simli.ai/compose/ice', { headers: { 'x-simli-api-key': _SIMLI_KEY } });
+      const iceRes = await fetch('https://api.simli.ai/compose/ice', { headers: { 'x-simli-api-key': cfg.simliKey } });
       const iceData = await iceRes.json();
       if (Array.isArray(iceData) && iceData.length) iceServers = iceData;
       else if (iceData.iceServers) iceServers = iceData.iceServers;
@@ -5776,14 +5786,15 @@ function hannahDisconnect() {
 // ── SPEAK — pipe PCM16 to Simli ───────────────────────────────────
 async function _speakText(text) {
   if (!_hannahConn || !_simliWs || _simliWs.readyState !== WebSocket.OPEN) return;
+  const cfg = await _loadHannahCfg();
   _hTalking(true);
   _hStatus('Speaking…');
   try {
     const elRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${_EL_VOICE}/stream?output_format=pcm_16000`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${cfg.elevenVoice}/stream?output_format=pcm_16000`,
       {
         method: 'POST',
-        headers: { 'xi-api-key': _EL_KEY, 'Content-Type': 'application/json' },
+        headers: { 'xi-api-key': cfg.elevenKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, model_id: 'eleven_turbo_v2_5', voice_settings: { stability: 0.5, similarity_boost: 0.75 } }),
       }
     );
@@ -6664,39 +6675,60 @@ function ac2Activate() {
 
 async function ac2Send() {
   const inp = document.getElementById('ac2-input');
-  if (!inp || !inp.value.trim() || !_hannahConn) return;
+  if (!inp || !inp.value.trim()) return;
   const text = inp.value.trim(); inp.value = '';
-  _ac2Append('user', text);
-  const cv16inp = document.getElementById('cv16-input');
-  if (cv16inp) {
-    cv16inp.value = text;
-    hannahSend();
-    _watchForHannahReply('ac2');
-  }
-}
 
-// Watch cv16 chat list for Hannah's reply and mirror it
-let _watcherTarget = null;
-function _watchForHannahReply(target) {
-  _watcherTarget = target;
-  const chatList = document.getElementById('cv16-chat-list') || document.querySelector('.cv16-msgs');
-  if (!chatList) return;
-  const observer = new MutationObserver(() => {
-    const all = chatList.querySelectorAll('.cv16-msg.hannah, .cv16-msg.assistant, [data-role="hannah"]');
-    if (all.length) {
-      const last = all[all.length - 1];
-      const txt = last.textContent.trim();
-      if (txt && txt !== window._lastMirrored) {
-        window._lastMirrored = txt;
-        const short = txt.length > 500 ? txt.substring(0, 500) + '…' : txt;
-        if (_watcherTarget === 'd2') _d2Append('hannah', short);
-        else _ac2Append('hannah', short);
-        observer.disconnect();
-      }
+  // Unlock audio context on every user gesture — fixes browser autoplay block
+  if (window._simliAudio && window._simliAudio.paused) {
+    window._simliAudio.play().catch(() => {});
+  }
+  if (window._audioCtx && window._audioCtx.state === 'suspended') {
+    window._audioCtx.resume().catch(() => {});
+  }
+
+  // Interrupt if Hannah is currently speaking — stop and answer new question
+  if (_hannahBusy) _interruptHannah();
+
+  _ac2Append('user', text);
+  const thinking = _ac2Append('thinking', '⚡ Thinking…');
+
+  try {
+    const sig  = window._marketSignals || {};
+    const ctrl = window._lastCtrlData;
+    const totalCap = document.getElementById('header-total')?.textContent || '?';
+    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+    const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
+    const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} profit=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
+    const fg = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? '?';
+    const regime = ctrl?.market?.regime ?? sig?.regime ?? '?';
+    const pCtx = `Capital: ${totalCap} | F&G: ${fg} | Regime: ${regime} | Trial Day: ${trialDay}/30 | Locked: ${lockedEl} | Active bots: ${tcBotLines || 'loading'}`;
+
+    const res = await fetch(HANNAH_PROXY + '/api/chat-dual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: _hannahHistory.slice(-6),
+        portfolioContext: pCtx,
+      }),
+    });
+    const data = await res.json();
+    const answer = data.answer || data.text || "Connection issue — try again.";
+    if (thinking && thinking.parentNode) thinking.remove();
+    _ac2Append('hannah', answer);
+    _hannahHistory.push({ role: 'user', content: text });
+    _hannahHistory.push({ role: 'assistant', content: answer });
+    if (_hannahHistory.length > 12) _hannahHistory = _hannahHistory.slice(-12);
+
+    // If Simli is connected, also speak the answer
+    if (_hannahConn && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+      _speakText(answer).catch(() => {});
     }
-  });
-  observer.observe(chatList, { childList: true, subtree: true });
-  setTimeout(() => observer.disconnect(), 30000);
+  } catch(err) {
+    if (thinking && thinking.parentNode) thinking.remove();
+    _ac2Append('hannah', 'Connection issue — try again.');
+    console.error('ac2Send error:', err);
+  }
 }
 
 // Mirror Hannah connection state to all portraits
