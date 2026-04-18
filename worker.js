@@ -1296,11 +1296,12 @@ function buildLivePortfolio(tcBots, bnBots, recon) {
     bySy[sym] = (bySy[sym] || 0) + cap;
   });
 
-  // Binance native bots
-  const bnSource = bnBreakdown.length > 0 ? bnBreakdown : bnBots.map(b => {
-    const meta = BOT_META[b.id]; if (!meta) return null;
-    return { id: b.id, capital: meta.capital || 0, direction: meta.direction || 'long', strategy: meta.strategy || 'grid' };
-  }).filter(Boolean);
+  // Binance native bots have been fully migrated to 3Commas. buildReconciliation
+  // hardcodes bnBotBreakdown=[] — treat the reconciliation as the only truth here.
+  // Do NOT fall back to BOT_META.capital for the /binance-bots trade-count rows:
+  // those legacy capital values resurrect ghost capital (~$1,469) that inflates
+  // longPct past 100% and triggers phantom "reduce long exposure" actions.
+  const bnSource = bnBreakdown;
   bnSource.forEach(b => {
     const cap = b.capital || 0; if (cap <= 0) return;
     const meta = BOT_META[b.id];
