@@ -4070,7 +4070,7 @@ body::after {
 </main>
 
 <footer class="ac-footer">
-  AlphaControl · AI Capital Management · bjbots.ai · Advisory Mode — All actions require your approval
+  AlphaControl · AI Capital Management · alphacontrol.ai · Advisory Mode — All actions require your approval
 </footer>
 
 </div><!-- /app-shell -->
@@ -4212,7 +4212,7 @@ function closeModal()   { document.getElementById('modal-overlay').style.display
 function confirmModal() { if(_modalCallback) _modalCallback(); closeModal(); }
 
 // ── BOT_META (Binance native bot definitions) ─────────────────────────────
-let BOT_META_STORE = JSON.parse(localStorage.getItem('bjbots_meta')||'null') || {
+let BOT_META_STORE = JSON.parse(localStorage.getItem('alphacontrol_meta')||'null') || {
   'eth-grid-trades':     {name:'ETH/USDT Spot Grid',    symbol:'ETHUSDT', direction:'long', strategy:'grid', marketType:'spot',    maxAllocationPct:18},
   'btc-dca-trades':      {name:'BTC/USDT Spot DCA',     symbol:'BTCUSDT', direction:'long', strategy:'dca',  marketType:'spot',    maxAllocationPct:15},
   'bnb-grid-trades':     {name:'BNB/USDT Spot Grid',    symbol:'BNBUSDT', direction:'long', strategy:'grid', marketType:'spot',    maxAllocationPct:12},
@@ -4220,7 +4220,7 @@ let BOT_META_STORE = JSON.parse(localStorage.getItem('bjbots_meta')||'null') || 
   'xrp-grid-trades':     {name:'XRP/USDT Spot Grid',    symbol:'XRPUSDT', direction:'long', strategy:'grid', marketType:'spot',    maxAllocationPct:10},
   'ethusdt-perp-trades': {name:'ETHUSDT Futures Grid',  symbol:'ETHUSDT', direction:'long', strategy:'grid', marketType:'futures', maxAllocationPct:25},
 };
-function saveMeta() { localStorage.setItem('bjbots_meta', JSON.stringify(BOT_META_STORE)); }
+function saveMeta() { localStorage.setItem('alphacontrol_meta', JSON.stringify(BOT_META_STORE)); }
 
 // ── Action history ────────────────────────────────────────────────────────
 let actionHistory = JSON.parse(sessionStorage.getItem('ac_hist')||'[]');
@@ -5391,7 +5391,7 @@ function checkPw() {
   if (val === 'Underwood10') {
     document.getElementById('pw-overlay').classList.add('hidden');
     document.getElementById('app-shell').style.display  = 'block';
-    sessionStorage.setItem('bjbots_auth', '1');
+    sessionStorage.setItem('alphacontrol_auth', '1');
     showScreen('dashboard');
     // Hold scroll at top for 2s — beats async renders, Hannah activation, cold-start retries
     window.scrollTo(0, 0);
@@ -5457,7 +5457,7 @@ document.addEventListener('DOMContentLoaded', () => {
   oldKeys.forEach(k => { if(localStorage.getItem(k)) localStorage.removeItem(k); });
 
   // Auto-login
-  if (sessionStorage.getItem('bjbots_auth') === '1') {
+  if (sessionStorage.getItem('alphacontrol_auth') === '1') {
     document.getElementById('pw-overlay').classList.add('hidden');
     document.getElementById('app-shell').style.display  = 'block';
     showScreen('dashboard');
@@ -6413,7 +6413,7 @@ async function _sendRegimeEmail(d) {
         </div>
       </div>
       <p style="color:#9ba3c0;font-size:12px">Log in to AlphaControl to approve the action.<br>
-      <a href="https://bjbots.ai" style="color:#14d9c4">Open dashboard →</a></p>
+      <a href="https://alphacontrol.ai" style="color:#14d9c4">Open dashboard →</a></p>
       <p style="color:#4a5568;font-size:11px;margin-top:24px">AlphaControl · Advisory Mode · All actions require your approval</p>
     </div>`;
   try {

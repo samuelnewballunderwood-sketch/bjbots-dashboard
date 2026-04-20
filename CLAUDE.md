@@ -2,8 +2,8 @@
 
 ## What This Is
 AlphaControl is a live crypto capital management dashboard built by Strix Labs.
-- Live at: **bjbots.ai** (password: Underwood10)
-- Migrating to: **alphacontrol.ai** (domain purchased, not yet connected)
+- Live at: **alphacontrol.ai** (password: Underwood10)
+- Legacy domain **bjbots.ai** 301-redirects to alphacontrol.ai
 - Founders: Jp (product/vision) + Sam (engineering/deployment)
 - Purpose: Intelligence layer between 3Commas (execution) and CoinStats (tracking)
 - Pitch: Hub71/ADGM Abu Dhabi — 30-day live trial results are the centrepiece
@@ -13,8 +13,8 @@ AlphaControl is a live crypto capital management dashboard built by Strix Labs.
 ## Architecture — Three Files, Three Services
 
 ### 1. `worker.js` → Cloudflare Workers
-- Deployed via GitHub Actions (~30s deploy) from `samuelnewballunderwood-sketch/bjbots-dashboard`
-- Serves the dashboard at bjbots.ai
+- Deployed via GitHub Actions (~30s deploy) from `samuelnewballunderwood-sketch/bjbots-dashboard` (repo name kept; Worker name stays `bjbots-dashboard` in Cloudflare — alphacontrol.ai is a Custom Domain pointing at it)
+- Serves the dashboard at alphacontrol.ai (bjbots.ai 301-redirects)
 - Contains the decision engine (Quantum Rules, portfolio analysis, action alerts)
 - Built by `build.js` which bundles `worker.js` + `dashboard.html` together
 - Deploy: push to GitHub → Actions triggers → live in 30s
@@ -216,6 +216,7 @@ Browser autoplay blocks audio started outside user gesture. Fix: call `window._s
 ### Storage Keys
 - `sessionStorage`: `alphacontrol_auth` (login state)
 - `localStorage`: `alphacontrol_meta` (bot metadata cache)
+- Legacy `bjbots_auth` / `bjbots_meta` keys no longer read — clean cutover at the alphacontrol.ai migration.
 
 ---
 
@@ -240,11 +241,11 @@ Service: tc-proxy-eu (Frankfurt) on Render
 
 ---
 
-## Known Remaining Issues (as of April 17 2026)
+## Known Remaining Issues (as of April 20 2026)
 
-1. **alphacontrol.ai migration** — domain purchased but not in Cloudflare yet. Steps: add domain to Cloudflare → add as custom domain on Worker → update storage keys (`bjbots_auth` → `alphacontrol_auth`) → update Resend `from:` email → update server.js company description.
+1. **Grid capital for new grids** — when Sam creates new grids, add `botId: investmentAmount` to `KNOWN_GRID_CAPITAL` in server.js. Otherwise capital shows as fluctuating USDT-side only.
 
-2. **Grid capital for new grids** — when Sam creates new grids, add `botId: investmentAmount` to `KNOWN_GRID_CAPITAL` in server.js. Otherwise capital shows as fluctuating USDT-side only.
+2. **Hannah key rotation** — Simli + ElevenLabs keys now served from proxy `/api/config` (not page source) but server.js still ships fallback values. Set `SIMLI_API_KEY`, `SIMLI_FACE_ID`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` in Render env, rotate at simli.ai / elevenlabs.io, then delete fallbacks from server.js.
 
 3. **Multi-user architecture** — not built yet. Currently single-user (Jp's keys hardcoded). Estimated 2-3 week build for auth system, per-user API vault, onboarding wizard.
 
