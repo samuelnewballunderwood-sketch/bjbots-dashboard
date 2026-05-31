@@ -1104,12 +1104,14 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
       'BNB': 'USDT_BNB',
     };
     const balances = spotData?.balances || [];
-    // pricesData is a list like [{symbol:'BTCUSDT', price:'73656'}, ...]
+    // pricesData is an object like {BTCUSDT: 73656, ETHUSDT: 2005, BTC: 73656, ...}
     const priceMap = {};
-    (Array.isArray(pricesData) ? pricesData : []).forEach(p => {
-      const sym = (p.symbol || '').replace('USDT','').toUpperCase();
-      if (sym) priceMap[sym] = parseFloat(p.price || 0);
-    });
+    if (pricesData && typeof pricesData === 'object') {
+      for (const [k, v] of Object.entries(pricesData)) {
+        const sym = k.replace('USDT','').toUpperCase();
+        if (sym) priceMap[sym] = parseFloat(v || 0);
+      }
+    }
     for (const [asset, pair] of Object.entries(assetMap)) {
       const bal = balances.find(b => b.asset === asset);
       if (!bal) continue;
