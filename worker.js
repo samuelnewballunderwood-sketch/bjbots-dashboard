@@ -792,7 +792,7 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
         urgency:urg, timeframe:urg==='critical'?'immediate':'4h',
         expectedImpact:'Frees $' + amt + ' from underperforming allocation',
         costOfInaction:inactionCost(amt, urg),
-        objective:'bot_efficiency', confidence:Math.round(85-bot.score*0.3),
+        objective:'bot_efficiency', confidence:Math.round(85-bot.score*0.3), executable:true,
       }));
     });
 
@@ -811,7 +811,7 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
         urgency:'high', timeframe:'1h',
         expectedImpact:'Recovers $' + amt + ' of idle capital — redeploy to active strategies',
         costOfInaction:inactionCost(amt,'high', bot.capital),
-        objective:'idle_capital', confidence:80,
+        objective:'idle_capital', confidence:80, executable:true,
       }));
     });
 
@@ -830,7 +830,7 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
         amount:amt, amountPct:20, targetBotIds:[bot.id],
         urgency:'medium', timeframe:'4h',
         expectedImpact:'Improves portfolio capital efficiency ratio',
-        objective:'bot_efficiency', confidence:68,
+        objective:'bot_efficiency', confidence:68, executable:true,
       }));
     });
   }
