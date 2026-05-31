@@ -1047,7 +1047,7 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
         urgency:'high', timeframe:'24h',
         expectedImpact:'Adds ~$' + (proposedSize*0.001).toFixed(2) + '/day at 0.1% grid yield',
         costOfInaction:'$' + (proposedSize*0.001*30).toFixed(0) + ' missed earnings/month',
-        objective:'idle_capital_deploy', confidence:80, executable:false,
+        objective:'idle_capital_deploy', confidence:80, executable:true,
       }));
     }
   } catch(_) {}
