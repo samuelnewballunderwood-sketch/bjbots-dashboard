@@ -1039,8 +1039,9 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     // FREE USDT only — usdtBalance includes locked (orders/Earn) which can't be deployed
     const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
     const usdt = parseFloat(usdtBal?.free || 0);
-    const idleExcess = Math.max(0, usdt - 500);
-    if (idleExcess >= 500) {
+    const RESERVE = 100; // R8 reserve floor (was 150 — lowered to 100 for aggressive deployment)
+    const idleExcess = Math.max(0, usdt - RESERVE);
+    if (idleExcess >= 300) {
       const proposedSize = Math.min(2000, Math.round(idleExcess * 0.7));
       required.push(makeDecision({
         actionType:'deploy_grid', category:'required',
@@ -1158,6 +1159,32 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
         // Non-standard payload so autonomy knows which pair to build
         suggestedPair: pair, suggestedAsset: asset,
       }));
+    }
+  } catch(_) {}
+
+  // ─── R13 (NEW): Bear-regime hedge — short futures grid ───────────
+  // In Bear regime (F&G < 30) with available futures wallet, propose a
+  // short BTC futures grid. Defensive deployment matching regime.
+  try {
+    if (fg != null && fg < 30) {
+      const futAvail = parseFloat(futData?.availableBalance || 0);
+      const hasShortGrid = tcBots.find(b =>
+        b.botType === 'grid' && b.active && b.marketType === 'futures' && /Hannah/i.test(b.name||''));
+      if (futAvail >= 500 && !hasShortGrid) {
+        const proposedSize = Math.min(1500, Math.max(500, Math.round(futAvail * 0.30)));
+        suggested.push(makeDecision({
+          actionType:'deploy_grid', category:'required',
+          text:'Bear regime — propose short BTC futures hedge ($' + proposedSize + ')',
+          reason:'R13: F&G ' + fg + ' (Bear). Futures wallet $' + futAvail.toFixed(0) + ' available, no active Hannah futures hedge. Propose BTCUSDT short grid, ±8%, ' + proposedSize + ' USDT margin, 25 grids, 3x leverage.',
+          amount:proposedSize, amountPct: totalAllocated > 0 ? Math.round((proposedSize/totalAllocated)*100) : 0,
+          targetBotIds:[],
+          urgency:'medium', timeframe:'24h',
+          expectedImpact:'Captures volatility on downside + provides hedge against spot longs',
+          costOfInaction:'Spot exposure unhedged in Bear regime',
+          objective:'bear_hedge', confidence:70, executable:false, // advisory — futures bot creation is more complex
+          suggestedPair:'USDT_BTC_FUTURES', suggestedAsset:'BTC',
+        }));
+      }
     }
   } catch(_) {}
 
