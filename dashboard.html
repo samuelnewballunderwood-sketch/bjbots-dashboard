@@ -6836,7 +6836,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const _trialDayNow = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
   ['dm-trial-day','cv-trial','cv-trial2'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = _trialDayNow + ' / 30';
+    if (el) el.textContent = String(_trialDayNow);
   });
   ['cv-trial-sub','cv-trial2-sub'].forEach(id => {
     const el = document.getElementById(id);
