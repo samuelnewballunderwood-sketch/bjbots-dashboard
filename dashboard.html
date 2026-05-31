@@ -2635,7 +2635,14 @@ body::after {
       </div>
 
       <div class="d2-chat-panel" style="width:100%;margin-top:14px;">
-        <div class="d2-chat-msgs" id="d2-chat-msgs">
+        <div class="d2-chat-msgs" <div id="hannah-perf-bar" style="display:flex;gap:18px;padding:10px 16px;margin:8px 16px 0;background:rgba(45,212,191,.04);border:1px solid rgba(45,212,191,.18);border-radius:6px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);align-items:center;flex-wrap:wrap">
+  <div><span style="color:var(--text-dim);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase">HER GRIDS</span> <span id="hp-active" style="color:var(--teal);font-weight:700">—</span></div>
+  <div><span style="color:var(--text-dim);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase">DEPLOYED</span> <span id="hp-capital" style="color:var(--text-primary);font-weight:700">—</span></div>
+  <div><span style="color:var(--text-dim);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase">LOCKED</span> <span id="hp-profit" style="color:var(--safe);font-weight:700">—</span></div>
+  <div><span style="color:var(--text-dim);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase">7-DAY ACTIONS</span> <span id="hp-actions" style="color:var(--text-primary);font-weight:700">—</span></div>
+  <div style="flex:1;color:var(--text-dim);font-size:10px;text-align:right" id="hp-insight">—</div>
+</div>
+        <div id="d2-chat-msgs">
           <div class="d2-msg hannah">I'm monitoring your portfolio in real time. I'll flag required actions, explain what the system is seeing, and answer any questions.</div>
         </div>
         <div class="d2-chat-input-row" id="d2-input-row">
@@ -4429,6 +4436,30 @@ async function refreshHannahStatus() {
 }
 setInterval(refreshHannahStatus, 60000);
 setTimeout(refreshHannahStatus, 7000);
+
+// ── HANNAH PERFORMANCE bar (visible mini-tile above her chat) ──
+async function refreshHannahPerfBar() {
+  try {
+    const [perf, learn] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/learning').then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
+    if (perf) {
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT('hp-active', perf.active + '/' + perf.count);
+      setT('hp-capital', '$' + perf.totalCapital.toFixed(0));
+      setT('hp-profit', perf.totalProfit >= 0 ? '+$' + perf.totalProfit.toFixed(2) : '-$' + Math.abs(perf.totalProfit).toFixed(2));
+    }
+    if (learn) {
+      const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT('hp-actions', String(learn.total || 0));
+      setT('hp-insight', learn.insight || '');
+    }
+  } catch(_) {}
+}
+setInterval(refreshHannahPerfBar, 60000);
+setTimeout(refreshHannahPerfBar, 8000);
+
 
 
 
