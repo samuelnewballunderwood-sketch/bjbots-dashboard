@@ -910,7 +910,7 @@ function capitalEfficiency(roi, capital) {
 // HIGH_RISK: only defensive. No optimisation.
 // CRITICAL always position [0] in output array.
 // ============================================================
-function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, spotData, dataReliable=true, dataIntegrity={} }) {
+function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, spotData, pricesData, dataReliable=true, dataIntegrity={} }) {
   const { longPct, bySymbol, totalAllocated, byStrategy } = portfolio;
   const now = new Date().toISOString();
 
@@ -1104,12 +1104,17 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
       'BNB': 'USDT_BNB',
     };
     const balances = spotData?.balances || [];
-    const prices = market.prices || {};
+    // pricesData is a list like [{symbol:'BTCUSDT', price:'73656'}, ...]
+    const priceMap = {};
+    (Array.isArray(pricesData) ? pricesData : []).forEach(p => {
+      const sym = (p.symbol || '').replace('USDT','').toUpperCase();
+      if (sym) priceMap[sym] = parseFloat(p.price || 0);
+    });
     for (const [asset, pair] of Object.entries(assetMap)) {
       const bal = balances.find(b => b.asset === asset);
       if (!bal) continue;
       const qty = parseFloat(bal.free||0) + parseFloat(bal.locked||0);
-      const price = parseFloat(prices[asset] || prices[asset+'USDT'] || 0);
+      const price = priceMap[asset] || 0;
       const usdValue = qty * price;
       if (usdValue < 300) continue;
       // Dedupe: skip if any Hannah grid for this pair exists
@@ -1637,7 +1642,7 @@ async function getDecisions(env){
     Object.entries(BOT_META).forEach(([id,meta])=>{
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
-    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,dataReliable,dataIntegrity});
+    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,pricesData,dataReliable,dataIntegrity});
     // R11 (NEW): Monthly performance tracker
     let monthlyTarget = null;
     try {
