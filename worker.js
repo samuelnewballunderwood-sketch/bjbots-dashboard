@@ -1009,6 +1009,89 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }));
   }
 
+  // ─── R2-LIFT (NEW) ──────────────────────────────────────────────
+  // When F&G crosses back >=30, auto-enable paused DCAs that earned before.
+  const fg = market.fearGreed;
+  if (fg != null && fg >= 30) {
+    const pausedDca = tcBots.filter(b =>
+      b.botType === 'dca' && b.active === false &&
+      (b.completedDeals > 0 || (b.profit||0) > 0)
+    );
+    if (pausedDca.length > 0) {
+      required.push(makeDecision({
+        actionType:'enable', category:'required',
+        text:'F&G recovered to ' + fg + ' — resume ' + pausedDca.length + ' DCA bot(s)',
+        reason:'R2 lifted (F&G ' + fg + ' >= 30). Paused DCA bots resume directional longs.',
+        amount:0, amountPct:0,
+        targetBotIds: pausedDca.map(b => b.id),
+        urgency:'high', timeframe:'1h',
+        expectedImpact:'Reactivates ' + pausedDca.length + ' DCA(s) — directional longs back online',
+        objective:'regime_lift', confidence:90, executable:true,
+      }));
+    }
+  }
+
+  // ─── R9 (NEW): Idle USDT deployment ──────────────────────────────
+  // USDT above $500 above R8 reserve → propose defensive grid (advisory).
+  try {
+    const usdt = parseFloat(spotData?.usdtBalance || 0);
+    const idleExcess = Math.max(0, usdt - 500);
+    if (idleExcess >= 500) {
+      const proposedSize = Math.min(2000, Math.round(idleExcess * 0.7));
+      required.push(makeDecision({
+        actionType:'deploy_grid', category:'required',
+        text:'Deploy $' + proposedSize + ' idle USDT to defensive grid',
+        reason:'R9: $' + usdt.toFixed(0) + ' USDT sitting idle. Capital must be working. Propose BTC/USDT defensive grid (±10%, ' + proposedSize + ', 30 grids).',
+        amount:proposedSize, amountPct: totalAllocated > 0 ? Math.round((proposedSize/totalAllocated)*100) : 0,
+        targetBotIds:[],
+        urgency:'high', timeframe:'24h',
+        expectedImpact:'Adds ~$' + (proposedSize*0.001).toFixed(2) + '/day at 0.1% grid yield',
+        costOfInaction:'$' + (proposedSize*0.001*30).toFixed(0) + ' missed earnings/month',
+        objective:'idle_capital_deploy', confidence:80, executable:false,
+      }));
+    }
+  } catch(_) {}
+
+  // ─── R10 (NEW): Target Allocation Gap per regime (R7) ─────────────
+  try {
+    const regimeAlloc = {
+      Bull:     { spotGrid:30, futuresGrid:15 },
+      Sideways: { spotGrid:50, futuresGrid:15 },
+      Bear:     { spotGrid:40, futuresGrid:15 },
+    };
+    const regimeKey = fg == null ? null : (fg >= 50 ? 'Bull' : fg >= 30 ? 'Sideways' : 'Bear');
+    if (regimeKey && totalAllocated > 0) {
+      const tgt = regimeAlloc[regimeKey];
+      const sumCap = (filter) => tcBots.filter(filter).reduce((s,b)=>s+(b.capital||0),0);
+      const actualSpot = Math.round((sumCap(b=>b.botType==='grid'&&b.active&&b.marketType==='spot')/totalAllocated)*100);
+      const actualFut  = Math.round((sumCap(b=>b.botType==='grid'&&b.active&&b.marketType==='futures')/totalAllocated)*100);
+      const gapSpot = tgt.spotGrid - actualSpot;
+      const gapFut  = tgt.futuresGrid - actualFut;
+      if (gapSpot >= 20) {
+        required.push(makeDecision({
+          actionType:'increase', category:'required',
+          text:regimeKey + ' regime: spot grid ' + actualSpot + '% vs target ' + tgt.spotGrid + '%',
+          reason:'R10: under-allocated to spot grid by ' + gapSpot + 'pp in ' + regimeKey + ' regime.',
+          amount:Math.round(totalAllocated * gapSpot/100), amountPct:gapSpot,
+          targetBotIds:[], urgency:'high', timeframe:'24h',
+          expectedImpact:'Closes ' + gapSpot + 'pp gap to regime target',
+          objective:'allocation_gap', confidence:75, executable:false,
+        }));
+      }
+      if (gapFut >= 15) {
+        required.push(makeDecision({
+          actionType:'increase', category:'required',
+          text:regimeKey + ' regime: futures grid ' + actualFut + '% vs target ' + tgt.futuresGrid + '%',
+          reason:'R10: under-allocated to futures grid by ' + gapFut + 'pp in ' + regimeKey + ' regime.',
+          amount:Math.round(totalAllocated * gapFut/100), amountPct:gapFut,
+          targetBotIds:[], urgency:'medium', timeframe:'48h',
+          expectedImpact:'Closes ' + gapFut + 'pp gap to regime target',
+          objective:'allocation_gap', confidence:70, executable:false,
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
@@ -1513,7 +1596,34 @@ async function getDecisions(env){
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
     const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
-    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{},market});
+    // R11 (NEW): Monthly performance tracker
+    let monthlyTarget = null;
+    try {
+      const now = new Date();
+      const mStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const daysIntoMonth = Math.floor((now.getTime() - mStart.getTime()) / 86400000) + 1;
+      const daysInMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+1, 0)).getUTCDate();
+      const grandTotal = recon?.grandTotal || result?.portfolio?.trueTotal || 0;
+      const monthLocked = recon?.totalRealised || 0;
+      const targets = {
+        min:     +(grandTotal * 0.06).toFixed(0),
+        stretch: +(grandTotal * 0.10).toFixed(0),
+        moon:    +(grandTotal * 0.15).toFixed(0),
+      };
+      const daysLeft = Math.max(1, daysInMonth - daysIntoMonth + 1);
+      monthlyTarget = {
+        daysIntoMonth, daysInMonth,
+        monthFraction: +(daysIntoMonth/daysInMonth).toFixed(2),
+        targets,
+        monthLocked: +monthLocked.toFixed(2),
+        requiredDailyForMin:     +((targets.min - monthLocked) / daysLeft).toFixed(2),
+        requiredDailyForStretch: +((targets.stretch - monthLocked) / daysLeft).toFixed(2),
+        onPaceFor6: monthLocked >= targets.min * (daysIntoMonth/daysInMonth),
+        pctOfMinTarget:     targets.min     > 0 ? +((monthLocked/targets.min)*100).toFixed(1)     : 0,
+        pctOfStretchTarget: targets.stretch > 0 ? +((monthLocked/targets.stretch)*100).toFixed(1) : 0,
+      };
+    } catch(_) {}
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{},market,monthlyTarget});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }

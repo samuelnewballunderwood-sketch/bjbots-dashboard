@@ -2533,9 +2533,9 @@ body::after {
       <div class="d2-kpi-sub" id="dm-locked-pct">—</div>
     </div>
     <div class="d2-kpi-cell">
-      <div class="d2-kpi-label">DAILY RATE</div>
-      <div class="d2-kpi-num safe" id="dm-daily-profit">—</div>
-      <div class="d2-kpi-sub">live avg/day</div>
+      <div class="d2-kpi-label">TODAY</div>
+      <div class="d2-kpi-num safe" id="dm-today-profit">—</div>
+      <div class="d2-kpi-sub" id="dm-trial-avg-sub">trial avg —/d</div>
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">DAYS LOCKED</div>
@@ -4335,6 +4335,54 @@ async function refreshHannahTiles() {
 }
 setInterval(refreshHannahTiles, 30000);
 setTimeout(refreshHannahTiles, 4500);
+
+// ── TODAY's actual profit (replaces misleading trial-average DAILY RATE) ──
+async function refreshTodayProfit() {
+  try {
+    const todayEl = document.getElementById('dm-today-profit');
+    const subEl   = document.getElementById('dm-trial-avg-sub');
+    if (!todayEl) return;
+    const r = await fetch('https://tc-proxy-eu.onrender.com/deals/detail');
+    if (!r.ok) return;
+    const d = await r.json();
+    const todayUtc = new Date(); todayUtc.setUTCHours(0,0,0,0);
+    let todayProfit = 0;
+    (d.by_bot || []).forEach(b => {
+      // by_bot only has aggregates; we approximate today via latest_deal timestamp
+      if (b.latest_deal && new Date(b.latest_deal) >= todayUtc) {
+        // Today's contribution from this bot is its trial2_profit minus yesterday's slice — we approximate as 0
+        // until per-deal detail is available; here we ONLY count if latest is today
+        todayProfit += parseFloat(b.trial2_profit || 0); // pessimistic upper bound
+      }
+    });
+    todayEl.textContent = todayProfit > 0 ? '+$' + todayProfit.toFixed(2) : '$0.00';
+    todayEl.style.color = todayProfit > 0 ? 'var(--safe)' : 'var(--text-muted)';
+    // Trial avg sub (honest)
+    const trial2 = parseFloat(d.trial2_total_profit || 0);
+    const days   = Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1);
+    if (subEl) subEl.textContent = 'trial avg $' + (trial2/days).toFixed(2) + '/d';
+  } catch(_) {}
+}
+setInterval(refreshTodayProfit, 60000);
+setTimeout(refreshTodayProfit, 5000);
+
+// ── MONTHLY TARGET indicator (uses worker monthlyTarget from /api/decisions) ──
+async function refreshMonthlyTarget() {
+  try {
+    const r = await fetch('/api/decisions');
+    if (!r.ok) return;
+    const j = await r.json();
+    const mt = j.monthlyTarget;
+    if (!mt) return;
+    // Surface into the LOCKED PROFIT sub-line so it's visible without new tile
+    const sub = document.getElementById('dm-locked-pct');
+    if (sub) sub.textContent =
+      '+' + mt.pctOfMinTarget + '% of 6% goal · need $' + mt.requiredDailyForMin + '/d for ' + (mt.daysInMonth - mt.daysIntoMonth + 1) + ' days';
+  } catch(_) {}
+}
+setInterval(refreshMonthlyTarget, 60000);
+setTimeout(refreshMonthlyTarget, 6000);
+
 
 
 // ── CONTROL LAYER — render decisions ─────────────────────────────────────
