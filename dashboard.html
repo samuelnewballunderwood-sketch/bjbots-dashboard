@@ -2538,8 +2538,8 @@ body::after {
       <div class="d2-kpi-sub">live avg/day</div>
     </div>
     <div class="d2-kpi-cell">
-      <div class="d2-kpi-label">TRIAL DAY</div>
-      <div class="d2-kpi-num" id="dm-trial-day">— / 30</div>
+      <div class="d2-kpi-label">DAYS LOCKED</div>
+      <div class="d2-kpi-num" id="dm-trial-day">—</div>
       <div class="d2-kpi-sub" id="dm-target">Target —</div>
     </div>
     <div class="d2-kpi-cell">
@@ -2649,7 +2649,7 @@ body::after {
           <div class="d2-trial-bar" id="d2-trial-bar" style="width:0%"></div>
         </div>
         <div style="font-size:10px;color:rgba(160,175,220,.6);margin-top:4px;font-family:var(--font-mono);" id="d2-trial-pct">—%</div>
-        <div style="font-size:10px;color:rgba(160,175,220,.45);margin-top:1px;font-family:var(--font-mono);" id="d2-trial-day-label-r">Day —/30</div>
+        <div style="font-size:10px;color:rgba(160,175,220,.45);margin-top:1px;font-family:var(--font-mono);" id="d2-trial-day-label-r">Day —</div>
         <div style="display:none" id="d2-target-num">—</div>
       </div>
     </div>
@@ -6061,7 +6061,7 @@ function _updateCtrlCards(data) {
   // 6 orbital metric cards
   setD('dm-daily-profit', actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   setD('dm-capital',  fmtUSD(gt));
-  setD('dm-trial-day', trialDay + '/30');
+  setD('dm-trial-day', String(trialDay));
   setD('dm-target',   '$' + trialTarget);
   setD('dm-stretch',  '$' + trialStretch);
   setD('dm-locked',   fmtPnl(rPnl));
@@ -6081,7 +6081,7 @@ function _updateCtrlCards(data) {
   setD('dbk-goal',  '$' + trialTarget);
 
   // Header extras
-  setD('header-trial-day', trialDay + '/30');
+  setD('header-trial-day', String(trialDay));
   setD('header-target',    '$' + trialTarget);
   setD('header-stretch',   '$' + trialStretch);
 
@@ -6209,13 +6209,13 @@ function _updateCtrlCards(data) {
   // Orbital trial cards (d2 section)
   setD('d2-locked-num',      fmtPnl(rPnl));
   setD('d2-target-num',      '$' + trialTarget);
-  setD('d2-trial-day-label', 'Day ' + trialDay + '/30');
+  setD('d2-trial-day-label', 'Day ' + trialDay);
   setD('d2-trial-pct',       pct.toFixed(0) + '% of target');
   const d2bar = document.getElementById('d2-trial-bar');
   if (d2bar) d2bar.style.width = Math.min(100, pct).toFixed(1) + '%';
 
   // Row 1 right — trial metadata
-  setD('d2-trial-day-label-r', trialDay + '/30');
+  setD('d2-trial-day-label-r', 'Day ' + trialDay);
 
   // Row 3 trial detail
   setD('r3-daily',   fmtPnl(actualDailyUsd) + '/day');
@@ -6552,7 +6552,7 @@ function d2Activate() {
 
     const lockedEl = document.getElementById('dm-locked');
     const locked   = lockedEl?.textContent || '—';
-    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+    const trialDay = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
 
     let openMsg = 'Day ' + trialDay + '/30. ';
     if (fg != null) {
@@ -6602,7 +6602,7 @@ async function d2Send() {
     const sig  = window._marketSignals || {};
     const ctrl = window._lastCtrlData;
     const totalCap = document.getElementById('header-total')?.textContent || '?';
-    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+    const trialDay = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
     const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
     const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} profit=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
     const fg = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? '?';
@@ -6659,7 +6659,7 @@ function ac2Activate() {
     const _sig2 = window._marketSignals;
     const _fg2 = _sig2?.fearGreed?.value ?? null;
     const _r2 = _fg2 != null && _fg2 < 30;
-    const _day2 = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+    const _day2 = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
     let _acMsg = 'Day ' + _day2 + '/30 · ';
     _acMsg += _r2 ? 'R2 ACTIVE (F&G ' + _fg2 + ') — short grids running, longs blocked. ' : 'F&G ' + (_fg2 ?? '—') + '. ';
     _acMsg += 'Ask me about pending actions, bot performance, or capital allocation.';
@@ -6698,7 +6698,7 @@ async function ac2Send() {
     const sig  = window._marketSignals || {};
     const ctrl = window._lastCtrlData;
     const totalCap = document.getElementById('header-total')?.textContent || '?';
-    const trialDay = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+    const trialDay = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
     const lockedEl = document.getElementById('d2-locked-num')?.textContent || '?';
     const tcBotLines = (window._tcBots || []).filter(b=>b.active).map(b => `${b.name}: $${b.capital} profit=${b.profit>=0?'+':''}${(b.profit||0).toFixed(2)}`).join(', ');
     const fg = ctrl?.market?.fearGreed ?? sig?.fearGreed?.value ?? '?';
@@ -6794,7 +6794,7 @@ function _mirrorHannahPhoto() {
 // Initialise on load — no stale defaults
 document.addEventListener('DOMContentLoaded', () => {
   // Set trial day immediately on load from calculation
-  const _trialDayNow = Math.min(30, Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime()) / 86400000) + 1));
+  const _trialDayNow = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
   ['dm-trial-day','cv-trial','cv-trial2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = _trialDayNow + ' / 30';
