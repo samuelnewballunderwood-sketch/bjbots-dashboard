@@ -910,7 +910,7 @@ function capitalEfficiency(roi, capital) {
 // HIGH_RISK: only defensive. No optimisation.
 // CRITICAL always position [0] in output array.
 // ============================================================
-function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, dataReliable=true, dataIntegrity={} }) {
+function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, spotData, dataReliable=true, dataIntegrity={} }) {
   const { longPct, bySymbol, totalAllocated, byStrategy } = portfolio;
   const now = new Date().toISOString();
 
