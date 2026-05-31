@@ -1119,9 +1119,25 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     for (const [asset, pair] of Object.entries(assetMap)) {
       const bal = balances.find(b => b.asset === asset);
       if (!bal) continue;
-      const qty = parseFloat(bal.free||0); // FREE only — locked is in Earn/orders, can't be gridded
+      const freeQty   = parseFloat(bal.free||0);
+      const lockedQty = parseFloat(bal.locked||0);
       const price = priceMap[asset] || 0;
-      const usdValue = qty * price;
+      const usdFree   = freeQty * price;
+      const usdTotal  = (freeQty + lockedQty) * price;
+      // Surface BLOCKED decision when held total qualifies but free does not
+      if (usdFree < 300 && usdTotal >= 300) {
+        suggested.push(makeDecision({
+          actionType:'unlock_funds', category:'required',
+          text:asset + ' grid blocked — \$' + usdTotal.toFixed(0) + ' held but \$' + usdFree.toFixed(0) + ' free',
+          reason:'R12: ' + asset + ' grid would deploy, but \$' + (usdTotal-usdFree).toFixed(0) + ' is locked in Binance Earn/orders. Redeem some to unlock grid creation.',
+          amount:0, amountPct:0, targetBotIds:[],
+          urgency:'medium', timeframe:'24h',
+          expectedImpact:'Unlocking unblocks ~\$' + Math.min(500, Math.round(usdTotal*0.25)) + '/grid earnings potential',
+          objective:'blocked_by_earn', confidence:90, executable:false,
+          suggestedAsset: asset,
+        }));
+      }
+      const usdValue = usdFree;
       if (usdValue < 300) continue;
       // Dedupe: skip if any Hannah grid for this pair exists
       const existing = tcBots.find(b =>
