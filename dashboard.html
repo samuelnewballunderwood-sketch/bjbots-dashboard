@@ -6030,7 +6030,7 @@ function _updateCtrlCards(data) {
 
   // Target daily rate needed
   const target6 = gt * 0.06;
-  const daysLeft = Math.max(0, 30 - trialDay);
+  const daysLeft = Math.max(1, 30 - trialDay);
   const neededDaily = Math.max(0, (target6 - rPnl) / daysLeft);
   const neededPct   = gt > 0 ? (neededDaily / gt) * 100 : 0;
 
