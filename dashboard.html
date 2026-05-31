@@ -5125,10 +5125,13 @@ async function refreshDecisions() {
 
 async function refreshBots() {
   try {
-    // Pull everything from reconciliation — it has both tcBots and bnBots with real capital/profit
-    const recon = await apiFetch('reconciliation');
-    const tcBots = recon.tcBots || [];
-    const bnBots = recon.bnBots || [];
+    // Pull from tc-proxy (3Commas + Binance) directly — worker doesn't expose /api/reconciliation
+    const [tcR, bnR] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/bots').then(r => r.ok ? r.json() : { bots: [] }),
+      apiFetch('binance-bots').catch(() => ({ bots: [] })),
+    ]);
+    const tcBots = tcR.bots || [];
+    const bnBots = bnR.bots || [];
     // Also grab scores/efficiency from decisions if available
     let botScores = {}, botEff = {};
     try {
