@@ -1595,7 +1595,7 @@ async function getDecisions(env){
     Object.entries(BOT_META).forEach(([id,meta])=>{
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
-    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,dataReliable,dataIntegrity});
+    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,dataReliable,dataIntegrity});
     // R11 (NEW): Monthly performance tracker
     let monthlyTarget = null;
     try {
