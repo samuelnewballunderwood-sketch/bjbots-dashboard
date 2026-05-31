@@ -1745,6 +1745,35 @@ export default {
         const data=await res.json();
         return json(data);
       }
+      // ── PHASE 2: Persistent action log + daily snapshots ─────
+      if(path==='/api/log-action' && request.method==='POST'){
+        try{
+          const body=await request.json();
+          await logAction(env,{...body,ts:body.ts||new Date().toISOString()});
+          return json({success:true});
+        }catch(e){return json({error:e.message},500);}
+      }
+      if(path==='/api/hannah-actions'){
+        // Persistent actions from worker KV (survives Render restarts)
+        const list=await getActionLogs(env);
+        return json({actions:list.filter(a=>a && a.event)});
+      }
+      if(path==='/api/daily-snapshot'){
+        // Read or write today's locked snapshot. GET=read, POST=write
+        try{
+          if(!env.ALPHA_LOGS) return json({error:'KV not configured'},500);
+          const today=new Date().toISOString().slice(0,10);
+          const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+          if(request.method==='POST'){
+            const body=await request.json();
+            await env.ALPHA_LOGS.put('snap:'+today,JSON.stringify({locked:body.locked,ts:new Date().toISOString()}),{expirationTtl:60*60*24*60});
+            return json({success:true,day:today,locked:body.locked});
+          }
+          const today_data=await env.ALPHA_LOGS.get('snap:'+today,'json');
+          const yesterday_data=await env.ALPHA_LOGS.get('snap:'+yesterday,'json');
+          return json({today:today_data,yesterday:yesterday_data});
+        }catch(e){return json({error:e.message},500);}
+      }
       if(path==='/'||path==='/index.html') return await serveHTML();
       return new Response('Not found',{status:404});
     }catch(e){return json({error:e.message},500);}
