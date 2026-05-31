@@ -2586,7 +2586,7 @@ body::after {
         </div>
         <div class="dash-metric-card dm3">
           <div class="dm-lbl">Trial Day</div>
-          <div class="dm-val" id="cv-trial">— / 30</div>
+          <div class="dm-val" id="cv-trial">—</div>
           <div class="dm-sub" id="cv-trial-sub">—</div>
         </div>
         <div class="dash-metric-card dm4">
@@ -3535,7 +3535,7 @@ body::after {
       </div>
       <div class="cv16-card cv16-card-3">
         <div class="cv16-card-lbl">Trial Day</div>
-        <div class="cv16-card-val" id="cv-trial2">— / 30</div>
+        <div class="cv16-card-val" id="cv-trial2">—</div>
         <div class="cv16-card-sub" id="cv-trial2-sub">Loading…</div>
       </div>
       <div class="cv16-card cv16-card-4">
@@ -4674,7 +4674,7 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   const dailyNeeded  = Math.max(0, (target6pct - totalLocked) / daysLeft);
 
   setEl('p-target-val',    fmtUSD(target6pct));
-  setEl('p-locked-pct-lbl', pctOfTarget.toFixed(1) + '% of target · Day ' + dayNum + '/30');
+  setEl('p-locked-pct-lbl', pctOfTarget.toFixed(1) + '% of target · Day ' + dayNum);
   setEl('p-bar-pct',       pctOfTarget.toFixed(0) + '% of 6% target');
   setEl('p-bar-daily',     'Need ' + fmtUSD(dailyNeeded) + '/day');
 
@@ -6030,14 +6030,14 @@ function _updateCtrlCards(data) {
 
   // Target daily rate needed
   const target6 = gt * 0.06;
-  const daysLeft = Math.max(1, 30 - trialDay);
+  const daysLeft = Math.max(0, 30 - trialDay);
   const neededDaily = Math.max(0, (target6 - rPnl) / daysLeft);
   const neededPct   = gt > 0 ? (neededDaily / gt) * 100 : 0;
 
   const cv = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   cv('cv-daily',   actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   cv('cv-capital', fmtUSD(gt));
-  cv('cv-trial',   trialDay + ' / 30');
+  cv('cv-trial',   String(trialDay));
   cv('cv-target',  '$' + (gt * 0.06).toFixed(0));
   cv('cv-stretch', neededDaily > 0 ? '$' + neededDaily.toFixed(0) + '/d' : '✓');
   cv('cv-progress', (rPnl >= 0 ? '+' : '') + ((rPnl / gt) * 100).toFixed(2) + '%');
@@ -6050,7 +6050,7 @@ function _updateCtrlCards(data) {
   if (r5el) r5el.textContent = fmtPnl(rPnl) + ' ✓';
 
   // cv-trial2 and cv-target2
-  cv('cv-trial2',     trialDay + ' / 30');
+  cv('cv-trial2',     String(trialDay));
   cv('cv-trial2-sub', 'Day ' + trialDay);
   cv('cv-target2',    '$' + (gt * 0.06).toFixed(0));
 
@@ -6150,7 +6150,7 @@ function _updateCtrlCards(data) {
     ? ' Need ' + fmtUSD(neededDailyUsd) + '/day to hit target.'
     : ' On pace.';
   setD('dhm-msg', regimeMsg + paceMsg);
-  setD('ac-analysis-text', fmtPnl(rPnl) + ' locked · Day ' + trialDay + '/30 · ' + dailyPct + '/day avg · Need ' + fmtUSD(neededDailyUsd) + '/day');
+  setD('ac-analysis-text', fmtPnl(rPnl) + ' locked · Day ' + trialDay + ' · ' + dailyPct + '/day avg · Need ' + fmtUSD(neededDailyUsd) + '/day');
 
   // Action Centre date + day label
   const acDate = document.getElementById('ac-date');
@@ -6258,7 +6258,7 @@ function _updateCtrlCards(data) {
 
   // Row 3 trial detail
   setD('r3-daily',   fmtPnl(actualDailyUsd) + '/day');
-  setD('r3-days',    (30 - trialDay) + ' remaining');
+  setD('r3-days',    Math.max(0, 30 - trialDay) + ' remaining');
   setD('r3-ontrack', pct >= 30 ? '✓ Yes' : '⚠ Below pace');
   setD('r3-pace',    actualDailyPct.toFixed(3) + '%/day');
 
@@ -6593,7 +6593,7 @@ function d2Activate() {
     const locked   = lockedEl?.textContent || '—';
     const trialDay = Math.max(1, Math.floor((Date.now() - new Date("2026-04-12").getTime()) / 86400000) + 1);
 
-    let openMsg = 'Day ' + trialDay + '/30. ';
+    let openMsg = 'Day ' + trialDay + '. ';
     if (fg != null) {
       openMsg += 'F&G ' + fg + ' (' + fgLbl + '). ';
       if (r2) openMsg += 'R2 ACTIVE — directional longs blocked. ';
