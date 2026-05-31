@@ -1036,7 +1036,9 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
   // ─── R9 (NEW): Idle USDT deployment ──────────────────────────────
   // USDT above $500 above R8 reserve → propose defensive grid (advisory).
   try {
-    const usdt = parseFloat(spotData?.usdtBalance || 0);
+    // FREE USDT only — usdtBalance includes locked (orders/Earn) which can't be deployed
+    const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
+    const usdt = parseFloat(usdtBal?.free || 0);
     const idleExcess = Math.max(0, usdt - 500);
     if (idleExcess >= 500) {
       const proposedSize = Math.min(2000, Math.round(idleExcess * 0.7));
@@ -1117,7 +1119,7 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     for (const [asset, pair] of Object.entries(assetMap)) {
       const bal = balances.find(b => b.asset === asset);
       if (!bal) continue;
-      const qty = parseFloat(bal.free||0) + parseFloat(bal.locked||0);
+      const qty = parseFloat(bal.free||0); // FREE only — locked is in Earn/orders, can't be gridded
       const price = priceMap[asset] || 0;
       const usdValue = qty * price;
       if (usdValue < 300) continue;
