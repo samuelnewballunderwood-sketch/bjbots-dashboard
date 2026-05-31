@@ -4246,6 +4246,45 @@ function renderHistory() {
   }).join('');
 }
 
+// ── Hannah Autonomy actions feed (tc-proxy /api/actions) ──────────────────
+async function refreshCompletedActions() {
+  const list = document.getElementById('ac-completed-list');
+  if (!list) return;
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=20');
+    if (!r.ok) return;
+    const { actions = [] } = await r.json();
+    // Keep only user-visible action events (skip pure status pings)
+    const visible = actions.filter(a =>
+      ['executed','dry_run','manual_execute'].includes(a.event));
+    if (visible.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions yet today. Autonomy loop is monitoring.</div>';
+      return;
+    }
+    list.innerHTML = visible.map(a => {
+      const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      const tag = a.event === 'executed' ? 'EXEC'
+               : a.event === 'manual_execute' ? 'MANUAL'
+               : 'DRY';
+      const color = a.event === 'executed' ? 'var(--safe)'
+                  : a.event === 'manual_execute' ? 'var(--balanced)'
+                  : 'var(--text-muted)';
+      const d   = a.decision || {};
+      const obj = d.objective || '';
+      const at  = d.actionType || '';
+      const tgt = (d.targetBotIds || []).slice(0,2).join(', ') || '—';
+      const txt = (d.text || `${at} ${obj}`).slice(0, 90);
+      return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-dim);font-size:11px;align-items:flex-start">'
+           + '<span style="color:var(--text-muted);font-family:var(--font-mono);min-width:38px">'+t+'</span>'
+           + '<span style="color:'+color+';font-weight:700;min-width:50px;font-size:9px;letter-spacing:.06em">'+tag+'</span>'
+           + '<span style="flex:1;color:var(--text-secondary)">'+txt+'<div style="color:var(--text-muted);font-size:9px;margin-top:2px">bots: '+tgt+'</div></span>'
+           + '</div>';
+    }).join('');
+  } catch (_) { /* swallow — autonomy may be cold-starting */ }
+}
+setInterval(refreshCompletedActions, 30000);
+setTimeout(refreshCompletedActions, 4000);
+
 // ── CONTROL LAYER — render decisions ─────────────────────────────────────
 function renderControl(data) {
   if (!data || data.error) return;
