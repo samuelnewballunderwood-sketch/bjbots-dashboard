@@ -4628,7 +4628,7 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
 
   // Trial progress
   const trialStart   = new Date('2026-04-12');
-  const dayNum       = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
+  const dayNum       = Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1);
   const target6pct   = grandTotal * 0.06;
   const pctOfTarget  = target6pct > 0 ? Math.min(100, (totalLocked / target6pct) * 100) : 0;
   const daysLeft     = Math.max(1, 30 - dayNum);
@@ -5982,7 +5982,7 @@ function _updateCtrlCards(data) {
 
   // ── Real daily rate: locked profit / days elapsed ──────────────────────
   const trialStart = new Date('2026-04-12');
-  const trialDay   = Math.min(30, Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1));
+  const trialDay   = Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1);
   const daysElapsed = Math.max(1, trialDay - 1); // days of actual trading
   const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
   const actualDailyPct = gt > 0 ? (actualDailyUsd / gt) * 100 : 0;
