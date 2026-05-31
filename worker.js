@@ -1092,6 +1092,48 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R12 (NEW): Held crypto without grid (per-asset) ───────────────
+  // Walk spot balances, find assets worth >\$300 without an active Hannah grid,
+  // propose a defensive grid using ~25% of held value as USDT investment.
+  try {
+    const assetMap = {
+      'BTC': 'USDT_BTC',
+      'SOL': 'USDT_SOL',
+      'ETH': 'USDT_ETH',
+      'XRP': 'USDT_XRP',
+      'BNB': 'USDT_BNB',
+    };
+    const balances = spotData?.balances || [];
+    const prices = market.prices || {};
+    for (const [asset, pair] of Object.entries(assetMap)) {
+      const bal = balances.find(b => b.asset === asset);
+      if (!bal) continue;
+      const qty = parseFloat(bal.free||0) + parseFloat(bal.locked||0);
+      const price = parseFloat(prices[asset] || prices[asset+'USDT'] || 0);
+      const usdValue = qty * price;
+      if (usdValue < 300) continue;
+      // Dedupe: skip if any Hannah grid for this pair exists
+      const existing = tcBots.find(b =>
+        b.botType==='grid' && /Hannah/i.test(b.name||'') &&
+        (b.pair||'').includes(asset));
+      if (existing) continue;
+      const proposedInvest = Math.min(500, Math.max(200, Math.round(usdValue * 0.25)));
+      required.push(makeDecision({
+        actionType:'deploy_grid', category:'required',
+        text:'Grid ' + asset + ' — \$' + usdValue.toFixed(0) + ' held, no active Hannah grid',
+        reason:'R12: ' + asset + ' worth \$' + usdValue.toFixed(0) + ' sitting unhedged. Propose ' + pair + ' ±10% grid, \$' + proposedInvest + ' USDT investment.',
+        amount:proposedInvest, amountPct: totalAllocated > 0 ? Math.round((proposedInvest/totalAllocated)*100) : 0,
+        targetBotIds:[],
+        urgency:'medium', timeframe:'24h',
+        expectedImpact:'Adds ~\$' + (proposedInvest*0.001).toFixed(2) + '/day at 0.1% grid yield',
+        costOfInaction:'\$' + (proposedInvest*0.001*30).toFixed(0) + ' missed earnings/month',
+        objective:'idle_crypto_grid', confidence:75, executable:true,
+        // Non-standard payload so autonomy knows which pair to build
+        suggestedPair: pair, suggestedAsset: asset,
+      }));
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
