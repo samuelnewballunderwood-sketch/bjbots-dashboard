@@ -1369,7 +1369,7 @@ body::after {
 /* KPI strip across top */
 .d2-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   border-bottom: 1px solid rgba(160,175,220,.1);
   background: rgba(6,8,14,.9);
 }
@@ -2551,6 +2551,16 @@ body::after {
       <div class="d2-kpi-label">MARKET REGIME</div>
       <div class="d2-kpi-num warn" id="dm-fg-val">F&amp;G —</div>
       <div class="d2-kpi-sub" id="dm-fg-label">Loading…</div>
+    </div>
+    <div class="d2-kpi-cell">
+      <div class="d2-kpi-label">ACTIONS TODAY</div>
+      <div class="d2-kpi-num teal" id="dm-actions-today">—</div>
+      <div class="d2-kpi-sub" id="dm-actions-today-sub">live · auto</div>
+    </div>
+    <div class="d2-kpi-cell">
+      <div class="d2-kpi-label">IN PROGRESS</div>
+      <div class="d2-kpi-num warn" id="dm-actions-pending">—</div>
+      <div class="d2-kpi-sub" id="dm-actions-pending-sub">awaiting action</div>
     </div>
   </div>
 
@@ -4284,6 +4294,48 @@ async function refreshCompletedActions() {
 }
 setInterval(refreshCompletedActions, 30000);
 setTimeout(refreshCompletedActions, 4000);
+
+// ── Home-page KPI tiles: ACTIONS TODAY + IN PROGRESS ──────────────────
+async function refreshHannahTiles() {
+  const todayEl   = document.getElementById('dm-actions-today');
+  const todaySub  = document.getElementById('dm-actions-today-sub');
+  const pendEl    = document.getElementById('dm-actions-pending');
+  const pendSub   = document.getElementById('dm-actions-pending-sub');
+  if (!todayEl && !pendEl) return;
+  try {
+    const [actR, decR] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200'),
+      fetch('/api/decisions'),
+    ]);
+    let actionsToday = 0, lastTag = '';
+    if (actR.ok) {
+      const { actions = [] } = await actR.json();
+      const midnight = new Date(); midnight.setHours(0,0,0,0);
+      const todays = actions.filter(a =>
+        ['executed','manual_execute'].includes(a.event) &&
+        new Date(a.ts) >= midnight);
+      actionsToday = todays.length;
+      if (todays[0]) {
+        const d = todays[0].decision || {};
+        lastTag = ((d.actionType || '') + ' ' + (d.objective || '')).trim();
+      }
+    }
+    let pending = 0, pendTag = '';
+    if (decR.ok) {
+      const j = await decR.json();
+      const exec = (j.decisions || []).filter(d => d.executable && (d.confidence ?? 0) >= 60);
+      pending = exec.length;
+      if (exec[0]) pendTag = ((exec[0].actionType || '') + ' ' + (exec[0].objective || '')).trim();
+    }
+    if (todayEl)  todayEl.textContent = String(actionsToday);
+    if (todaySub) todaySub.textContent = lastTag ? ('last: ' + lastTag.slice(0,18)) : 'live · auto';
+    if (pendEl)   pendEl.textContent  = String(pending);
+    if (pendSub)  pendSub.textContent = pendTag ? ('next: ' + pendTag.slice(0,18)) : 'awaiting action';
+  } catch (_) { /* swallow */ }
+}
+setInterval(refreshHannahTiles, 30000);
+setTimeout(refreshHannahTiles, 4500);
+
 
 // ── CONTROL LAYER — render decisions ─────────────────────────────────────
 function renderControl(data) {
