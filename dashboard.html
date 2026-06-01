@@ -5080,6 +5080,43 @@ async function refreshDashboardV2() {
       }
     }
 
+    // DCA BOT PERFORMANCE — locked + reinvested
+    if (dcaDetail?.bots) {
+      const dcaRows = document.getElementById('v2-dca-rows');
+      if (dcaRows) {
+        const bots = dcaDetail.bots;
+        // Summary chips
+        const s = dcaDetail.summary || {};
+        const setT2 = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        setT2('v2-dca-cash',  '+$' + (s.totalCash || 0).toFixed(2));
+        setT2('v2-dca-reinv', '+$' + (s.totalReinvested || 0).toFixed(2));
+        setT2('v2-dca-total', '+$' + (s.totalLocked || 0).toFixed(2));
+        setT2('v2-dca-active', (s.activeBots || 0) + ' / ' + (s.botCount || 0));
+        // Per-bot rows
+        if (bots.length === 0) {
+          dcaRows.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:10px 12px">No DCA bots.</div>';
+        } else {
+          dcaRows.innerHTML = bots.map(b => {
+            const isLive = b.enabled || b.activeDeals > 0;
+            const statusColor = isLive ? 'var(--safe)' : 'var(--text-muted)';
+            const statusText = b.enabled ? '● LIVE' : (b.activeDeals > 0 ? '◐ DEAL OPEN' : '○ OFF');
+            const pnlClass = b.pnlUsd > 0 ? 'pos' : b.pnlUsd < 0 ? 'neg' : '';
+            const pnlColor = b.pnlUsd > 0 ? 'var(--safe)' : b.pnlUsd < 0 ? 'var(--warn)' : 'var(--text-muted)';
+            const reinvColor = b.reinvested > 0 ? 'var(--teal)' : 'var(--text-muted)';
+            const totalColor = b.totalLocked > 0 ? '#fff' : 'var(--text-muted)';
+            const shortName = (b.name || '').replace(/^(BNB|BTC|ETH|SOL|XRP)[\/\s]+USDT\s+/i, '$1 ').replace(/\bBOT\b/i, '');
+            return '<div class="v2-bot-row" style="grid-template-columns:1.8fr .9fr .9fr 1fr .9fr">' +
+                   '<div class="v2-bot-name" title="' + (b.name || '') + '">' + (shortName || b.name) + '</div>' +
+                   '<div style="color:' + pnlColor + ';font-family:var(--font-mono)">' + (b.pnlUsd >= 0 ? '+$' : '-$') + Math.abs(b.pnlUsd).toFixed(2) + '</div>' +
+                   '<div style="color:' + reinvColor + ';font-family:var(--font-mono)">' + (b.reinvested > 0 ? '+$' + b.reinvested.toFixed(2) : '—') + '</div>' +
+                   '<div style="color:' + totalColor + ';font-family:var(--font-mono);font-weight:700">' + (b.totalLocked >= 0 ? '+$' : '-$') + Math.abs(b.totalLocked).toFixed(2) + '</div>' +
+                   '<div style="color:' + statusColor + ';text-align:right;font-size:10px">' + statusText + '</div>' +
+                   '</div>';
+          }).join('');
+        }
+      }
+    }
+
     // HANNAH GREETING — dynamic
     const greet = document.getElementById('v2-hannah-greeting');
     if (greet && dec?.market) {
