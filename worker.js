@@ -1826,6 +1826,18 @@ export default {
         const list=await getActionLogs(env);
         return json({actions:list.filter(a=>a && a.event)});
       }
+      if(path==='/api/snapshot-history'){
+        try{
+          if(!env.ALPHA_LOGS) return json({error:'KV not configured'},500);
+          const days = [];
+          for (let i=29; i>=0; i--) {
+            const d = new Date(Date.now() - i*86400000).toISOString().slice(0,10);
+            const data = await env.ALPHA_LOGS.get('snap:'+d, 'json');
+            days.push({ day: d, locked: data?.locked ?? null });
+          }
+          return json({ days });
+        }catch(e){return json({error:e.message},500);}
+      }
       if(path==='/api/daily-snapshot'){
         // Read or write today's locked snapshot. GET=read, POST=write
         try{
