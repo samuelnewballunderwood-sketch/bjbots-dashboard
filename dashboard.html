@@ -2650,7 +2650,28 @@ body::after {
       </div>
 
       <div class="d2-chat-panel" style="width:100%;margin-top:14px;">
-        <div class="d2-chat-msgs" <div id="pnl-perf-panel" style="margin:12px 16px 8px;padding:14px 18px;background:rgba(14,16,26,.94);border:1px solid var(--border-dim);border-radius:8px">
+        <div class="d2-chat-msgs" <div id="hannah-trades-panel" style="margin:12px 16px 8px;padding:14px 18px;background:rgba(14,16,26,.94);border:1px solid var(--border-dim);border-radius:8px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+    <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.18em;color:var(--text-dim);text-transform:uppercase">⚡ HANNAH's TRADES</div>
+    <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim)" id="ht-meta">— open · unrealised $0.00 · last 20 closed $0.00</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div>
+      <div style="font-size:9px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)">OPEN (live)</div>
+      <div id="ht-open">
+        <div style="color:var(--text-muted);font-size:11px;padding:6px 0">None open. Hannah scalp-armed but waiting for capital.</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:9px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;font-family:var(--font-display)">RECENTLY CLOSED</div>
+      <div id="ht-recent" style="max-height:240px;overflow-y:auto">
+        <div style="color:var(--text-muted);font-size:11px;padding:6px 0">Nothing closed yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <div id="pnl-perf-panel" style="margin:12px 16px 8px;padding:14px 18px;background:rgba(14,16,26,.94);border:1px solid var(--border-dim);border-radius:8px">
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
     <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.18em;color:var(--text-dim);text-transform:uppercase">📈 P&amp;L PERFORMANCE</div>
     <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim)" id="pnl-meta">Locked profit over time</div>
@@ -4740,6 +4761,58 @@ async function refreshLiveActionBoard() {
 }
 setInterval(refreshLiveActionBoard, 30000);
 setTimeout(refreshLiveActionBoard, 5000);
+
+// HANNAH'S TRADES panel
+async function refreshHannahTrades() {
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/smart-trades');
+    if (!r.ok) return;
+    const j = await r.json();
+    const openEl   = document.getElementById('ht-open');
+    const recentEl = document.getElementById('ht-recent');
+    const meta     = document.getElementById('ht-meta');
+    if (meta) {
+      meta.textContent = (j.open?.length || 0) + ' open · unrealised $' + (j.unrealizedTotal||0).toFixed(2) + ' · last closed $' + (j.realizedRecent||0).toFixed(2);
+    }
+    if (openEl) {
+      if (!j.open || j.open.length === 0) {
+        openEl.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No open positions.</div>';
+      } else {
+        openEl.innerHTML = j.open.map(t => {
+          const profColor = t.currentProfit > 0 ? 'var(--safe)' : t.currentProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
+          const sign = t.currentProfit >= 0 ? '+' : '';
+          return '<div style="padding:6px 8px;background:rgba(45,212,191,.04);border:1px solid var(--border-dim);border-radius:5px;margin-bottom:5px;font-size:10.5px">' +
+                 '<div style="display:flex;justify-content:space-between;margin-bottom:2px">' +
+                 '<span style="color:var(--text-primary);font-weight:700">' + (t.pair||'') + ' ' + (t.direction||'').toUpperCase() + '</span>' +
+                 '<span style="color:'+profColor+';font-family:var(--font-mono);font-weight:700">' + sign + '$' + t.currentProfit.toFixed(2) + '</span>' +
+                 '</div>' +
+                 '<div style="color:var(--text-muted);font-size:9px;font-family:var(--font-mono)">' + (t.note||'') + ' · entry $' + t.entry.toFixed(2) + '</div>' +
+                 '</div>';
+        }).join('');
+      }
+    }
+    if (recentEl) {
+      if (!j.recent || j.recent.length === 0) {
+        recentEl.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No closed trades in history yet.</div>';
+      } else {
+        recentEl.innerHTML = j.recent.map(t => {
+          const profColor = t.currentProfit > 0 ? 'var(--safe)' : t.currentProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
+          const sign = t.currentProfit >= 0 ? '+' : '';
+          const t1 = new Date(t.closedAt || t.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          return '<div style="display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--border-dim);font-size:10.5px">' +
+                 '<span style="color:var(--text-muted);font-family:var(--font-mono);min-width:42px">'+t1+'</span>' +
+                 '<span style="color:var(--text-secondary);min-width:80px">' + (t.pair||'') + ' ' + (t.direction||'').toUpperCase() + '</span>' +
+                 '<span style="color:'+profColor+';font-family:var(--font-mono);font-weight:700">' + sign + '$' + t.currentProfit.toFixed(2) + '</span>' +
+                 '<span style="flex:1;color:var(--text-dim);font-size:9px;text-align:right">' + (t.note||'').slice(0,30) + '</span>' +
+                 '</div>';
+        }).join('');
+      }
+    }
+  } catch(_) {}
+}
+setInterval(refreshHannahTrades, 30000);
+setTimeout(refreshHannahTrades, 6000);
+
 
 // Also force-disable the legacy renderControl alerts → dash-alerts (which would otherwise repopulate dca_depth)
 // renderControl will still run but its output went into #dash-alerts which we have replaced.

@@ -1495,6 +1495,37 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R26 (NEW): BTC Open Interest spike detector ──────────────
+  // Binance fapi /openInterest is free, no auth. Compare current OI to stored 1h-ago value in KV.
+  // Spike >5% in 1h = big positions building = volatility incoming.
+  try {
+    const oiR = await fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT');
+    if (oiR.ok && env.ALPHA_LOGS) {
+      const oi = await oiR.json();
+      const oiVal = parseFloat(oi.openInterest || 0);
+      const now = Date.now();
+      const bucket = Math.floor(now / (60*60*1000)); // 1h bucket
+      const prevKey = 'btcOI:h_' + (bucket - 1);
+      const curKey  = 'btcOI:h_' + bucket;
+      const prev = await env.ALPHA_LOGS.get(prevKey, 'json');
+      await env.ALPHA_LOGS.put(curKey, JSON.stringify({ oi: oiVal, ts: now }), { expirationTtl: 60*60*48 });
+      if (prev?.oi && oiVal > 0) {
+        const deltaPct = ((oiVal - prev.oi) / prev.oi) * 100;
+        if (Math.abs(deltaPct) > 5) {
+          suggested.push(makeDecision({
+            actionType:'monitor', category:'suggested',
+            text:'BTC OI ' + (deltaPct >= 0 ? '+' : '') + deltaPct.toFixed(1) + '% in 1h — vol incoming',
+            reason:'R26: Open Interest moved ' + deltaPct.toFixed(2) + '% in last hour. Big positions building. Expect volatility — tighten R16/R18 stops or step aside.',
+            amount:0, amountPct:0, targetBotIds:[],
+            urgency:'medium', timeframe:'1h',
+            expectedImpact:'Volatility forecast — informs scalp rule sensitivity',
+            objective:'oi_spike', confidence:70, executable:false,
+          }));
+        }
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
