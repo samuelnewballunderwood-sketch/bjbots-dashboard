@@ -4463,11 +4463,12 @@ async function refreshTodayProfit() {
     const currentLocked = dec?.reconciliation?.totalRealised
                        ?? parseFloat((d?.trial2_total_profit ?? 0));
     const yesterdayLocked = snap?.yesterday?.locked ?? null;
-    let todayProfit = 0;
-    if (yesterdayLocked != null) {
+    let todayProfit = null;
+    if (currentLocked != null && yesterdayLocked != null && Math.abs(currentLocked - yesterdayLocked) < 10000) {
       todayProfit = currentLocked - yesterdayLocked;
     }
-    todayEl.textContent = todayProfit > 0 ? '+$' + todayProfit.toFixed(2)
+    todayEl.textContent = todayProfit == null ? '—'
+                         : todayProfit > 0 ? '+$' + todayProfit.toFixed(2)
                          : todayProfit < 0 ? '-$' + Math.abs(todayProfit).toFixed(2)
                          : '$0.00';
     todayEl.style.color = todayProfit > 0 ? 'var(--safe)'
@@ -4682,10 +4683,11 @@ async function fixOrbitalToday() {
       fetch('/api/daily-snapshot').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
-    const current = dec?.reconciliation?.totalRealised ?? 0;
+    const current = dec?.reconciliation?.totalRealised;
     const yest = snap?.yesterday?.locked ?? null;
-    let val = '$0.00';
-    if (yest != null) {
+    let val = '—';
+    // Guard: only show TODAY if both values are valid AND not catastrophically wrong (data outage)
+    if (current != null && yest != null && Math.abs(current - yest) < 10000) {
       const diff = current - yest;
       val = diff >= 0 ? '+$' + diff.toFixed(2) : '-$' + Math.abs(diff).toFixed(2);
     }
