@@ -1470,6 +1470,31 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R25 (NEW): 5-min BTC momentum scalp ─────────────────────────
+  // When BTC 24h change > +2% AND latest price is < recent high: buy with tight 0.6%/0.8% scalp
+  // When BTC 24h change < -2% AND latest price is > recent low: sell scalp
+  // Fast in-out trade — captures short bursts of momentum.
+  try {
+    const change24h = market?.btcChange24h;
+    if (change24h != null) {
+      let direction = null;
+      if (change24h > 2)       direction = 'buy';   // momentum up
+      else if (change24h < -2) direction = 'sell';  // momentum down
+      if (direction) {
+        required.push(makeDecision({
+          actionType:'spot_buy', category:'required',
+          text:'Momentum ' + change24h.toFixed(1) + '% — scalp \$' + (direction === 'sell' ? 'SHORT' : 'LONG') + ' BTC',
+          reason:'R25: BTC 24h ' + change24h.toFixed(1) + '%. Momentum is real. Quick scalp with 0.6%/0.8% targets. \$50 position.',
+          amount:50, amountPct:0, targetBotIds:[],
+          urgency:'high', timeframe:'1h',
+          expectedImpact:'Captures short momentum burst — fast locked profit',
+          objective:'momentum_scalp', confidence:65, executable:true,
+          suggestedPair:'USDT_BTC', suggestedAsset:'BTC',
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
