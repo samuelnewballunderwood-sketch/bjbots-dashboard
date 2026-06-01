@@ -4947,7 +4947,7 @@ setTimeout(refreshHannahTrades, 6000);
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
-    const [dec, mp, perf, deals, mkt, capRes, dealsSum] = await Promise.all([
+    const [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
@@ -4955,6 +4955,7 @@ async function refreshDashboardV2() {
       fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/total-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     const canonicalLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
@@ -5027,7 +5028,13 @@ async function refreshDashboardV2() {
       });
       setT('v2-trades-today', String(todayDealCount));
     }
-    if (perf) {
+    // Active bots: prefer all-types (DCA + Grid + Signal), fall back to Hannah-only
+    if (botStats?.total?.count > 0) {
+      setT('v2-active-bots', botStats.total.active + ' / ' + botStats.total.count);
+      // sub-line: type breakdown
+      const sub = document.querySelector('#v2-active-bots + .v2-stat-sub');
+      if (sub) sub.textContent = (botStats.dca?.active || 0) + ' DCA · ' + (botStats.grid?.active || 0) + ' grid · ' + (botStats.signal?.active || 0) + ' signal';
+    } else if (perf) {
       setT('v2-active-bots', perf.active + ' / ' + perf.count);
     }
     {
