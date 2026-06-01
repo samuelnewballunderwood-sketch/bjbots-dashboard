@@ -4423,7 +4423,7 @@ function pnlClass(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 // ── Clock ────────────────────────────────────────────────────────────────
 function updateClock() {
   const n = new Date();
-  setEl('header-clock', n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  setEl('header-clock', n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Asia/Dubai'}));
 }
 setInterval(updateClock, 1000); updateClock();
 
@@ -4472,7 +4472,7 @@ function saveMeta() { localStorage.setItem('alphacontrol_meta', JSON.stringify(B
 // ── Action history ────────────────────────────────────────────────────────
 let actionHistory = JSON.parse(sessionStorage.getItem('ac_hist')||'[]');
 function addHistory(action, text) {
-  const ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const ts = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
   actionHistory.unshift({ts, action, text});
   if (actionHistory.length > 20) actionHistory = actionHistory.slice(0,20);
   sessionStorage.setItem('ac_hist', JSON.stringify(actionHistory));
@@ -4509,7 +4509,7 @@ async function refreshCompletedActions() {
       return;
     }
     list.innerHTML = visible.map(a => {
-      const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
       const tag = a.event === 'executed' ? 'EXEC'
                : a.event === 'manual_execute' ? 'MANUAL'
                : 'DRY';
@@ -4869,7 +4869,7 @@ async function refreshLiveActionBoard() {
         done.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions in last 24h.</div>';
       } else {
         done.innerHTML = recent.map(a => {
-          const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
           const tag = a.event === 'executed' ? 'EXEC' : a.event === 'manual_execute' ? 'MANUAL' : 'SNAP';
           const color = a.event === 'executed' ? 'var(--safe)' : a.event === 'manual_execute' ? 'var(--balanced)' : 'var(--text-muted)';
           const d = a.decision || {};
@@ -4927,7 +4927,7 @@ async function refreshHannahTrades() {
         recentEl.innerHTML = j.recent.map(t => {
           const profColor = t.currentProfit > 0 ? 'var(--safe)' : t.currentProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
           const sign = t.currentProfit >= 0 ? '+' : '';
-          const t1 = new Date(t.closedAt || t.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          const t1 = new Date(t.closedAt || t.createdAt).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
           return '<div style="display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--border-dim);font-size:10.5px">' +
                  '<span style="color:var(--text-muted);font-family:var(--font-mono);min-width:42px">'+t1+'</span>' +
                  '<span style="color:var(--text-secondary);min-width:80px">' + (t.pair||'') + ' ' + (t.direction||'').toUpperCase() + '</span>' +
@@ -5313,7 +5313,7 @@ function renderControl(data) {
   // Row 3 market / portfolio populated by renderPortfolioFromRecon + loadMarketSignals
 
   // Engine badge
-  const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+  const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'}) : '';
   setEl('engine-ts', 'Engine ran ' + ts);
 
   // Actions
@@ -5982,7 +5982,7 @@ function renderContext(data) {
   }
 
   // Health
-  const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—';
+  const ts = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Asia/Dubai'}) : '—';
   setEl('h-lastsync', ts);
   const engEl = document.getElementById('h-engine-val');
   if (engEl) { engEl.textContent = (data.requiredActions?.length||0) + ' actions'; }
