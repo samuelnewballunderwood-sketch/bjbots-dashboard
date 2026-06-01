@@ -4396,7 +4396,7 @@ async function refreshHannahTiles() {
     if (decR.ok) {
       const j = await decR.json();
       const exec = (j.decisions || []).filter(d => d.executable && (d.confidence ?? 0) >= 60);
-      const blocked = (j.decisions || []).filter(d => d.objective === 'blocked_by_earn');
+      const blocked = (j.decisions || []).filter(d => d.objective === 'low_free_balance' || (d.objective === 'low_free_balance' || d.objective === 'blocked_by_earn'));
       pending = exec.length + blocked.length;
       if (exec[0])      pendTag = ((exec[0].actionType || '') + ' ' + (exec[0].objective || '')).trim();
       else if (blocked[0]) pendTag = 'blocked: redeem ' + (blocked[0].suggestedAsset || '?');
@@ -4482,7 +4482,7 @@ async function refreshHannahStatus() {
     if (perf) {
       pieces.push(perf.active + ' grid' + (perf.active===1?'':'s') + ' live · \$' + perf.totalCapital.toFixed(0) + ' deployed · \$' + perf.totalProfit.toFixed(2) + ' locked');
     }
-    const blocked = (dec?.decisions||[]).filter(d => d.objective === 'blocked_by_earn');
+    const blocked = (dec?.decisions||[]).filter(d => d.objective === 'low_free_balance' || (d.objective === 'low_free_balance' || d.objective === 'blocked_by_earn'));
     if (blocked.length > 0) {
       pieces.push('Blocked: redeem ' + blocked.map(b => b.suggestedAsset).join('/') + ' from Earn to unlock more grids.');
     } else if (usdtFree > 500) {
@@ -4605,7 +4605,7 @@ async function filterManualOnly() {
     const dec = await fetch('/api/decisions').then(r => r.ok ? r.json() : null);
     if (!dec) return;
     // Only show things YOU must act on — exclude Hannah-handled and informational
-    const TRULY_MANUAL = new Set(['blocked_by_earn']);
+    const TRULY_MANUAL = new Set(['low_free_balance','blocked_by_earn']);
     const manual = (dec.decisions || []).filter(d => {
       if (d.executable) return false;                                    // Hannah handles
       if (TRULY_MANUAL.has(d.objective)) return true;                     // unstake / human-only
