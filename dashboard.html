@@ -4713,7 +4713,7 @@ setTimeout(refreshSystemScore, 5500);
 let _actionsCache = null;
 async function loadActionsCache() {
   try {
-    const r = await fetch('/api/hannah-actions');
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200');
     if (!r.ok) return;
     const j = await r.json();
     _actionsCache = (j.actions || []).filter(a =>
@@ -4834,7 +4834,7 @@ async function refreshLiveActionBoard() {
     const cnt  = document.getElementById('d2-action-count');
     const [dec, acts] = await Promise.all([
       fetch('/api/decisions?cb=' + Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
 
     // INCOMING — executable decisions Hannah is about to do
