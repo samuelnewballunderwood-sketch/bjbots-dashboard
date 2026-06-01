@@ -5028,15 +5028,16 @@ async function refreshDashboardV2() {
       });
       setT('v2-trades-today', String(todayDealCount));
     }
-    // Active bots: prefer all-types (DCA + Grid + Signal), fall back to Hannah-only
+    // Active bots: prefer all-types (DCA + Grid + Signal), fall back to Hannah-only.
+    // Race guard: never overwrite with '0/0' on cold start — keep previous value.
     if (botStats?.total?.count > 0) {
       setT('v2-active-bots', botStats.total.active + ' / ' + botStats.total.count);
-      // sub-line: type breakdown
       const sub = document.querySelector('#v2-active-bots + .v2-stat-sub');
       if (sub) sub.textContent = (botStats.dca?.active || 0) + ' DCA · ' + (botStats.grid?.active || 0) + ' grid · ' + (botStats.signal?.active || 0) + ' signal';
-    } else if (perf) {
+    } else if (perf && (perf.count || 0) > 0) {
       setT('v2-active-bots', perf.active + ' / ' + perf.count);
     }
+    // else: leave whatever was there (don't blank to 0/0 on transient failure)
     {
       // Prefer canonical locked from /deals/summary, fall back to reconciliation
       const tl = canonicalLocked != null ? canonicalLocked : (dec?.reconciliation?.totalRealised || 0);
