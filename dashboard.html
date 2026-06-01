@@ -2842,8 +2842,8 @@ body::after {
     <!-- LEFT: pending actions — primary -->
     <div class="ac2-left">
       <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(248,113,113,.2);">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.14em;color:#f87171;">⚡ REQUIRED ACTIONS</div>
-        <div style="font-size:10px;color:var(--text-dim);font-family:var(--font-mono)">What to do now</div>
+        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:.14em;color:#f87171;">⚡ MANUAL INTERVENTION REQUIRED</div>
+        <div style="font-size:10px;color:var(--text-dim);font-family:var(--font-mono)">things Hannah cannot do alone</div>
       </div>
       <div id="required-actions-list-ac">
         <div style="color:var(--text-muted);font-size:11px;padding:10px 0">Syncing with decision engine…</div>
@@ -2887,6 +2887,16 @@ body::after {
 
     <!-- RIGHT: completed + checklist -->
     <div class="ac2-right">
+      <div class="d2-section-title" style="margin-bottom:10px">HANNAH ACTIONS TAKEN</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:.08em">
+        <button onclick="renderActionsTaken('24h')" id="at-btn-24h" style="flex:1;padding:5px 8px;background:rgba(45,212,191,.15);border:1px solid var(--teal);border-radius:4px;color:var(--teal);cursor:pointer">LAST 24H</button>
+        <button onclick="renderActionsTaken('7d')" id="at-btn-7d" style="flex:1;padding:5px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border-dim);border-radius:4px;color:var(--text-muted);cursor:pointer">LAST 7 DAYS</button>
+        <button onclick="renderActionsTaken('all')" id="at-btn-all" style="flex:1;padding:5px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border-dim);border-radius:4px;color:var(--text-muted);cursor:pointer">ALL</button>
+      </div>
+      <div id="actions-taken-list" style="max-height:240px;overflow-y:auto;margin-bottom:18px">
+        <div style="color:var(--text-muted);font-size:11px;padding:6px 0">Loading actions...</div>
+      </div>
+
       <div class="d2-section-title">✓ COMPLETED TODAY</div>
       <div class="ac2-done-list" id="ac-completed-list">
         <div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions recorded this session. System monitoring is active.</div>
@@ -3562,9 +3572,9 @@ body::after {
 
       <!-- 6 Metric cards radially placed -->
       <div class="cv16-card cv16-card-1">
-        <div class="cv16-card-lbl">Daily Profit</div>
+        <div class="cv16-card-lbl">Today</div>
         <div class="cv16-card-val cv-pos" id="cv-daily">—</div>
-        <div class="cv16-card-sub" id="cv16-daily-sub">live avg/day</div>
+        <div class="cv16-card-sub" id="cv16-daily-sub">actual vs yesterday</div>
       </div>
       <div class="cv16-card cv16-card-2">
         <div class="cv16-card-lbl">Capital</div>
@@ -4498,6 +4508,111 @@ async function refreshSystemScore() {
 }
 setInterval(refreshSystemScore, 60000);
 setTimeout(refreshSystemScore, 5500);
+
+// ACTIONS TAKEN renderer (pulls persistent KV log)
+let _actionsCache = null;
+async function loadActionsCache() {
+  try {
+    const r = await fetch('/api/hannah-actions');
+    if (!r.ok) return;
+    const j = await r.json();
+    _actionsCache = (j.actions || []).filter(a =>
+      ['executed','manual_execute','daily_snapshot_written'].includes(a.event));
+    renderActionsTaken('24h');
+  } catch (_) {}
+}
+function renderActionsTaken(scope) {
+  const list = document.getElementById('actions-taken-list');
+  if (!list || !_actionsCache) return;
+  ['24h','7d','all'].forEach(s => {
+    const b = document.getElementById('at-btn-'+s);
+    if (b) {
+      const sel = s === scope;
+      b.style.background = sel ? 'rgba(45,212,191,.15)' : 'rgba(255,255,255,.04)';
+      b.style.borderColor = sel ? 'var(--teal)' : 'var(--border-dim)';
+      b.style.color = sel ? 'var(--teal)' : 'var(--text-muted)';
+    }
+  });
+  const cutoff = scope === '24h' ? Date.now() - 86400000
+              : scope === '7d'  ? Date.now() - 7*86400000
+              : 0;
+  const filtered = _actionsCache.filter(a => new Date(a.ts).getTime() >= cutoff);
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions in this window.</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice(0, 60).map(a => {
+    const t = new Date(a.ts).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const tag = a.event === 'executed' ? 'EXEC' : a.event === 'manual_execute' ? 'MANUAL' : 'SNAP';
+    const color = a.event === 'executed' ? 'var(--safe)' : a.event === 'manual_execute' ? 'var(--balanced)' : 'var(--text-muted)';
+    const d = a.decision || {};
+    const at = d.actionType || '';
+    const obj = d.objective || '';
+    const txt = (d.text || (a.event === 'daily_snapshot_written' ? 'Snapshot $'+a.locked : (at+' '+obj))).slice(0, 90);
+    const result = (a.results || [])[0];
+    const detail = result?.skipped ? 'skipped' :
+                   result?.created ? 'bot ' + (result.response?.gridBot?.id || '?') + ' created' :
+                   '';
+    return '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border-dim);font-size:11px;align-items:flex-start">' +
+           '<span style="color:var(--text-muted);font-family:var(--font-mono);min-width:88px;font-size:9.5px">'+t+'</span>' +
+           '<span style="color:'+color+';font-weight:700;min-width:48px;font-size:9px;letter-spacing:.06em">'+tag+'</span>' +
+           '<span style="flex:1;color:var(--text-secondary)">'+txt+(detail ? ' / '+detail : '')+'</span>' +
+           '</div>';
+  }).join('');
+}
+setInterval(loadActionsCache, 60000);
+setTimeout(loadActionsCache, 4500);
+
+// MANUAL INTERVENTION list — strip executable decisions (Hannah handles those)
+async function filterManualOnly() {
+  const list = document.getElementById('required-actions-list-ac');
+  if (!list) return;
+  try {
+    const dec = await fetch('/api/decisions').then(r => r.ok ? r.json() : null);
+    if (!dec) return;
+    const manual = (dec.decisions || []).filter(d => !d.executable);
+    if (manual.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:10px 0">All clear. Hannah handling autonomously.</div>';
+      return;
+    }
+    list.innerHTML = manual.slice(0, 8).map(d => {
+      const sev = d.severity || d.urgency || 'medium';
+      const sevColor = sev === 'critical' ? '#f87171' : sev === 'high' ? 'var(--warn)' : 'var(--text-secondary)';
+      return '<div style="padding:10px 12px;background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.18);border-radius:6px;margin-bottom:8px">' +
+             '<div style="font-size:9px;letter-spacing:.12em;color:'+sevColor+';font-weight:700;text-transform:uppercase;margin-bottom:4px">'+sev+' / '+(d.timeframe||'')+'</div>' +
+             '<div style="font-size:12px;color:var(--text-primary);font-weight:700;margin-bottom:4px">'+(d.text||'')+'</div>' +
+             '<div style="font-size:10px;color:var(--text-muted)">'+(d.reason||'')+'</div>' +
+             '</div>';
+    }).join('');
+  } catch (_) {}
+}
+setInterval(filterManualOnly, 30000);
+setTimeout(filterManualOnly, 5000);
+
+// cv-daily (orbital Today tile) — snapshot-based
+async function fixOrbitalToday() {
+  try {
+    const el = document.getElementById('cv-daily');
+    if (!el) return;
+    const [snap, dec] = await Promise.all([
+      fetch('/api/daily-snapshot').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
+    const current = dec?.reconciliation?.totalRealised ?? 0;
+    const yest = snap?.yesterday?.locked ?? null;
+    let val = '$0.00';
+    if (yest != null) {
+      const diff = current - yest;
+      val = diff >= 0 ? '+$' + diff.toFixed(2) : '-$' + Math.abs(diff).toFixed(2);
+    }
+    el.textContent = val;
+    const sub = document.getElementById('cv16-daily-sub');
+    if (sub) sub.textContent = yest == null ? 'awaiting baseline' : 'vs yesterday';
+  } catch (_) {}
+}
+setInterval(fixOrbitalToday, 60000);
+setTimeout(fixOrbitalToday, 6500);
+
 
 
 
