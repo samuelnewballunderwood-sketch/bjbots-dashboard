@@ -726,21 +726,24 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
   const { totalAllocated, byStrategy } = portfolio;
   const moves = [];
 
-  // Build enriched bot list
-  const allBots = Object.entries(BOT_META).map(([id, meta]) => {
-    const bnBot  = bnBots.find(b => b.id === id);
-    const tcBot  = tcBots.find(b => String(b.id) === String(id));
-    const trades = bnBot?.trades || (tcBot ? (tcBot.completedDeals||0)+(tcBot.activeDeals||0) : 0);
-    const roi    = meta.roi !== undefined ? meta.roi : (tcBot?.profit ? (tcBot.profit/(meta.capital||100))*100 : 0);
-    const score  = botScores[id] || 0;
-    const effUsd = parseFloat(((roi/100)*meta.capital).toFixed(2));
-    const absChange  = Math.abs(market.btcChange24h||0);
-    const isGrid     = meta.scoreType==='spot-grid'||meta.scoreType==='futures-grid';
-    const marketFit  = isGrid ? (absChange<2?'positive':absChange<4?'neutral':'negative') : (absChange>1?'positive':'neutral');
-    const currentPct = totalAllocated > 0 ? (meta.capital/totalAllocated)*100 : 0;
-    const stratPct   = totalAllocated > 0 ? ((byStrategy[meta.strategy]||0)/totalAllocated)*100 : 0;
-    return { id, ...meta, score, trades, roi, effUsd, marketFit, currentPct, stratPct };
-  });
+  // Build enriched bot list — exclude legacy non-numeric IDs (eth-grid-trades etc.)
+  // Those are static placeholders not in 3Commas API; targeting them produces 404s.
+  const allBots = Object.entries(BOT_META)
+    .filter(([id]) => /^\d+$/.test(String(id)))  // numeric 3Commas IDs only
+    .map(([id, meta]) => {
+      const bnBot  = bnBots.find(b => b.id === id);
+      const tcBot  = tcBots.find(b => String(b.id) === String(id));
+      const trades = bnBot?.trades || (tcBot ? (tcBot.completedDeals||0)+(tcBot.activeDeals||0) : 0);
+      const roi    = meta.roi !== undefined ? meta.roi : (tcBot?.profit ? (tcBot.profit/(meta.capital||100))*100 : 0);
+      const score  = botScores[id] || 0;
+      const effUsd = parseFloat(((roi/100)*meta.capital).toFixed(2));
+      const absChange  = Math.abs(market.btcChange24h||0);
+      const isGrid     = meta.scoreType==='spot-grid'||meta.scoreType==='futures-grid';
+      const marketFit  = isGrid ? (absChange<2?'positive':absChange<4?'neutral':'negative') : (absChange>1?'positive':'neutral');
+      const currentPct = totalAllocated > 0 ? (meta.capital/totalAllocated)*100 : 0;
+      const stratPct   = totalAllocated > 0 ? ((byStrategy[meta.strategy]||0)/totalAllocated)*100 : 0;
+      return { id: Number(id), ...meta, score, trades, roi, effUsd, marketFit, currentPct, stratPct };
+    });
 
   // PHASE 0 — PORTFOLIO GAP ACTIONS (largest gap first, already sorted)
   // These close gaps between current and target state — portfolio-level, not bot-level
