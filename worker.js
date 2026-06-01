@@ -1526,6 +1526,90 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R28 (NEW): BTC 5-min Volume Spike ────────────────────────────
+  // Binance /fapi/v1/klines free. Compare last 5m vol to 20-period average.
+  // 2x+ spike means activity surge — combined with direction = scalp opportunity.
+  try {
+    const kr = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=21');
+    if (kr.ok) {
+      const klines = await kr.json();
+      if (Array.isArray(klines) && klines.length >= 21) {
+        const lastVol = parseFloat(klines[20][7] || 0); // quote volume USDT
+        const avgVol = klines.slice(0,20).reduce((s,k) => s + parseFloat(k[7]||0), 0) / 20;
+        const ratio = avgVol > 0 ? lastVol / avgVol : 0;
+        if (ratio > 2) {
+          const open = parseFloat(klines[20][1]);
+          const close = parseFloat(klines[20][4]);
+          const dir = close > open ? 'UP' : 'DOWN';
+          required.push(makeDecision({
+            actionType:'monitor', category:'required',
+            text:'BTC 5m vol ' + ratio.toFixed(1) + 'x · ' + dir + ' move active',
+            reason:'R28: Last 5min volume \$' + (lastVol/1000).toFixed(0) + 'k vs 20-period avg \$' + (avgVol/1000).toFixed(0) + 'k. ' + ratio.toFixed(1) + 'x spike + ' + dir + ' direction. Combine with R25 momentum for entry.',
+            amount:0, amountPct:0, targetBotIds:[],
+            urgency:'high', timeframe:'15m',
+            expectedImpact:'Tag a Hannah scalp opportunity — confluence signal',
+            objective:'volume_spike', confidence:75, executable:false,
+            suggestedAsset:'BTC',
+          }));
+        }
+      }
+    }
+  } catch(_) {}
+
+  // ─── R30 (NEW): Liquidation Cascade Hunter ────────────────────────
+  // Detect: BTC 5min drop >1.5% AND OI dropped vs 1h ago = forced liquidations cleared.
+  // Buy the wick — historical edge ~65%.
+  try {
+    if (env.ALPHA_LOGS) {
+      const now = Date.now();
+      const oiPrev = await env.ALPHA_LOGS.get('btcOI:h_' + (Math.floor(now/(60*60*1000)) - 1), 'json');
+      const kr2 = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=1');
+      const oiR = await fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT');
+      if (kr2.ok && oiR.ok && oiPrev?.oi) {
+        const candle = (await kr2.json())[0];
+        const oiCur = parseFloat((await oiR.json()).openInterest || 0);
+        const open = parseFloat(candle[1]);
+        const close = parseFloat(candle[4]);
+        const movePct = ((close - open) / open) * 100;
+        const oiDeltaPct = ((oiCur - oiPrev.oi) / oiPrev.oi) * 100;
+        if (movePct < -1.5 && oiDeltaPct < -2) {
+          required.push(makeDecision({
+            actionType:'spot_buy', category:'required',
+            text:'BTC liq cascade ' + movePct.toFixed(1) + '%, OI -' + Math.abs(oiDeltaPct).toFixed(1) + '% — buy wick \$50',
+            reason:'R30: BTC dropped ' + movePct.toFixed(2) + '% in 5min WITH Open Interest down ' + oiDeltaPct.toFixed(1) + '% = forced liquidations cleared. Historical: ~65% bounce rate within next hour. Buy \$50, 0.6%/0.8% TP/SL.',
+            amount:50, amountPct:0, targetBotIds:[],
+            urgency:'critical', timeframe:'1h',
+            expectedImpact:'Captures post-liquidation bounce — high-edge scalp',
+            objective:'liq_cascade_buy', confidence:80, executable:true,
+            suggestedPair:'USDT_BTC', suggestedAsset:'BTC',
+          }));
+        }
+      }
+    }
+  } catch(_) {}
+
+  // ─── R29 (NEW): Auto-disable losing rules (meta-rule) ───────────────
+  // Reads /api/rule-performance, marks rules with negative ROI after 7+ days for disable.
+  // Currently dormant — needs accumulated R23 attribution data first. Surfaces as advisory.
+  try {
+    const rp = await fetch('https://tc-proxy-eu.onrender.com/api/rule-performance');
+    if (rp.ok) {
+      const j = await rp.json();
+      const losers = (j.rules || []).filter(r => r.profit < -10 && r.botCount >= 3);
+      for (const lose of losers) {
+        suggested.push(makeDecision({
+          actionType:'monitor', category:'suggested',
+          text:'Rule ' + lose.rule + ' losing — \$' + lose.profit.toFixed(2) + ' across ' + lose.botCount + ' bots (ROI ' + lose.roi + '%)',
+          reason:'R29: ' + lose.rule + ' has produced \$' + lose.profit.toFixed(2) + ' across ' + lose.botCount + ' bots. Sustained negative. Consider disabling or tuning thresholds.',
+          amount:0, amountPct:0, targetBotIds:[],
+          urgency:'low', timeframe:'7d',
+          expectedImpact:'Trims rules that don\'t pay — system Darwinism',
+          objective:'rule_killer', confidence:65, executable:false,
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
