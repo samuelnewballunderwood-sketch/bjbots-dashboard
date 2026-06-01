@@ -2733,14 +2733,25 @@ body::after {
 
   </div><!-- /d2-row1 -->
 
-  <!-- ══ ROW 2: REQUIRED ACTIONS — dominant ══ -->
+  <!-- ══ ROW 2: LIVE ACTION BOARD ══ -->
   <div class="d2-row2">
     <div class="d2-row2-header">
-      <div class="d2-row2-title">⚡ REQUIRED ACTIONS</div>
-      <div class="d2-row2-sub" id="d2-action-count">What the system needs you to do now</div>
+      <div class="d2-row2-title">⚡ LIVE ACTION BOARD</div>
+      <div class="d2-row2-sub" id="d2-action-count">Hannah's incoming + last 24h taken</div>
     </div>
-    <div class="d2-actions-grid" id="dash-alerts">
-      <div style="color:var(--text-dim);font-size:11px;padding:8px 0;grid-column:1/-1">Syncing with decision engine…</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 4px">
+      <div>
+        <div style="font-size:9.5px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;font-family:var(--font-display)">⏵ INCOMING (Hannah about to act)</div>
+        <div id="lab-incoming">
+          <div style="color:var(--text-muted);font-size:11px;padding:6px 0">Loading…</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9.5px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;font-family:var(--font-display)">✓ DONE LAST 24H</div>
+        <div id="lab-done24h" style="max-height:260px;overflow-y:auto">
+          <div style="color:var(--text-muted);font-size:11px;padding:6px 0">Loading…</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4664,6 +4675,75 @@ async function fixOrbitalToday() {
 }
 setInterval(fixOrbitalToday, 60000);
 setTimeout(fixOrbitalToday, 6500);
+
+// LIVE ACTION BOARD — INCOMING + DONE LAST 24H
+async function refreshLiveActionBoard() {
+  try {
+    const inc  = document.getElementById('lab-incoming');
+    const done = document.getElementById('lab-done24h');
+    const cnt  = document.getElementById('d2-action-count');
+    const [dec, acts] = await Promise.all([
+      fetch('/api/decisions?cb=' + Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
+
+    // INCOMING — executable decisions Hannah is about to do
+    if (inc && dec) {
+      const incoming = (dec.decisions || []).filter(d => d.executable && (d.confidence ?? 0) >= 50);
+      if (incoming.length === 0) {
+        inc.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">Nothing queued. All clear.</div>';
+      } else {
+        inc.innerHTML = incoming.slice(0,5).map(d => {
+          const conf = d.confidence || 0;
+          const confColor = conf >= 80 ? 'var(--safe)' : conf >= 60 ? 'var(--teal)' : 'var(--warn)';
+          return '<div style="padding:8px 10px;background:rgba(45,212,191,.06);border:1px solid rgba(45,212,191,.22);border-radius:6px;margin-bottom:6px">'
+               + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
+               + '<span style="font-size:9px;letter-spacing:.12em;color:var(--teal);text-transform:uppercase;font-weight:700">' + (d.objective||'').replace(/_/g,' ') + '</span>'
+               + '<span style="font-size:9px;color:'+confColor+';font-family:var(--font-mono)">' + conf + '%</span>'
+               + '</div>'
+               + '<div style="font-size:12px;color:var(--text-primary);font-weight:600">' + (d.text||'') + '</div>'
+               + '</div>';
+        }).join('');
+      }
+      if (cnt) cnt.textContent = incoming.length + ' queued · ' + ((dec.decisions||[]).length) + ' decisions in cycle';
+    }
+
+    // DONE LAST 24H — Hannah's actual actions
+    if (done && acts) {
+      const since = Date.now() - 24*60*60*1000;
+      const recent = (acts.actions||[])
+        .filter(a => new Date(a.ts).getTime() >= since)
+        .filter(a => ['executed','manual_execute','daily_snapshot_written'].includes(a.event))
+        .slice(0, 50);
+      if (recent.length === 0) {
+        done.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:6px 0">No actions in last 24h.</div>';
+      } else {
+        done.innerHTML = recent.map(a => {
+          const t = new Date(a.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          const tag = a.event === 'executed' ? 'EXEC' : a.event === 'manual_execute' ? 'MANUAL' : 'SNAP';
+          const color = a.event === 'executed' ? 'var(--safe)' : a.event === 'manual_execute' ? 'var(--balanced)' : 'var(--text-muted)';
+          const d = a.decision || {};
+          const txt = (d.text || (a.event === 'daily_snapshot_written' ? 'Snapshot $'+a.locked : (d.actionType||'') + ' ' + (d.objective||''))).slice(0,80);
+          const result = (a.results||[])[0];
+          const detail = result?.skipped ? 'skipped' :
+                         result?.created ? 'bot ' + (result.response?.gridBot?.id || '?') :
+                         result?.cancelled ? 'cancelled' : '';
+          return '<div style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border-dim);font-size:10.5px">'
+               + '<span style="color:var(--text-muted);font-family:var(--font-mono);min-width:42px">'+t+'</span>'
+               + '<span style="color:'+color+';font-weight:700;min-width:42px;font-size:9px;letter-spacing:.06em">'+tag+'</span>'
+               + '<span style="flex:1;color:var(--text-secondary)">'+txt+(detail?' · '+detail:'')+'</span>'
+               + '</div>';
+        }).join('');
+      }
+    }
+  } catch(_) {}
+}
+setInterval(refreshLiveActionBoard, 30000);
+setTimeout(refreshLiveActionBoard, 5000);
+
+// Also force-disable the legacy renderControl alerts → dash-alerts (which would otherwise repopulate dca_depth)
+// renderControl will still run but its output went into #dash-alerts which we have replaced.
+
 
 // MTD% + YTD% + PREV MONTH tiles — now uses /api/monthly-performance for calendar accuracy
 async function refreshMtdYtd() {
