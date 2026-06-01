@@ -1719,7 +1719,28 @@ async function getDecisions(env){
         pctOfStretchTarget: targets.stretch > 0 ? +((monthLocked/targets.stretch)*100).toFixed(1) : 0,
       };
     } catch(_) {}
-    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{},market,monthlyTarget});
+    // YTD performance — annual P&L tracker (target 6%/mo × 12 = 72% annual)
+    let ytdTarget = null;
+    try {
+      const now = new Date();
+      const yStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+      const daysIntoYear = Math.floor((now.getTime() - yStart.getTime()) / 86400000) + 1;
+      const daysInYear = ((now.getUTCFullYear() % 4 === 0) && (now.getUTCFullYear() % 100 !== 0)) || (now.getUTCFullYear() % 400 === 0) ? 366 : 365;
+      const grandTotal = recon?.grandTotal || result?.portfolio?.trueTotal || 0;
+      const ytdLocked = recon?.totalRealised || 0;
+      const annualTarget = +(grandTotal * 0.72).toFixed(0);
+      const monthlyMinPace = +(grandTotal * 0.06).toFixed(0);
+      ytdTarget = {
+        daysIntoYear, daysInYear,
+        ytdLocked: +ytdLocked.toFixed(2),
+        ytdPct: grandTotal > 0 ? +((ytdLocked/grandTotal)*100).toFixed(2) : 0,
+        annualTarget,
+        monthlyMinPace,
+        pctOfYearlyTarget: annualTarget > 0 ? +((ytdLocked/annualTarget)*100).toFixed(1) : 0,
+        onPace: ytdLocked >= (annualTarget * (daysIntoYear/daysInYear)),
+      };
+    } catch(_) {}
+    return json({...result,scores:botScores,efficiency:botEff,dataIntegrity,dataWarning:result.dataWarning,reconciliation:recon,prices:pricesData||{},market,monthlyTarget,ytdTarget});
   }catch(e){
     return json({error:e.message,decisions:[],requiredActions:[],suggestedActions:[],riskState:'UNKNOWN',riskScore:0,portfolioGaps:[],targetState:{}},500);
   }

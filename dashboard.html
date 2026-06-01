@@ -2527,10 +2527,10 @@ body::after {
       <div class="d2-kpi-num" id="dm-capital">—</div>
       <div class="d2-kpi-sub">Binance · live</div>
     </div>
-    <div class="d2-kpi-cell highlight">
-      <div class="d2-kpi-label">LOCKED PROFIT</div>
-      <div class="d2-kpi-num safe" id="dm-locked">—</div>
-      <div class="d2-kpi-sub" id="dm-locked-pct">—</div>
+    <div class="d2-kpi-cell highlight" style="background:rgba(45,212,191,.08)">
+      <div class="d2-kpi-label">TOTAL LOCKED</div>
+      <div class="d2-kpi-num safe" id="dm-locked" style="font-size:28px;font-weight:900;letter-spacing:-.02em">—</div>
+      <div class="d2-kpi-sub" id="dm-locked-pct" style="font-size:12px;font-weight:700;color:var(--safe)">—</div>
     </div>
     <div class="d2-kpi-cell">
       <div class="d2-kpi-label">TODAY</div>
@@ -2538,7 +2538,7 @@ body::after {
       <div class="d2-kpi-sub" id="dm-trial-avg-sub">trial avg —/d</div>
     </div>
     <div class="d2-kpi-cell">
-      <div class="d2-kpi-label">DAYS LOCKED</div>
+      <div class="d2-kpi-label">DAYS LIVE</div>
       <div class="d2-kpi-num" id="dm-trial-day">—</div>
       <div class="d2-kpi-sub" id="dm-target">Target —</div>
     </div>
@@ -2561,6 +2561,16 @@ body::after {
       <div class="d2-kpi-label">IN PROGRESS</div>
       <div class="d2-kpi-num warn" id="dm-actions-pending">—</div>
       <div class="d2-kpi-sub" id="dm-actions-pending-sub">awaiting action</div>
+    </div>
+    <div class="d2-kpi-cell" style="background:rgba(45,212,191,.04)">
+      <div class="d2-kpi-label">MTD %</div>
+      <div class="d2-kpi-num safe" id="dm-mtd-pct" style="font-size:24px;font-weight:900">—</div>
+      <div class="d2-kpi-sub" id="dm-mtd-sub">vs 6% goal</div>
+    </div>
+    <div class="d2-kpi-cell" style="background:rgba(45,212,191,.04)">
+      <div class="d2-kpi-label">YTD %</div>
+      <div class="d2-kpi-num safe" id="dm-ytd-pct" style="font-size:24px;font-weight:900">—</div>
+      <div class="d2-kpi-sub" id="dm-ytd-sub">vs 72% goal</div>
     </div>
   </div>
 
@@ -2595,12 +2605,12 @@ body::after {
           <div class="dm-sub">Binance</div>
         </div>
         <div class="dash-metric-card dm3">
-          <div class="dm-lbl">Trial Day</div>
+          <div class="dm-lbl">Day</div>
           <div class="dm-val" id="cv-trial">—</div>
           <div class="dm-sub" id="cv-trial-sub">—</div>
         </div>
         <div class="dash-metric-card dm4">
-          <div class="dm-lbl">Target</div>
+          <div class="dm-lbl">MTD Target</div>
           <div class="dm-val" id="cv-target">—</div>
           <div class="dm-sub">6% goal</div>
         </div>
@@ -3582,22 +3592,22 @@ body::after {
         <div class="cv16-card-sub">Binance</div>
       </div>
       <div class="cv16-card cv16-card-3">
-        <div class="cv16-card-lbl">Trial Day</div>
+        <div class="cv16-card-lbl">Day</div>
         <div class="cv16-card-val" id="cv-trial2">—</div>
         <div class="cv16-card-sub" id="cv-trial2-sub">Loading…</div>
       </div>
       <div class="cv16-card cv16-card-4">
-        <div class="cv16-card-lbl">Target</div>
+        <div class="cv16-card-lbl">MTD Target</div>
         <div class="cv16-card-val" id="cv-target2">—</div>
         <div class="cv16-card-sub">6% goal</div>
       </div>
       <div class="cv16-card cv16-card-5">
-        <div class="cv16-card-lbl">Stretch</div>
+        <div class="cv16-card-lbl">MTD Stretch</div>
         <div class="cv16-card-val cv-warn" id="cv-stretch">—</div>
         <div class="cv16-card-sub">10% goal</div>
       </div>
       <div class="cv16-card cv16-card-6">
-        <div class="cv16-card-lbl">Progress</div>
+        <div class="cv16-card-lbl">MTD Locked</div>
         <div class="cv16-card-val cv-pos" id="cv-progress">—</div>
         <div class="cv16-card-sub">Locked</div>
       </div>
@@ -4624,6 +4634,32 @@ async function fixOrbitalToday() {
 }
 setInterval(fixOrbitalToday, 60000);
 setTimeout(fixOrbitalToday, 6500);
+
+// MTD% + YTD% tiles
+async function refreshMtdYtd() {
+  try {
+    const r = await fetch('/api/decisions');
+    if (!r.ok) return;
+    const j = await r.json();
+    const mt = j.monthlyTarget, yt = j.ytdTarget;
+    const setT = (id, v, c) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = v; if (c) el.style.color = c; }
+    };
+    if (mt) {
+      const mtdPct = ((mt.monthLocked / Math.max(1, mt.targets.min/0.06)) * 100).toFixed(2);
+      setT('dm-mtd-pct', '+' + mtdPct + '%', mt.onPaceFor6 ? 'var(--safe)' : 'var(--warn)');
+      setT('dm-mtd-sub', '$' + mt.monthLocked.toFixed(0) + ' / target $' + mt.targets.min);
+    }
+    if (yt) {
+      setT('dm-ytd-pct', '+' + yt.ytdPct + '%', yt.onPace ? 'var(--safe)' : 'var(--warn)');
+      setT('dm-ytd-sub', '$' + yt.ytdLocked.toFixed(0) + ' / target $' + yt.annualTarget);
+    }
+  } catch(_) {}
+}
+setInterval(refreshMtdYtd, 60000);
+setTimeout(refreshMtdYtd, 7000);
+
 
 
 
