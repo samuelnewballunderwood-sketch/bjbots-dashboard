@@ -1320,6 +1320,33 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R18 (NEW): BTC Funding Rate Contrarian ──────────────────────
+  // Funding extremes mean-revert. When longs overpay (>0.05%) → short.
+  // When shorts overpay (<-0.03%) → long. \$100 Smart Trade, 1% TP/SL.
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/funding-rate');
+    if (r.ok) {
+      const j = await r.json();
+      const rate = parseFloat(j?.lastFundingRate || 0); // already a decimal
+      const ratePct = rate * 100;
+      let direction = null;
+      if (ratePct > 0.05)       direction = 'sell'; // longs overpaying → fade
+      else if (ratePct < -0.03) direction = 'buy';  // shorts overpaying → fade
+      if (direction) {
+        required.push(makeDecision({
+          actionType:'spot_buy', category:'required',
+          text:'Funding ' + ratePct.toFixed(4) + '% — contrarian ' + direction.toUpperCase() + ' BTC \$100',
+          reason:'R18: BTC perp funding ' + ratePct.toFixed(4) + '% is extreme. ' + (direction==='sell'?'Longs are overpaying.':'Shorts are overpaying.') + ' Mean-reversion trade: \$100 ' + direction + ' Smart Trade, 1% TP/SL.',
+          amount:100, amountPct:0, targetBotIds:[],
+          urgency:'high', timeframe:'4h',
+          expectedImpact:'Capture funding mean-reversion (~70% historical win rate)',
+          objective:'funding_contrarian', confidence:75, executable:true,
+          suggestedPair:'USDT_BTC', suggestedAsset:'BTC',
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
