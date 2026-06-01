@@ -782,8 +782,10 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
 
   // PHASE 1 — BOT-LEVEL DOWNSIDE PROTECTION (always runs)
 
-  // A. Score < 50 → reduce capital (worst bots first)
-  allBots.filter(b => b.score < RC.scoreThresholds.reduce && b.capital > RC.minimumMoveUsd * 2)
+  // A. Score 1..49 → reduce capital (worst real-data bots first).
+  // Score = 0 means 'no signal yet' (just enabled, no recent trades) — skip, don't punish.
+  // Only target bots with measurable underperformance.
+  allBots.filter(b => b.score > 0 && b.score < RC.scoreThresholds.reduce && b.capital > RC.minimumMoveUsd * 2)
     .sort((a,b) => a.score - b.score)
     .forEach(bot => {
       const pct = bot.score < 30 ? 0.60 : bot.score < 40 ? 0.40 : 0.25;
@@ -802,8 +804,18 @@ function computeReallocation({ botScores, bnBots, tcBots, portfolio, riskState, 
       }));
     });
 
-  // B. Idle bots — zero trades, capital allocated
-  allBots.filter(b => b.trades === 0 && b.capital >= RC.minimumMoveUsd*2 && b.score >= RC.scoreThresholds.reduce)
+  // B. Idle bots — zero trades, capital allocated.
+  // Skip if bot was recently enabled (has lifetime trades but 0 in current period — needs time).
+  // For 3Commas bots, tcBot.completedDeals is lifetime; trades counts current period.
+  allBots.filter(b => {
+      if (b.trades !== 0) return false;
+      if (b.capital < RC.minimumMoveUsd*2) return false;
+      if (b.score < RC.scoreThresholds.reduce) return false;
+      // If bot has any lifetime activity at all, it was working before — give it time.
+      const tcBot = tcBots.find(tb => String(tb.id) === String(b.id));
+      if (tcBot && ((tcBot.completedDeals||0) > 0 || (tcBot.activeDeals||0) > 0)) return false;
+      return true;
+    })
     .forEach(bot => {
       const amt = Math.round(bot.capital * 0.50);
       if (amt < RC.minimumMoveUsd) return;
