@@ -2572,6 +2572,11 @@ body::after {
       <div class="d2-kpi-num safe" id="dm-ytd-pct" style="font-size:24px;font-weight:900">—</div>
       <div class="d2-kpi-sub" id="dm-ytd-sub">vs 72% goal</div>
     </div>
+    <div class="d2-kpi-cell" style="background:rgba(160,175,220,.04)">
+      <div class="d2-kpi-label" id="dm-prev-month-label">LAST MONTH</div>
+      <div class="d2-kpi-num" id="dm-prev-month-val" style="font-size:24px;font-weight:900">—</div>
+      <div class="d2-kpi-sub" id="dm-prev-month-sub">locked profit</div>
+    </div>
   </div>
 
   <!-- ══ ROW 1: context | Hannah | trial ══ -->
@@ -4660,25 +4665,38 @@ async function fixOrbitalToday() {
 setInterval(fixOrbitalToday, 60000);
 setTimeout(fixOrbitalToday, 6500);
 
-// MTD% + YTD% tiles
+// MTD% + YTD% + PREV MONTH tiles — now uses /api/monthly-performance for calendar accuracy
 async function refreshMtdYtd() {
   try {
-    const r = await fetch('/api/decisions');
-    if (!r.ok) return;
-    const j = await r.json();
-    const mt = j.monthlyTarget, yt = j.ytdTarget;
+    const [dec, mp] = await Promise.all([
+      fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
     const setT = (id, v, c) => {
       const el = document.getElementById(id);
       if (el) { el.textContent = v; if (c) el.style.color = c; }
     };
-    if (mt) {
-      const mtdPct = ((mt.monthLocked / Math.max(1, mt.targets.min/0.06)) * 100).toFixed(2);
-      setT('dm-mtd-pct', '+' + mtdPct + '%', mt.onPaceFor6 ? 'var(--safe)' : 'var(--warn)');
-      setT('dm-mtd-sub', '$' + mt.monthLocked.toFixed(0) + ' / target $' + mt.targets.min);
+    // MTD — accurate calendar month from monthly-performance
+    if (mp?.currentMonth) {
+      const cm = mp.currentMonth;
+      const pct = cm.pctOfCapital;
+      const onPace = pct >= 6 * (new Date().getUTCDate() / 30);
+      setT('dm-mtd-pct', (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', onPace ? 'var(--safe)' : 'var(--warn)');
+      setT('dm-mtd-sub', '$' + cm.locked.toFixed(0) + ' · ' + cm.dealCount + ' deals · ' + cm.label);
     }
+    // YTD — still from worker (year-to-date totalRealised is fine)
+    const yt = dec?.ytdTarget;
     if (yt) {
       setT('dm-ytd-pct', '+' + yt.ytdPct + '%', yt.onPace ? 'var(--safe)' : 'var(--warn)');
       setT('dm-ytd-sub', '$' + yt.ytdLocked.toFixed(0) + ' / target $' + yt.annualTarget);
+    }
+    // Previous month — rolls automatically
+    if (mp?.previousMonth) {
+      const pm = mp.previousMonth;
+      setT('dm-prev-month-label', pm.label.toUpperCase());
+      const v = (pm.locked >= 0 ? '+$' : '-$') + Math.abs(pm.locked).toFixed(2);
+      setT('dm-prev-month-val', v, pm.locked > 0 ? 'var(--safe)' : 'var(--text-muted)');
+      setT('dm-prev-month-sub', (pm.pctOfCapital >= 0 ? '+' : '') + pm.pctOfCapital.toFixed(2) + '% · ' + pm.dealCount + ' deals');
     }
   } catch(_) {}
 }
