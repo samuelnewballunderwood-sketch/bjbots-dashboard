@@ -1192,6 +1192,30 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R14 (NEW): Auto-redeem from Binance Earn to unblock deployment ───
+  // Fires when USDT free is below the R9 deployment threshold but there's
+  // capital sitting in Earn that could fund a new grid.
+  try {
+    const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
+    const usdtFree = parseFloat(usdtBal?.free || 0);
+    // We can't see Earn balance from spotData directly (it's separate sapi endpoint).
+    // The autonomy executor will attempt the redeem and fail gracefully if no Earn position.
+    // Trigger when: free is below R9 threshold AND there's a blocked R12 OR allocation gap signal.
+    const hasBlocked = required.some(d => d.objective === 'blocked_by_earn');
+    if (usdtFree < 300 && hasBlocked) {
+      required.push(makeDecision({
+        actionType:'redeem', category:'required',
+        text:'Redeem $500 USDT from Earn to unblock grids',
+        reason:'R14: USDT free $' + usdtFree.toFixed(0) + ' below R9 threshold + R12 blocked-by-Earn. Auto-redeem $500.',
+        amount:500, amountPct:0, targetBotIds:[],
+        urgency:'high', timeframe:'1h',
+        expectedImpact:'Unlocks $500 for R9/R12 grid deployment on next tick',
+        objective:'auto_redeem', confidence:85, executable:true,
+        suggestedAsset:'USDT',
+      }));
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
