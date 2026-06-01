@@ -1425,6 +1425,51 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R24 (NEW): BTC Dominance Break Detector ───────────────────────
+  // CoinGecko free /global endpoint. Track delta vs stored snapshot in KV.
+  // Sharp drop (>2pp in 4h) → alt season starting → tilt to ETH/SOL/XRP grids.
+  // Sharp rise → BTC dominating → retreat to BTC.
+  try {
+    const cg = await fetch('https://api.coingecko.com/api/v3/global').then(r => r.ok ? r.json() : null);
+    const dom = cg?.data?.market_cap_percentage?.btc;
+    if (dom != null && env.ALPHA_LOGS) {
+      const now = Date.now();
+      // Store current
+      await env.ALPHA_LOGS.put('btcDom:latest', JSON.stringify({ pct: dom, ts: now }), { expirationTtl: 60*60*24*7 });
+      // Read 4h-ago snapshot
+      const fourHoursAgoKey = 'btcDom:4h_' + Math.floor(now / (4*60*60*1000));
+      let prior = await env.ALPHA_LOGS.get('btcDom:4h_' + (Math.floor(now / (4*60*60*1000)) - 1), 'json');
+      if (prior?.pct) {
+        const delta = dom - prior.pct;
+        if (delta < -2) {
+          // BTC dominance dropped >2pp → alt season signal
+          suggested.push(makeDecision({
+            actionType:'increase', category:'suggested',
+            text:'BTC dom ' + dom.toFixed(1) + '% (-' + Math.abs(delta).toFixed(1) + 'pp in 4h) — alt rotation',
+            reason:'R24: BTC dominance dropped ' + delta.toFixed(2) + 'pp in 4h. Historical: this precedes alt-season rallies. Tilt grid investment toward ETH/SOL/XRP.',
+            amount:0, amountPct:0, targetBotIds:[],
+            urgency:'medium', timeframe:'24h',
+            expectedImpact:'Capture rotation into alts via grid concentration',
+            objective:'btc_dominance_break', confidence:70, executable:false,
+          }));
+        } else if (delta > 2) {
+          // BTC dominance rose >2pp → flight to BTC
+          suggested.push(makeDecision({
+            actionType:'reduce', category:'suggested',
+            text:'BTC dom ' + dom.toFixed(1) + '% (+' + delta.toFixed(1) + 'pp in 4h) — alts bleeding',
+            reason:'R24: BTC dominance rose ' + delta.toFixed(2) + 'pp in 4h. Capital fleeing alts. Reduce alt grid exposure, concentrate in BTC.',
+            amount:0, amountPct:0, targetBotIds:[],
+            urgency:'medium', timeframe:'24h',
+            expectedImpact:'Defensive rotation to BTC during alt drawdown',
+            objective:'btc_dominance_break', confidence:70, executable:false,
+          }));
+        }
+      }
+      // Also store snapshot keyed by 4h bucket for next comparison
+      await env.ALPHA_LOGS.put(fourHoursAgoKey, JSON.stringify({ pct: dom, ts: now }), { expirationTtl: 60*60*24*7 });
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
