@@ -499,7 +499,7 @@ function computeRiskState({ longPct, floatingPnl, totalAllocated, volatility, by
 function makeDecision({ actionType, text, reason, amount, amountPct, targetBotIds, fromBotId, toBotId,
                         urgency, timeframe, expectedImpact, costOfInaction, category, confidence,
                         executable, objective, targetDimension, portfolio, targets,
-                        suggestedPair, suggestedAsset }) {
+                        suggestedPair, suggestedAsset, stale_orders_payload }) {
   return {
     actionType:      actionType     || 'reduce',
     text:            text           || '',
@@ -519,6 +519,7 @@ function makeDecision({ actionType, text, reason, amount, amountPct, targetBotId
     confidence:      Math.min(100, Math.max(0, confidence || 70)),
     executable:      executable     || false,
     suggestedPair, suggestedAsset,
+    payload: stale_orders_payload ? { orders: stale_orders_payload } : undefined,
     generatedAt:     new Date().toISOString(),
   };
 }
@@ -1213,6 +1214,37 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
         objective:'auto_redeem', confidence:85, executable:true,
         suggestedAsset:'USDT',
       }));
+    }
+  } catch(_) {}
+
+  // ─── R15 (NEW): Cancel stale spot orders (>48h) ──────────────────
+  // Frees capital trapped in long-dead orders from paused/legacy bots.
+  // Executes via tc-proxy /api/binance-cancel-order. Cap of 3 per tick.
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/binance-open-orders');
+    if (r.ok) {
+      const j = await r.json();
+      const stale = [];
+      for (const [sym, info] of Object.entries(j.bySymbol || {})) {
+        for (const o of (info.orders || [])) {
+          if (o.ageHours > 48) stale.push({ symbol: o.symbol, orderId: o.orderId, ageHours: o.ageHours, lockedUsd: o.lockedValueUsd });
+        }
+      }
+      stale.sort((a,b) => b.ageHours - a.ageHours);
+      const toCancel = stale.slice(0, 3); // cap per tick
+      if (toCancel.length > 0) {
+        const totalFreed = toCancel.reduce((s,o) => s + o.lockedUsd, 0);
+        required.push(makeDecision({
+          actionType:'cancel_order', category:'required',
+          text:'Cancel ' + toCancel.length + ' stale order(s) >48h — frees \$' + totalFreed.toFixed(0),
+          reason:'R15: ' + toCancel.length + ' orders idle >48h (oldest: ' + toCancel[0].ageHours.toFixed(0) + 'h on ' + toCancel[0].symbol + '). Cancelling frees \$' + totalFreed.toFixed(0) + ' in trapped capital for R9/R12 grid deployment.',
+          amount:Math.round(totalFreed), amountPct:0, targetBotIds:[],
+          urgency:'high', timeframe:'1h',
+          expectedImpact:'Unlocks \$' + totalFreed.toFixed(0) + ' for redeployment',
+          objective:'stale_order_cancel', confidence:90, executable:true,
+          stale_orders_payload: toCancel.map(o => ({symbol:o.symbol, orderId:o.orderId})),
+        }));
+      }
     }
   } catch(_) {}
 
