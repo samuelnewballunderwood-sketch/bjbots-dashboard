@@ -499,7 +499,7 @@ function computeRiskState({ longPct, floatingPnl, totalAllocated, volatility, by
 function makeDecision({ actionType, text, reason, amount, amountPct, targetBotIds, fromBotId, toBotId,
                         urgency, timeframe, expectedImpact, costOfInaction, category, confidence,
                         executable, objective, targetDimension, portfolio, targets,
-                        suggestedPair, suggestedAsset, stale_orders_payload }) {
+                        suggestedPair, suggestedAsset, stale_orders_payload, tv_alert }) {
   return {
     actionType:      actionType     || 'reduce',
     text:            text           || '',
@@ -519,7 +519,7 @@ function makeDecision({ actionType, text, reason, amount, amountPct, targetBotId
     confidence:      Math.min(100, Math.max(0, confidence || 70)),
     executable:      executable     || false,
     suggestedPair, suggestedAsset,
-    payload: stale_orders_payload ? { orders: stale_orders_payload } : undefined,
+    payload: stale_orders_payload ? { orders: stale_orders_payload } : tv_alert ? { alert: tv_alert } : undefined,
     generatedAt:     new Date().toISOString(),
   };
 }
@@ -1244,6 +1244,35 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
           objective:'stale_order_cancel', confidence:90, executable:true,
           stale_orders_payload: toCancel.map(o => ({symbol:o.symbol, orderId:o.orderId})),
         }));
+      }
+    }
+  } catch(_) {}
+
+  // ─── R16 (NEW): Act on TradingView Bj Bot signals ────────────────
+  // Reads recent TV alerts (<30 min old) and emits executable tv_signal decision.
+  // Autonomy handles the actual Smart Trade creation + daily cap.
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/tv-alerts');
+    if (r.ok) {
+      const j = await r.json();
+      const cutoff = Date.now() - 30*60*1000; // 30 min window
+      const fresh = (j.alerts || [])
+        .filter(a => a.action === 'buy' || a.action === 'sell')
+        .filter(a => new Date(a.ts).getTime() > cutoff)
+        .filter(a => ['BTCUSDT','ETHUSDT','SOLUSDT'].includes(a.symbol));
+      if (fresh.length > 0) {
+        const a = fresh[0]; // act on the newest first
+        required.push(makeDecision({
+          actionType:'tv_signal', category:'required',
+          text:a.strategy + ' ' + a.action.toUpperCase() + ' ' + a.symbol + ' @ \$' + (a.price||0),
+          reason:'R16: ' + a.strategy + ' fired ' + a.action + ' on ' + a.symbol + ' at \$' + (a.price||0) + '. Opening \$100 Smart Trade with 1.5% TP/SL.',
+          amount:100, amountPct:0, targetBotIds:[],
+          urgency:'high', timeframe:'immediate',
+          expectedImpact:'Captures Bj Bot signal with capped \$100 exposure',
+          objective:'tv_signal_act', confidence:70, executable:true,
+          tv_alert: { ts: a.ts, symbol: a.symbol, action: a.action, strategy: a.strategy, price: a.price },
+        }));
+        // attach alert in non-standard payload — autonomy reads decision.payload.alert
       }
     }
   } catch(_) {}
