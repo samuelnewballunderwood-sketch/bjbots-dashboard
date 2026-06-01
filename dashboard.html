@@ -2585,9 +2585,9 @@ body::after {
         <div class="dash-glow"></div>
 
         <div class="dash-metric-card dm1">
-          <div class="dm-lbl">Daily Profit</div>
+          <div class="dm-lbl">Today</div>
           <div class="dm-val pos" id="cv-daily">—</div>
-          <div class="dm-sub" id="cv-daily-pct">+0.155%/day</div>
+          <div class="dm-sub" id="cv-daily-pct">vs yesterday</div>
         </div>
         <div class="dash-metric-card dm2">
           <div class="dm-lbl">Capital</div>
@@ -4570,7 +4570,19 @@ async function filterManualOnly() {
   try {
     const dec = await fetch('/api/decisions').then(r => r.ok ? r.json() : null);
     if (!dec) return;
-    const manual = (dec.decisions || []).filter(d => !d.executable);
+    // Only show things YOU must act on — exclude Hannah-handled and informational
+    const TRULY_MANUAL = new Set(['blocked_by_earn']);
+    const manual = (dec.decisions || []).filter(d => {
+      if (d.executable) return false;                                    // Hannah handles
+      if (TRULY_MANUAL.has(d.objective)) return true;                     // unstake / human-only
+      if (d.objective === 'drawdown_protection' && d.actionType !== 'hold') return true; // real cut needed
+      // dca_depth is R8-protected info — Hannah can't act, but it's not your problem either: skip
+      // monitor actionTypes are informational
+      if (d.actionType === 'monitor' || d.actionType === 'hold') return false;
+      // allocation_gap: only show if it requires futures (Hannah can't yet) or specific human input
+      if (d.objective === 'allocation_gap' && /futures/i.test(d.text||'')) return true;
+      return false;
+    });
     if (manual.length === 0) {
       list.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:10px 0">All clear. Hannah handling autonomously.</div>';
       return;
@@ -6372,7 +6384,7 @@ function _updateCtrlCards(data) {
   const neededPct   = gt > 0 ? (neededDaily / gt) * 100 : 0;
 
   const cv = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  cv('cv-daily',   actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
+  // cv-daily handled by fixOrbitalToday() — snapshot delta vs yesterday
   cv('cv-capital', fmtUSD(gt));
   cv('cv-trial',   String(trialDay));
   cv('cv-target',  '$' + (gt * 0.06).toFixed(0));
