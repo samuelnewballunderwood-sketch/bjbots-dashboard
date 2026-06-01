@@ -1015,8 +1015,12 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
   // When F&G crosses back >=30, auto-enable paused DCAs that earned before.
   const fg = market.fearGreed;
   if (fg != null && fg >= 30) {
+    // PERMANENTLY STOPPED per CLAUDE.md — never auto-resume
+    const PERMANENT_STOP_IDS = new Set([16801943, 16801248, 16812326, 16809699]);
     const pausedDca = tcBots.filter(b =>
       b.botType === 'dca' && b.active === false &&
+      !PERMANENT_STOP_IDS.has(b.id) &&
+      !/HEDGE|SHORT|LONG FUTURES|STABLE COIN/i.test(b.name||'') &&
       (b.completedDeals > 0 || (b.profit||0) > 0)
     );
     if (pausedDca.length > 0) {
