@@ -913,7 +913,7 @@ function capitalEfficiency(roi, capital) {
 // HIGH_RISK: only defensive. No optimisation.
 // CRITICAL always position [0] in output array.
 // ============================================================
-function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, spotData, pricesData, dataReliable=true, dataIntegrity={} }) {
+async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScores, spotData, pricesData, dataReliable=true, dataIntegrity={} }) {
   const { longPct, bySymbol, totalAllocated, byStrategy } = portfolio;
   const now = new Date().toISOString();
 
@@ -2113,7 +2113,7 @@ async function getDecisions(env){
     Object.entries(BOT_META).forEach(([id,meta])=>{
       if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
     });
-    const result=decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,pricesData,dataReliable,dataIntegrity});
+    const result=await decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,pricesData,dataReliable,dataIntegrity});
     // R11 (NEW): Monthly performance tracker
     let monthlyTarget = null;
     try {
