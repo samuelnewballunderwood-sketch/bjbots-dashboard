@@ -5096,7 +5096,7 @@ async function v2ChatSend() {
     });
     const j = await r.json();
     thinking.style.opacity = '1';
-    thinking.textContent = j.response || j.message || j.text || 'No response — Hannah may be cold-starting (~30s on first ask).';
+    thinking.textContent = j.answer || j.response || j.message || j.text || 'No response — Hannah may be cold-starting (~30s on first ask).';
   } catch (e) {
     thinking.textContent = 'Chat error: ' + e.message;
     thinking.style.color = 'var(--warn)';
