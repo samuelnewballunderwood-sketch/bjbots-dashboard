@@ -2051,7 +2051,7 @@ async function getAlgoFutureBots(env) {
 async function getReconciliation(env) {
   try {
     const [spotData, futData, tcData, bnData, pricesData] = await Promise.all([
-      getSpotWalletData(env),
+      getSpotWalletData(env).catch(()=>({usdtBalance:0,balances:[],error:'spot-wallet failed'})),
       getFuturesWalletData(env).catch(()=>({walletBalance:0,marginBalance:0,unrealizedPnl:0,availableBalance:0})),
       fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
       getBinanceBotsData(env),
@@ -2075,7 +2075,7 @@ async function getDecisions(env){
     const [tcData,bnData,futData,spotData,pricesData,sigData]=await Promise.all([
       fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()),
       getBinanceBotsData(env),getFuturesWalletData(env).catch(()=>({walletBalance:0,marginBalance:0,unrealizedPnl:0,availableBalance:0})),
-      getSpotWalletData(env),
+      getSpotWalletData(env).catch(()=>({usdtBalance:0,balances:[],error:'spot-wallet failed'})),
       fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
       fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r=>r.json()).catch(()=>({})),
     ]);
