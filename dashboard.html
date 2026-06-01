@@ -7,6 +7,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 
+/* DASHBOARD V2 — hide the old orbital + side rails on Dashboard tab */
+#screen-dashboard .d2-row1 { display: none !important; }
+#screen-dashboard .d2-row1-r { display: none !important; }
+#screen-dashboard #hannah-changes-panel { display: none !important; }
+.cv16-arena, .cv16-card { display: none !important; }
+.dash-metric-card { display: none !important; }
+/* New v2 styles */
+.v2-hero { display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px 20px; margin: 16px; background: linear-gradient(180deg, rgba(20,28,46,.95), rgba(10,14,24,.95)); border: 1px solid rgba(45,212,191,.25); border-radius: 12px; }
+.v2-hero-cell { padding: 16px; border-radius: 8px; background: rgba(255,255,255,.02); border: 1px solid rgba(160,175,220,.08); }
+.v2-hero-label { font-family: var(--font-display); font-size: 11px; letter-spacing: .22em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; }
+.v2-hero-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 6px; }
+.v2-hero-money { font-family: var(--font-mono); font-size: 36px; font-weight: 900; color: var(--text-primary); letter-spacing: -.02em; line-height: 1; }
+.v2-hero-pct { font-family: var(--font-mono); font-size: 36px; font-weight: 900; color: var(--safe); letter-spacing: -.02em; line-height: 1; }
+.v2-hero-pct.neg { color: var(--warn); }
+.v2-hero-sub { font-size: 10.5px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 8px; }
+
+.v2-stats { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 20px; margin: 0 16px 12px; }
+.v2-stat { padding: 12px 14px; background: rgba(14,16,26,.94); border: 1px solid var(--border-dim); border-radius: 8px; text-align: center; }
+.v2-stat-label { font-size: 9px; letter-spacing: .18em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; font-family: var(--font-display); }
+.v2-stat-val { font-family: var(--font-mono); font-size: 22px; font-weight: 800; color: var(--teal); }
+.v2-stat-sub { font-size: 9.5px; color: var(--text-muted); margin-top: 4px; font-family: var(--font-mono); }
+
+.v2-section { padding: 18px 20px; margin: 12px 16px; background: rgba(14,16,26,.94); border: 1px solid var(--border-dim); border-radius: 8px; }
+.v2-section-title { font-family: var(--font-display); font-size: 12px; letter-spacing: .2em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 14px; }
+.v2-bot-row { display: grid; grid-template-columns: 1.4fr .8fr .8fr .8fr .6fr; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border-dim); align-items: center; font-size: 11.5px; }
+.v2-bot-row.head { color: var(--text-dim); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; font-family: var(--font-display); border-bottom: 1px solid rgba(160,175,220,.18); }
+.v2-bot-name { color: var(--text-primary); font-weight: 600; }
+.v2-bot-cap { font-family: var(--font-mono); color: var(--text-secondary); }
+.v2-bot-profit { font-family: var(--font-mono); font-weight: 700; }
+.v2-bot-profit.pos { color: var(--safe); }
+.v2-bot-profit.neg { color: var(--warn); }
+.v2-bot-roi { font-family: var(--font-mono); font-weight: 700; }
+.v2-bot-status { font-size: 9px; letter-spacing: .12em; font-family: var(--font-mono); }
+
+.v2-chat { padding: 18px 20px; margin: 12px 16px; background: linear-gradient(180deg, rgba(45,212,191,.06), rgba(14,16,26,.94)); border: 1px solid rgba(45,212,191,.3); border-radius: 12px; }
+.v2-chat-title { font-family: var(--font-display); font-size: 13px; letter-spacing: .2em; color: var(--teal); text-transform: uppercase; margin-bottom: 10px; }
+.v2-chat-msgs { max-height: 240px; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 8px; }
+.v2-chat-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.4; max-width: 90%; }
+.v2-chat-msg.hannah { background: rgba(45,212,191,.08); color: var(--text-secondary); align-self: flex-start; }
+.v2-chat-msg.user { background: rgba(160,175,220,.1); color: var(--text-primary); align-self: flex-end; }
+.v2-chat-row { display: flex; gap: 8px; margin-top: 12px; }
+.v2-chat-input { flex: 1; padding: 10px 14px; background: rgba(0,0,0,.3); border: 1px solid var(--border-dim); border-radius: 8px; color: var(--text-primary); font-family: var(--font-body); font-size: 13px; outline: none; }
+.v2-chat-input:focus { border-color: var(--teal); }
+.v2-chat-send { padding: 10px 22px; background: var(--teal); border: none; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer; font-family: var(--font-display); letter-spacing: .12em; font-size: 11px; }
+.v2-chat-send:hover { background: rgba(45,212,191,.85); }
+
+
+
 /* ════════════════════════════════════════════════════════════
    DESIGN TOKENS — splash screen aesthetic extended
    ════════════════════════════════════════════════════════════ */
@@ -2580,6 +2628,84 @@ body::after {
   </div>
 
   <!-- ══ ROW 1: context | Hannah | trial ══ -->
+  <!-- ════════ DASHBOARD V2 — clean redesign ════════ -->
+  <div id="v2-dashboard" style="margin-top:8px">
+    <!-- HERO: TODAY · MTD · YTD with big bold same-size $ and % -->
+    <div class="v2-hero">
+      <div class="v2-hero-cell">
+        <div class="v2-hero-label">Today</div>
+        <div class="v2-hero-row">
+          <span class="v2-hero-money" id="v2-today-money">—</span>
+          <span class="v2-hero-pct" id="v2-today-pct">—</span>
+        </div>
+        <div class="v2-hero-sub" id="v2-today-sub">vs yesterday locked</div>
+      </div>
+      <div class="v2-hero-cell">
+        <div class="v2-hero-label">Month to date</div>
+        <div class="v2-hero-row">
+          <span class="v2-hero-money" id="v2-mtd-money">—</span>
+          <span class="v2-hero-pct" id="v2-mtd-pct">—</span>
+        </div>
+        <div class="v2-hero-sub" id="v2-mtd-sub">target 6% / month</div>
+      </div>
+      <div class="v2-hero-cell">
+        <div class="v2-hero-label">Year to date</div>
+        <div class="v2-hero-row">
+          <span class="v2-hero-money" id="v2-ytd-money">—</span>
+          <span class="v2-hero-pct" id="v2-ytd-pct">—</span>
+        </div>
+        <div class="v2-hero-sub" id="v2-ytd-sub">target 72% / year</div>
+      </div>
+    </div>
+
+    <!-- Compact metric row -->
+    <div class="v2-stats">
+      <div class="v2-stat">
+        <div class="v2-stat-label">Trades Today</div>
+        <div class="v2-stat-val" id="v2-trades-today">—</div>
+        <div class="v2-stat-sub">closed deals</div>
+      </div>
+      <div class="v2-stat">
+        <div class="v2-stat-label">Active Bots</div>
+        <div class="v2-stat-val" id="v2-active-bots">—</div>
+        <div class="v2-stat-sub">grids + DCAs</div>
+      </div>
+      <div class="v2-stat">
+        <div class="v2-stat-label">Total Locked</div>
+        <div class="v2-stat-val" id="v2-total-locked">—</div>
+        <div class="v2-stat-sub" id="v2-total-locked-pct">— of capital</div>
+      </div>
+      <div class="v2-stat">
+        <div class="v2-stat-label">Market Regime</div>
+        <div class="v2-stat-val" id="v2-regime">—</div>
+        <div class="v2-stat-sub" id="v2-fg">F&amp;G —</div>
+      </div>
+    </div>
+
+    <!-- Per-bot performance -->
+    <div class="v2-section">
+      <div class="v2-section-title">⚡ Performance by bot</div>
+      <div class="v2-bot-row head">
+        <div>Bot</div><div>Capital</div><div>Profit</div><div>ROI</div><div style="text-align:right">Status</div>
+      </div>
+      <div id="v2-bot-rows">
+        <div style="color:var(--text-muted);font-size:11px;padding:10px 12px">Loading bots…</div>
+      </div>
+    </div>
+
+    <!-- Hannah chat — prominent -->
+    <div class="v2-chat">
+      <div class="v2-chat-title">💬 Talk to Hannah</div>
+      <div class="v2-chat-msgs" id="v2-chat-msgs">
+        <div class="v2-chat-msg hannah" id="v2-hannah-greeting">Loading status…</div>
+      </div>
+      <div class="v2-chat-row">
+        <input class="v2-chat-input" id="v2-chat-input" placeholder="Ask anything — bots, market, decisions, performance" onkeydown="if(event.key==='Enter')v2ChatSend()" />
+        <button class="v2-chat-send" onclick="v2ChatSend()">SEND</button>
+      </div>
+    </div>
+  </div>
+
   <div class="d2-row1">
 
     <!-- LEFT: Risk state + objective — compact, contextual -->
@@ -4814,6 +4940,169 @@ async function refreshHannahTrades() {
 }
 setInterval(refreshHannahTrades, 30000);
 setTimeout(refreshHannahTrades, 6000);
+setInterval(refreshHannahTrades, 30000);
+setTimeout(refreshHannahTrades, 6000);
+
+// ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
+async function refreshDashboardV2() {
+  try {
+    const [dec, mp, perf, deals, mkt] = await Promise.all([
+      fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
+    const setT = (id, v, color) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = v; if (color) el.style.color = color; }
+    };
+    const grandTotal = dec?.reconciliation?.grandTotal || mp?.capital || 0;
+
+    // HERO: TODAY
+    const today = mp?.currentMonth?.locked || 0;
+    // Use today's closed deal sum if available — approximation
+    // For now use snapshot delta — fall back to monthly value
+    const todayLockedDelta = (() => {
+      // best signal: dec.reconciliation.totalRealised - daily snapshot yesterday
+      return null;
+    })();
+    if (mp?.currentMonth) {
+      const todayPct = mp.currentMonth.pctOfCapital;
+      setT('v2-today-money', '+$' + (mp.currentMonth.locked / Math.max(1,new Date().getUTCDate())).toFixed(2));
+      setT('v2-today-pct', '+' + (todayPct / Math.max(1,new Date().getUTCDate())).toFixed(2) + '%');
+      setT('v2-today-sub', 'avg / day this month · ' + mp.currentMonth.dealCount + ' deals');
+    }
+
+    // HERO: MTD
+    if (mp?.currentMonth) {
+      const mtd = mp.currentMonth;
+      const signMoney = mtd.locked >= 0 ? '+$' : '-$';
+      const signPct = mtd.pctOfCapital >= 0 ? '+' : '';
+      setT('v2-mtd-money', signMoney + Math.abs(mtd.locked).toFixed(2), mtd.locked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
+      const mtdEl = document.getElementById('v2-mtd-pct');
+      if (mtdEl) {
+        mtdEl.textContent = signPct + mtd.pctOfCapital.toFixed(2) + '%';
+        mtdEl.className = 'v2-hero-pct' + (mtd.pctOfCapital < 0 ? ' neg' : '');
+      }
+      setT('v2-mtd-sub', mtd.label + ' · ' + mtd.dealCount + ' deals · need $' + (grandTotal*0.06 - mtd.locked).toFixed(0) + ' more for 6%');
+    }
+
+    // HERO: YTD
+    if (dec?.ytdTarget) {
+      const yt = dec.ytdTarget;
+      const signMoney = yt.ytdLocked >= 0 ? '+$' : '-$';
+      const signPct = yt.ytdPct >= 0 ? '+' : '';
+      setT('v2-ytd-money', signMoney + Math.abs(yt.ytdLocked).toFixed(2), yt.ytdLocked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
+      const ytdEl = document.getElementById('v2-ytd-pct');
+      if (ytdEl) {
+        ytdEl.textContent = signPct + yt.ytdPct.toFixed(2) + '%';
+        ytdEl.className = 'v2-hero-pct' + (yt.ytdPct < 0 ? ' neg' : '');
+      }
+      setT('v2-ytd-sub', yt.daysIntoYear + ' days in · target $' + yt.annualTarget);
+    }
+
+    // STATS row
+    if (deals) {
+      const todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
+      // Approximate today's trades via deals/detail (not perfectly accurate but useful)
+      let todayDealCount = 0;
+      (deals.by_bot || []).forEach(b => {
+        if (b.latest_deal && new Date(b.latest_deal) >= todayUTC) todayDealCount++;
+      });
+      setT('v2-trades-today', String(todayDealCount));
+    }
+    if (perf) {
+      setT('v2-active-bots', perf.active + ' / ' + perf.count);
+    }
+    if (dec?.reconciliation) {
+      const tl = dec.reconciliation.totalRealised || 0;
+      setT('v2-total-locked', '+$' + tl.toFixed(2));
+      setT('v2-total-locked-pct', '+' + (grandTotal > 0 ? (tl/grandTotal*100).toFixed(2) : '0') + '% of capital');
+    }
+    if (mkt) {
+      const fg = mkt.fearGreed?.value;
+      const regime = fg != null ? (fg < 30 ? 'Bear' : fg >= 50 ? 'Bull' : 'Sideways') : 'Unknown';
+      setT('v2-regime', regime);
+      setT('v2-fg', 'F&G ' + (fg ?? '—'));
+    }
+
+    // BOT PERFORMANCE
+    if (perf?.perBot) {
+      const rows = document.getElementById('v2-bot-rows');
+      if (rows) {
+        const sorted = [...perf.perBot].sort((a,b) => parseFloat(b.profit||0) - parseFloat(a.profit||0));
+        if (sorted.length === 0) {
+          rows.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:10px 12px">No Hannah bots yet.</div>';
+        } else {
+          rows.innerHTML = sorted.map(b => {
+            const cap = parseFloat(b.capital || 0);
+            const prof = parseFloat(b.profit || 0);
+            const roi = cap > 0 ? (prof / cap * 100) : 0;
+            const profClass = prof > 0 ? 'pos' : prof < 0 ? 'neg' : '';
+            const roiColor = roi > 0 ? 'var(--safe)' : roi < 0 ? 'var(--warn)' : 'var(--text-muted)';
+            const statusColor = b.active ? 'var(--safe)' : 'var(--text-muted)';
+            return '<div class="v2-bot-row">' +
+                   '<div class="v2-bot-name">' + (b.name || '?').replace(/Hannah[-_]/, '') + '</div>' +
+                   '<div class="v2-bot-cap">$' + cap.toFixed(2) + '</div>' +
+                   '<div class="v2-bot-profit ' + profClass + '">' + (prof >= 0 ? '+$' : '-$') + Math.abs(prof).toFixed(2) + '</div>' +
+                   '<div class="v2-bot-roi" style="color:' + roiColor + '">' + (roi >= 0 ? '+' : '') + roi.toFixed(2) + '%</div>' +
+                   '<div class="v2-bot-status" style="color:' + statusColor + ';text-align:right">' + (b.active ? '● LIVE' : '○ OFF') + '</div>' +
+                   '</div>';
+          }).join('');
+        }
+      }
+    }
+
+    // HANNAH GREETING — dynamic
+    const greet = document.getElementById('v2-hannah-greeting');
+    if (greet && dec?.market) {
+      const fg = dec.market.fearGreed;
+      const regime = fg != null ? (fg < 30 ? 'Bear' : fg >= 50 ? 'Bull' : 'Sideways') : 'Unknown';
+      const day = Math.max(1, Math.floor((Date.now() - new Date('2026-04-12').getTime())/86400000)+1);
+      const lockedStr = dec.reconciliation?.totalRealised != null ? '+$' + dec.reconciliation.totalRealised.toFixed(2) : '—';
+      greet.textContent = 'Day ' + day + '. F&G ' + (fg ?? '—') + ' (' + regime + '). ' + (perf?.active || 0) + ' bots live · ' + lockedStr + ' locked. Ask me anything — bot status, regime read, why I made (or didn\'t make) a decision.';
+    }
+  } catch(_) {}
+}
+setInterval(refreshDashboardV2, 30000);
+setTimeout(refreshDashboardV2, 1500);
+
+// CHAT
+async function v2ChatSend() {
+  const input = document.getElementById('v2-chat-input');
+  const msgs = document.getElementById('v2-chat-msgs');
+  if (!input || !msgs) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const userDiv = document.createElement('div');
+  userDiv.className = 'v2-chat-msg user';
+  userDiv.textContent = text;
+  msgs.appendChild(userDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+  // Thinking
+  const thinking = document.createElement('div');
+  thinking.className = 'v2-chat-msg hannah';
+  thinking.style.opacity = '.5';
+  thinking.textContent = '…';
+  msgs.appendChild(thinking);
+  msgs.scrollTop = msgs.scrollHeight;
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/chat-dual', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history: [] }),
+    });
+    const j = await r.json();
+    thinking.style.opacity = '1';
+    thinking.textContent = j.response || j.message || j.text || 'No response — Hannah may be cold-starting (~30s on first ask).';
+  } catch (e) {
+    thinking.textContent = 'Chat error: ' + e.message;
+    thinking.style.color = 'var(--warn)';
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
 
 
 // Also force-disable the legacy renderControl alerts → dash-alerts (which would otherwise repopulate dca_depth)
