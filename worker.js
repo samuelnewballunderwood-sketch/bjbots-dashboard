@@ -1133,12 +1133,12 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
       if (usdFree < 300 && usdTotal >= 300) {
         suggested.push(makeDecision({
           actionType:'unlock_funds', category:'required',
-          text:asset + ' grid blocked — \$' + usdTotal.toFixed(0) + ' held but \$' + usdFree.toFixed(0) + ' free',
-          reason:'R12: ' + asset + ' grid would deploy, but \$' + (usdTotal-usdFree).toFixed(0) + ' is locked in Binance Earn/orders. Redeem some to unlock grid creation.',
+          text:asset + ' grid waiting — \$' + usdFree.toFixed(0) + ' free of \$' + usdTotal.toFixed(0) + ' total',
+          reason:'R12: ' + asset + ' grid would deploy, but only \$' + usdFree.toFixed(0) + ' free. \$' + (usdTotal-usdFree).toFixed(0) + ' is committed elsewhere (3Commas bot orders, Flexible Earn, or Locked Earn). Run /api/capital-audit for breakdown.',
           amount:0, amountPct:0, targetBotIds:[],
           urgency:'medium', timeframe:'24h',
           expectedImpact:'Unlocking unblocks ~\$' + Math.min(500, Math.round(usdTotal*0.25)) + '/grid earnings potential',
-          objective:'blocked_by_earn', confidence:90, executable:false,
+          objective:'low_free_balance', confidence:90, executable:false,
           suggestedAsset: asset,
         }));
       }
@@ -1201,7 +1201,7 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     // We can't see Earn balance from spotData directly (it's separate sapi endpoint).
     // The autonomy executor will attempt the redeem and fail gracefully if no Earn position.
     // Trigger when: free is below R9 threshold AND there's a blocked R12 OR allocation gap signal.
-    const hasBlocked = required.some(d => d.objective === 'blocked_by_earn');
+    const hasBlocked = required.some(d => d.objective === 'low_free_balance' || d.objective === 'blocked_by_earn');
     if (usdtFree < 300 && hasBlocked) {
       required.push(makeDecision({
         actionType:'redeem', category:'required',
