@@ -1277,6 +1277,49 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R17 (NEW): F&G Extreme Accumulation ──────────────────────
+  // When F&G < 15 (Extreme Fear), accumulate \$50 BTC spot daily.
+  // Autonomy enforces 1/day cap. Historical: mean-reversion ~85% from extremes.
+  try {
+    if (fg != null && fg < 15) {
+      required.push(makeDecision({
+        actionType:'spot_buy', category:'required',
+        text:'F&G ' + fg + ' Extreme Fear — accumulate \$50 BTC',
+        reason:'R17: F&G ' + fg + ' < 15. Historical buying opportunity. Accumulating \$50 BTC spot via market Smart Trade.',
+        amount:50, amountPct:0, targetBotIds:[],
+        urgency:'medium', timeframe:'24h',
+        expectedImpact:'DCA into BTC at extreme fear — locked when sold above entry',
+        objective:'fear_accumulate', confidence:80, executable:true,
+        suggestedPair:'USDT_BTC', suggestedAsset:'BTC',
+      }));
+    }
+  } catch(_) {}
+
+  // ─── R19 (NEW): Grid Profit-Take ──────────────────────────────────
+  // When any Hannah grid's profit > 1.5% of its deployed capital, close + bank.
+  // Next R9 tick will create a fresh grid at current price (auto-recycle).
+  try {
+    const hannahGrids = tcBots.filter(b =>
+      b.botType === 'grid' && b.active && /Hannah/i.test(b.name||''));
+    for (const g of hannahGrids) {
+      const cap = parseFloat(g.capital || 0);
+      const profit = parseFloat(g.profit || 0);
+      if (cap < 100) continue;
+      const returnPct = (profit / cap) * 100;
+      if (returnPct >= 1.5) {
+        required.push(makeDecision({
+          actionType:'close_grid', category:'required',
+          text:'Profit-take: ' + g.name + ' at +' + returnPct.toFixed(2) + '% (\$' + profit.toFixed(2) + ')',
+          reason:'R19: Grid returned ' + returnPct.toFixed(2) + '% on \$' + cap.toFixed(0) + ' capital. Banking locked profit. R9 will redeploy next tick.',
+          amount:Math.round(profit), amountPct:0, targetBotIds:[g.id],
+          urgency:'medium', timeframe:'1h',
+          expectedImpact:'Locks \$' + profit.toFixed(2) + ' realised. Frees capital for next grid cycle.',
+          objective:'grid_profit_take', confidence:90, executable:true,
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
