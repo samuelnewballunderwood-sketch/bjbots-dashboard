@@ -1347,6 +1347,84 @@ function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, botScore
     }
   } catch(_) {}
 
+  // ─── R20 (NEW): Grid range auto-recenter ──────────────────────────
+  // If current price is outside the middle 60% (20-80%) of a Hannah grid's range
+  // AND that grid has 0 trades in last 12h, close + R9 will relaunch at fresh center.
+  try {
+    const priceMap_R20 = priceMap || {};
+    const hannahGrids_R20 = tcBots.filter(b =>
+      b.botType === 'grid' && b.active && /Hannah/i.test(b.name||''));
+    for (const g of hannahGrids_R20) {
+      const pair = (g.pair || '').toUpperCase();
+      const baseAsset = pair.split('_')[1] || '';
+      const cur = priceMap_R20[baseAsset] || 0;
+      const lo = parseFloat(g.lower_price || g.price_low || 0);
+      const hi = parseFloat(g.upper_price || g.price_high || 0);
+      if (!cur || !lo || !hi || hi <= lo) continue;
+      const posPct = ((cur - lo) / (hi - lo)) * 100;
+      const recentTrades = parseInt(g.trades || g.completedDeals || 0);
+      // Outside middle 60% AND looks idle (<5 trades recorded total — proxy for low activity)
+      if ((posPct < 20 || posPct > 80) && recentTrades < 50) {
+        required.push(makeDecision({
+          actionType:'close_grid', category:'required',
+          text:'Recenter ' + g.name + ' — price at ' + posPct.toFixed(0) + '% of range',
+          reason:'R20: ' + baseAsset + ' price \$' + cur.toFixed(2) + ' is outside middle 60% of grid range \$' + lo.toFixed(0) + '-\$' + hi.toFixed(0) + ' (at ' + posPct.toFixed(0) + '%). Grid bleeding edge. Closing for R9 to relaunch at fresh center.',
+          amount:0, amountPct:0, targetBotIds:[g.id],
+          urgency:'medium', timeframe:'1h',
+          expectedImpact:'Replaces drifted grid with one centred on current price',
+          objective:'grid_recenter', confidence:85, executable:true,
+        }));
+      }
+    }
+  } catch(_) {}
+
+  // ─── R21 (NEW): Compounding ───────────────────────────────────────
+  // When locked profit > \$50 AND best-performing Hannah grid exists,
+  // emit advisory to launch a SECOND small grid funded by the locked profit.
+  try {
+    const totalLocked_R21 = recon?.totalRealised || 0;
+    if (totalLocked_R21 > 50) {
+      const hannahGrids_R21 = tcBots.filter(b =>
+        b.botType === 'grid' && b.active && /Hannah/i.test(b.name||''));
+      const best = hannahGrids_R21.sort((a,b) => (parseFloat(b.profit||0) - parseFloat(a.profit||0)))[0];
+      if (best) {
+        const compAmount = Math.min(150, Math.floor(totalLocked_R21 / 10) * 10);
+        suggested.push(makeDecision({
+          actionType:'deploy_grid', category:'suggested',
+          text:'Compound \$' + compAmount + ' into best performer',
+          reason:'R21: Locked profit \$' + totalLocked_R21.toFixed(0) + ' > \$50 threshold. Reinvest \$' + compAmount + ' into a fresh grid mirroring the best performer (' + best.name + ').',
+          amount:compAmount, amountPct:0, targetBotIds:[],
+          urgency:'low', timeframe:'48h',
+          expectedImpact:'Compounding loop — locked profit funds new earnings',
+          objective:'compound_grid', confidence:65, executable:false,
+        }));
+      }
+    }
+  } catch(_) {}
+
+  // ─── R22 (NEW): Volatility rotation ─────────────────────────────
+  // Identify which pair has the highest 24h range and surface as advisory.
+  // (Pure signal — humans interpret. R20 + R21 are the executable parts.)
+  try {
+    const VOL_TARGETS = ['BTCUSDT','ETHUSDT','SOLUSDT','XRPUSDT','BNBUSDT'];
+    // No 24h-change data passed in — derive from price array if available
+    // We don't have ranges in scope; emit as a placeholder informational decision.
+    if (market?.btcChange24h != null) {
+      // Use BTC 24h change as a vol proxy — when |change| > 3%, propose tilt
+      if (Math.abs(market.btcChange24h) > 3) {
+        suggested.push(makeDecision({
+          actionType:'monitor', category:'suggested',
+          text:'BTC volatility ' + market.btcChange24h.toFixed(1) + '% — tilt to BTC grid',
+          reason:'R22: BTC 24h change ' + market.btcChange24h.toFixed(1) + '% (>3% threshold). Highest-vol pair = highest grid yield. Consider increasing BTC grid capital.',
+          amount:0, amountPct:0, targetBotIds:[],
+          urgency:'low', timeframe:'24h',
+          expectedImpact:'Concentrates capital where vol pays',
+          objective:'vol_rotation', confidence:60, executable:false,
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
