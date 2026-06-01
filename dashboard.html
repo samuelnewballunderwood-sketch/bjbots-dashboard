@@ -4947,14 +4947,17 @@ setTimeout(refreshHannahTrades, 6000);
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
-    const [dec, mp, perf, deals, mkt, capRes] = await Promise.all([
+    const [dec, mp, perf, deals, mkt, capRes, dealsSum] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/total-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
+    // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
+    const canonicalLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
     const setT = (id, v, color) => {
       const el = document.getElementById(id);
       if (el) { el.textContent = v; if (color) el.style.color = color; }
@@ -4996,18 +4999,22 @@ async function refreshDashboardV2() {
       setT('v2-mtd-sub', mtd.label + ' · ' + mtd.dealCount + ' deals · need $' + (grandTotal*0.06 - mtd.locked).toFixed(0) + ' more for 6%');
     }
 
-    // HERO: YTD
-    if (dec?.ytdTarget) {
-      const yt = dec.ytdTarget;
-      const signMoney = yt.ytdLocked >= 0 ? '+$' : '-$';
-      const signPct = yt.ytdPct >= 0 ? '+' : '';
-      setT('v2-ytd-money', signMoney + Math.abs(yt.ytdLocked).toFixed(2), yt.ytdLocked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
+    // HERO: YTD — prefer canonical /deals/summary, fall back to ytdTarget
+    if (canonicalLocked != null || dec?.ytdTarget) {
+      const ytdLocked = canonicalLocked != null ? canonicalLocked : (dec?.ytdTarget?.ytdLocked || 0);
+      const ytdPct = grandTotal > 0 ? (ytdLocked / grandTotal) * 100 : 0;
+      const signMoney = ytdLocked >= 0 ? '+$' : '-$';
+      const signPct = ytdPct >= 0 ? '+' : '';
+      setT('v2-ytd-money', signMoney + Math.abs(ytdLocked).toFixed(2), ytdLocked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
       const ytdEl = document.getElementById('v2-ytd-pct');
       if (ytdEl) {
-        ytdEl.textContent = signPct + yt.ytdPct.toFixed(2) + '%';
-        ytdEl.className = 'v2-hero-pct' + (yt.ytdPct < 0 ? ' neg' : '');
+        ytdEl.textContent = signPct + ytdPct.toFixed(2) + '%';
+        ytdEl.className = 'v2-hero-pct' + (ytdPct < 0 ? ' neg' : '');
       }
-      setT('v2-ytd-sub', yt.daysIntoYear + ' days in · target $' + yt.annualTarget);
+      const days = dec?.ytdTarget?.daysIntoYear || 0;
+      const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
+      const dealCount = dealsSum?.completedDeals || 0;
+      setT('v2-ytd-sub', days + ' days · ' + dealCount + ' deals · target $' + target);
     }
 
     // STATS row
@@ -5023,10 +5030,13 @@ async function refreshDashboardV2() {
     if (perf) {
       setT('v2-active-bots', perf.active + ' / ' + perf.count);
     }
-    if (dec?.reconciliation) {
-      const tl = dec.reconciliation.totalRealised || 0;
-      setT('v2-total-locked', '+$' + tl.toFixed(2));
-      setT('v2-total-locked-pct', '+' + (grandTotal > 0 ? (tl/grandTotal*100).toFixed(2) : '0') + '% of capital');
+    {
+      // Prefer canonical locked from /deals/summary, fall back to reconciliation
+      const tl = canonicalLocked != null ? canonicalLocked : (dec?.reconciliation?.totalRealised || 0);
+      if (tl > 0) {
+        setT('v2-total-locked', '+$' + tl.toFixed(2));
+        setT('v2-total-locked-pct', '+' + (grandTotal > 0 ? (tl/grandTotal*100).toFixed(2) : '0') + '% of capital');
+      }
     }
     if (mkt) {
       const fg = mkt.fearGreed?.value;
