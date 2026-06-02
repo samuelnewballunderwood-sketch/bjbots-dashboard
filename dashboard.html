@@ -4984,6 +4984,7 @@ async function refreshDashboardV2() {
       candidateLocked = window._lastGoodLocked;
     } else if (candidateLocked != null) {
       window._lastGoodLocked = candidateLocked;
+      try { localStorage.setItem('lg:locked', String(candidateLocked)); } catch(_) {}
     } else if (window._lastGoodLocked > 0) {
       candidateLocked = window._lastGoodLocked;
     }
@@ -4994,8 +4995,12 @@ async function refreshDashboardV2() {
     };
     // STICKINESS: keep last-known-good values across refreshes (prevents flicker)
     // when Render instance returns futures-only fallback (~$3,600) vs real $8,900.
-    if (typeof window._lastGoodCapital === 'undefined') window._lastGoodCapital = 0;
-    if (typeof window._lastGoodLocked === 'undefined') window._lastGoodLocked = 0;
+    if (typeof window._lastGoodCapital === 'undefined') {
+      try { window._lastGoodCapital = parseFloat(localStorage.getItem('lg:capital') || '0') || 0; } catch(_) { window._lastGoodCapital = 0; }
+    }
+    if (typeof window._lastGoodLocked === 'undefined') {
+      try { window._lastGoodLocked = parseFloat(localStorage.getItem('lg:locked') || '0') || 0; } catch(_) { window._lastGoodLocked = 0; }
+    }
     let candidateCap = (capRes?.total > 100 ? capRes.total : 0) || dec?.reconciliation?.grandTotal || mp?.capital || 0;
     // Reject a new value if it's <60% of last-known-good (likely a partial fetch)
     if (window._lastGoodCapital > 100 && candidateCap > 100 && candidateCap < window._lastGoodCapital * 0.6) {
@@ -5003,6 +5008,7 @@ async function refreshDashboardV2() {
       candidateCap = window._lastGoodCapital;
     } else if (candidateCap > 100) {
       window._lastGoodCapital = candidateCap;
+      try { localStorage.setItem('lg:capital', String(candidateCap)); } catch(_) {}
     }
     const grandTotal = candidateCap || window._lastGoodCapital || 0;
     // Header tile — only update with a real value (skip if all sources empty)
@@ -5019,22 +5025,25 @@ async function refreshDashboardV2() {
       // best signal: dec.reconciliation.totalRealised - daily snapshot yesterday
       return null;
     })();
-    // STICKINESS: keep last-known-good currentMonth across refreshes
-    // (different Render instances cache different values; prevent flicker to $0)
-    if (typeof window._lastGoodMonth === 'undefined') window._lastGoodMonth = null;
+    // STICKINESS: keep last-known-good currentMonth across refreshes + page reloads (localStorage)
+    if (typeof window._lastGoodMonth === 'undefined') {
+      try { window._lastGoodMonth = JSON.parse(localStorage.getItem('lg:month') || 'null'); } catch(_) { window._lastGoodMonth = null; }
+    }
     let stickyMonth = mp?.currentMonth;
-    if (stickyMonth && stickyMonth.locked > 0.5 && stickyMonth.dealCount > 0) {
+    const isRealMonth = stickyMonth && stickyMonth.locked > 0.5 && stickyMonth.dealCount > 0;
+    if (isRealMonth) {
       // Fresh value is real — accept unless it's a regression
       if (window._lastGoodMonth && stickyMonth.locked < window._lastGoodMonth.locked * 0.7) {
-        // Suspicious 30%+ drop, keep cached
         console.warn('Dashboard: rejecting suspicious low MTD', stickyMonth.locked, 'keeping', window._lastGoodMonth.locked);
         stickyMonth = window._lastGoodMonth;
       } else {
         window._lastGoodMonth = stickyMonth;
+        try { localStorage.setItem('lg:month', JSON.stringify(stickyMonth)); } catch(_) {}
       }
     } else if (window._lastGoodMonth) {
-      // Fresh value is zero/empty — use cached
       stickyMonth = window._lastGoodMonth;
+    } else {
+      stickyMonth = null;  // No good data anywhere — skip DOM writes (leaves prior value)
     }
 
     if (stickyMonth) {
