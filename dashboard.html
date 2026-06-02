@@ -5343,10 +5343,74 @@ async function v2ChatSend() {
   thinking.textContent = '…';
   msgs.appendChild(thinking);
   msgs.scrollTop = msgs.scrollHeight;
+  // Build LIVE portfolio context from canonical sources so Hannah's answers are fresh
+  let portfolioContext = '';
+  try {
+    const [cap, ds, td, dca, stats, market, dec] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/api/total-capital?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/deals/summary?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/dca-detail?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/market-signals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('/api/decisions?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+    ]);
+
+    const fg = market?.fearGreed ?? '?';
+    const regime = fg < 30 ? 'Bear' : fg >= 66 ? 'Bull' : 'Neutral';
+    const totalCap = cap?.total ? '$' + Math.round(cap.total).toLocaleString() : '?';
+    const dcaP = ds?.dcaProfit ?? 0, gridP = ds?.gridProfit ?? 0, totalLocked = ds?.totalProfit ?? 0;
+    const dcaDeals = ds?.dcaDeals ?? 0, gridDeals = ds?.gridDeals ?? 0, totalDeals = ds?.completedDeals ?? 0;
+    const todayClosed = td?.count ?? 0, todayProfit = td?.profit ?? 0, todayLive = td?.liveCount ?? 0;
+    const liveDca = td?.liveDca ?? 0, liveGrid = td?.liveGrid ?? 0;
+    const dcaBots = (dca?.bots || []).filter(b => /DCA Long/i.test(b.name||''));
+    const dcaSummary = dcaBots.map(b => '  ' + b.name + ': TP ' + b.takeProfitPct + '%, PnL +$' + b.pnlUsd.toFixed(2) + ', ' + (b.enabled ? 'ENABLED' : 'paused') + (b.activeDeals > 0 ? ', deal open' : '')).join('\n');
+    const trialStart = new Date('2026-04-12');
+    const dayNum = Math.max(1, Math.floor((Date.now() - trialStart.getTime())/86400000) + 1);
+    const tunes = (dec?.decisions || []).filter(d => d.objective === 'tune_tp').length;
+
+    portfolioContext = [
+      '=== LIVE STATE (as of ' + new Date().toISOString().slice(11,16) + ' UTC) ===',
+      'Day ' + dayNum + ' of trading (since 2026-04-12)',
+      '',
+      '=== MARKET ===',
+      'F&G: ' + fg + ' (' + regime + ' regime)',
+      '',
+      '=== CAPITAL ===',
+      'Total: ' + totalCap + ' (canonical from 3Commas)',
+      '',
+      '=== LOCKED PROFIT ===',
+      'TOTAL: +$' + totalLocked.toFixed(2) + ' (' + totalDeals + ' trades — ' + dcaDeals + ' DCA + ' + gridDeals + ' grid)',
+      '  DCA realised: +$' + dcaP.toFixed(2),
+      '  Grid realised: +$' + gridP.toFixed(2),
+      '',
+      '=== TODAY ===',
+      'Closed: ' + todayClosed + ' deals (+$' + todayProfit.toFixed(2) + ')',
+      'Live (open right now): ' + todayLive + ' deals (' + liveDca + ' DCA + ' + liveGrid + ' grid)',
+      '',
+      '=== ACTIVE BOTS ===',
+      'DCA: ' + (stats?.dca?.active || 0) + '/' + (stats?.dca?.count || 0) + ' enabled',
+      'Grid: ' + (stats?.grid?.active || 0) + '/' + (stats?.grid?.count || 0) + ' enabled',
+      'Signal: 4 (manual count — REST API does not expose)',
+      '',
+      '=== DCA BOT DETAIL (R31 tuned today) ===',
+      dcaSummary || '  (no DCA data)',
+      '',
+      '=== RULES ===',
+      'R31 Tuner: tuned 5 DCAs to TP 1.0% today (F&G ' + fg + ' regime)',
+      'R17 Fear-Accumulate: cap 5/day, currently spent ?',
+      'R25 Momentum Scalp: $50 BTC shorts',
+      'R30 Liq Cascade Hunter: active',
+      tunes > 0 ? 'R31 currently has ' + tunes + ' tune decisions queued' : 'R31 cooldown active (6h per bot)',
+    ].join('\n');
+  } catch (_) {
+    portfolioContext = 'Live data fetch failed — use general knowledge only';
+  }
+
   try {
     const r = await fetch('https://tc-proxy-eu.onrender.com/api/chat-dual', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: [] }),
+      body: JSON.stringify({ message: text, history: [], portfolioContext }),
     });
     const j = await r.json();
     thinking.style.opacity = '1';
