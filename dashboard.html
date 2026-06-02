@@ -5053,6 +5053,29 @@ setTimeout(refreshHannahTrades, 6000);
 setInterval(refreshHannahTrades, 30000);
 setTimeout(refreshHannahTrades, 6000);
 
+// ── HEADER PRICE TICKERS (BTC/USD + ETH/USD) — Binance public API, no auth needed ──
+async function refreshHeaderPrices() {
+  try {
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbols=%5B%22BTCUSDT%22%2C%22ETHUSDT%22%5D');
+    if (!r.ok) return;
+    const data = await r.json();
+    const map = {};
+    (Array.isArray(data) ? data : []).forEach(p => { map[p.symbol] = parseFloat(p.price); });
+    const btc = map.BTCUSDT;
+    const eth = map.ETHUSDT;
+    if (btc > 0) {
+      const el = document.getElementById('header-btc');
+      if (el) el.textContent = '$' + Math.round(btc).toLocaleString();
+    }
+    if (eth > 0) {
+      const el = document.getElementById('header-eth');
+      if (el) el.textContent = '$' + Math.round(eth).toLocaleString();
+    }
+  } catch(_) {}
+}
+setInterval(refreshHeaderPrices, 15000);  // 15s — Binance public API is generous
+setTimeout(refreshHeaderPrices, 500);
+
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
