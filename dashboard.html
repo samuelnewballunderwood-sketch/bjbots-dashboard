@@ -2797,6 +2797,28 @@ body::after {
       <div style="font-size:10px;color:var(--text-muted);padding:0 4px 4px">Reserved for future signal-only rules. Existing scalp rules (R16/R17/R18/R25/R30) remain in the main discretionary pool — Signal Fund does not affect them.</div>
     </div>
 
+    <!-- INSUFFICIENT FUNDS + IDLE CAPITAL — where to add capital -->
+    <div class="v2-section" id="v2-capital-section">
+      <div class="v2-section-title">💰 Capital — idle + needed</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- IDLE CAPITAL -->
+        <div style="padding:10px 14px;background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.18);border-radius:8px">
+          <div style="font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px">Idle / Available</div>
+          <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:#fff;line-height:1" id="v2-idle-total">—</div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px" id="v2-idle-breakdown">— spot · — futures</div>
+          <div id="v2-idle-assets" style="margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);max-height:80px;overflow:auto"></div>
+        </div>
+        <!-- SUGGESTED TOP-UP -->
+        <div style="padding:10px 14px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.22);border-radius:8px">
+          <div style="font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px">Suggested Top-Up (24h)</div>
+          <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:#fbbf24;line-height:1" id="v2-topup-total">—</div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:6px"><span id="v2-funds-failed-count">—</span> failed actions due to insufficient funds</div>
+          <div id="v2-topup-assets" style="margin-top:8px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);max-height:80px;overflow:auto"></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);padding:8px 4px 0">Failures excluded: daily caps, cooldowns, dedupe (those aren't fund problems). Only matches: balance/MIN_NOTIONAL/-2010/-2019.</div>
+    </div>
+
     <!-- Hannah chat — prominent -->
     <div class="v2-chat">
       <div class="v2-chat-title">💬 Talk to Hannah</div>
@@ -5092,7 +5114,7 @@ setTimeout(refreshHeaderPrices, 500);
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
-    const [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund] = await Promise.all([
+    const [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
@@ -5102,6 +5124,8 @@ async function refreshDashboardV2() {
       fetch('https://tc-proxy-eu.onrender.com/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/signal-fund-status').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/insufficient-funds').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/idle-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
@@ -5356,6 +5380,44 @@ async function refreshDashboardV2() {
       const lPnl = signalFund.lifetimePnL || 0;
       setT2('v2-sf-lifetime-pnl', (lPnl >= 0 ? '+$' : '-$') + Math.abs(lPnl).toFixed(2) + ' (' + (signalFund.lifetimeTrades || 0) + ' trades)', lPnl >= 0 ? 'var(--safe)' : 'var(--warn)');
       setT2('v2-sf-winrate', (signalFund.winRate || 0).toFixed(1) + '% (' + (signalFund.winCount || 0) + 'W/' + (signalFund.lossCount || 0) + 'L)');
+    }
+
+    // IDLE CAPITAL tile
+    if (idleCapital) {
+      const setT3 = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT3('v2-idle-total', '$' + (idleCapital.idleTotalUsd || 0).toFixed(2));
+      setT3('v2-idle-breakdown', '$' + (idleCapital.idleSpotUsdEstimate || 0).toFixed(0) + ' spot · $' + (idleCapital.futuresAvailable || 0).toFixed(0) + ' futures avail');
+      const assetEl = document.getElementById('v2-idle-assets');
+      if (assetEl && idleCapital.perAsset) {
+        const rows = Object.entries(idleCapital.perAsset)
+          .filter(([sym, d]) => d.idleEstimate > 0.1 || d.spotFree > 0.1)
+          .sort(([,a],[,b]) => (b.idleEstimate || 0) - (a.idleEstimate || 0))
+          .slice(0, 6)
+          .map(([sym, d]) => '<div>' + sym + ': $' + (d.idleEstimate || 0).toFixed(2) + (d.inBots ? ' · in bots: $' + d.inBots.toFixed(0) : '') + '</div>')
+          .join('');
+        assetEl.innerHTML = rows || '<div style="color:var(--text-muted)">All deployed</div>';
+      }
+    }
+
+    // INSUFFICIENT FUNDS / TOP-UP tile
+    if (insufficientFunds) {
+      const setT4 = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setT4('v2-topup-total', '$' + (insufficientFunds.totalSuggestedUsd || 0).toFixed(2));
+      setT4('v2-funds-failed-count', String(insufficientFunds.total || 0));
+      const topupEl = document.getElementById('v2-topup-assets');
+      if (topupEl) {
+        const entries = Object.entries(insufficientFunds.suggestedTopUpByAsset || {});
+        if (entries.length === 0) {
+          topupEl.innerHTML = '<div style="color:var(--text-muted)">No fund failures in last 24h ✓</div>';
+        } else {
+          const rows = entries
+            .sort(([,a],[,b]) => b - a)
+            .slice(0, 6)
+            .map(([asset, amt]) => '<div>' + asset + ': add ~$' + amt.toFixed(2) + '</div>')
+            .join('');
+          topupEl.innerHTML = rows;
+        }
+      }
     }
 
     // HANNAH GREETING — dynamic
