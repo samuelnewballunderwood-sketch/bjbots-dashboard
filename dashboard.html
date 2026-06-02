@@ -5817,7 +5817,7 @@ async function renderPortfolioFromRecon(r) {
 }
 
 // ── Render new CoinStats-style 4-level portfolio view ─────────────────────
-function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
+async function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   if (!grandTotal) return;
 
   // Level 1 already handled by p-grand-total above
@@ -5848,28 +5848,45 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   // Level 3 — Asset list from spot wallet balances
   _renderAssetList(grandTotal);
 
-  // Level 4 — Locked profit scoreboard
-  // Split locked: 3Commas vs Binance native
-  const tcLocked = (window._tcBots||[]).reduce((s,b) => s + parseFloat(b.realised||b.profit||0), 0);
+  // Level 4 — Locked profit scoreboard (canonical sources)
+  // 3Commas: pull from /deals/summary (~$587 total)
+  // Today: pull from /api/today-deals (accurate count + profit)
+  // Binance native: from window._bnBots if available
   const bnLocked = (window._bnBots||[]).reduce((s,b) => s + parseFloat(b.realised||b.profit||0), 0);
-  const totalLocked = rPnl || (tcLocked + bnLocked);
+  let tcLocked = (window._tcBots||[]).reduce((s,b) => s + parseFloat(b.realised||b.profit||0), 0);
+  let todayLocked = null;
+  try {
+    const [dsR, tdR] = await Promise.all([
+      fetch('https://tc-proxy-eu.onrender.com/deals/summary?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+    ]);
+    if (dsR?.totalProfit > 0) tcLocked = dsR.totalProfit;
+    if (tdR?.profit != null) todayLocked = tdR.profit;
+  } catch(_) {}
+  const totalLocked = tcLocked + bnLocked;
 
   const tcEl = document.getElementById('p-tc-locked');
   const bnEl = document.getElementById('p-bn-locked');
   if (tcEl) { tcEl.textContent = fmtPnl(tcLocked); tcEl.style.color = tcLocked>=0?'var(--safe)':'#f87171'; }
   if (bnEl) { bnEl.textContent = fmtPnl(bnLocked); bnEl.style.color = bnLocked>=0?'var(--safe)':'#f87171'; }
 
-  // Today's locked delta — stored in sessionStorage to survive refreshes
-  const todayKey = 'locked_baseline_' + new Date().toDateString();
-  if (!sessionStorage.getItem(todayKey)) {
-    sessionStorage.setItem(todayKey, totalLocked.toFixed(2));
-  }
-  const baseline   = parseFloat(sessionStorage.getItem(todayKey) || totalLocked);
-  const todayDelta = totalLocked - baseline;
+  // Today: prefer canonical today-deals; fall back to session baseline if endpoint failed
   const todayEl = document.getElementById('p-locked-today');
   if (todayEl) {
-    todayEl.textContent = (todayDelta >= 0 ? '+' : '') + '$' + todayDelta.toFixed(2);
-    todayEl.style.color = todayDelta >= 0 ? 'var(--safe)' : '#f87171';
+    if (todayLocked != null) {
+      todayEl.textContent = (todayLocked >= 0 ? '+' : '') + '$' + todayLocked.toFixed(2);
+      todayEl.style.color = todayLocked >= 0 ? 'var(--safe)' : '#f87171';
+    } else {
+      // Fallback: session baseline diff
+      const todayKey = 'locked_baseline_' + new Date().toDateString();
+      if (!sessionStorage.getItem(todayKey)) {
+        sessionStorage.setItem(todayKey, totalLocked.toFixed(2));
+      }
+      const baseline = parseFloat(sessionStorage.getItem(todayKey) || totalLocked);
+      const delta = totalLocked - baseline;
+      todayEl.textContent = (delta >= 0 ? '+' : '') + '$' + delta.toFixed(2);
+      todayEl.style.color = delta >= 0 ? 'var(--safe)' : '#f87171';
+    }
   }
 
   // Trial progress
@@ -5890,16 +5907,35 @@ function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
 }
 
 // ── Render asset list from live spot wallet data ───────────────────────────
-function _renderAssetList(grandTotal) {
+async function _renderAssetList(grandTotal) {
   const listEl = document.getElementById('p-asset-list');
   if (!listEl) return;
 
-  // Gather from _lastSpotBalances if available, else from reconciliation
-  const balances = window._lastSpotBalances || [];
-  const prices   = window._lastPrices || {};
+  // Primary: try /api/capital-audit (works even when /spot-wallet is throttled)
+  // Fallback: window._lastSpotBalances
+  let balances = window._lastSpotBalances || [];
+  const prices = window._lastPrices || {};
 
   if (!balances.length) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">Loading assets…</div>';
+    try {
+      const auditR = await fetch('https://tc-proxy-eu.onrender.com/api/capital-audit?cb='+Date.now());
+      if (auditR.ok) {
+        const audit = (await auditR.json()).audit || {};
+        // Convert audit per-asset to balance-shape rows
+        balances = Object.entries(audit)
+          .filter(([sym, d]) => sym !== 'USDC' && ((d.activeBotCapitalUsd || 0) > 0 || (d.flexibleEarn || 0) > 0))
+          .map(([asset, d]) => ({
+            asset,
+            free: d.spotFree || 0,
+            locked: d.activeBotCapitalUsd || 0,
+            usdValue: (d.activeBotCapitalUsd || 0) + (d.flexibleEarn || 0),
+          }));
+      }
+    } catch(_) {}
+  }
+
+  if (!balances.length) {
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:11px;padding:8px 0">No asset breakdown available (Binance spot API throttled)</div>';
     return;
   }
 
