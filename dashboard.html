@@ -5245,8 +5245,18 @@ async function refreshDashboardV2() {
       const todayR = await fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now());
       if (todayR.ok) {
         const td = await todayR.json();
-        const count = parseInt(td?.count || 0);
-        const live = parseInt(td?.liveCount || 0);
+        let count = parseInt(td?.count || 0);
+        let live = parseInt(td?.liveCount || 0);
+        // Dashboard-side high-water-mark belt + braces: never let the display drop today
+        // unless midnight UTC has rolled over. Stored in window._lastGoodTodayDisplay.
+        const todayKey = new Date().toISOString().slice(0,10);
+        if (!window._lastGoodTodayDisplay || window._lastGoodTodayDisplay.day !== todayKey) {
+          window._lastGoodTodayDisplay = { day: todayKey, count: 0, live: 0 };
+        }
+        if (count >= window._lastGoodTodayDisplay.count) window._lastGoodTodayDisplay.count = count;
+        else count = window._lastGoodTodayDisplay.count;
+        if (live >= window._lastGoodTodayDisplay.live) window._lastGoodTodayDisplay.live = live;
+        else live = window._lastGoodTodayDisplay.live;
         setT('v2-trades-today', String(count));
         // Hero badge: show closed count + live count when there are open positions
         setT('v2-today-trades', count + ' closed · ' + live + ' live');
