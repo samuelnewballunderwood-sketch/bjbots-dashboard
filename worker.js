@@ -1668,6 +1668,53 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
   } catch(_) {}
 
+  // ─── R32 (NEW): Auto-tune DCA safety order step % based on volatility/regime ─────
+  // Wider SO steps in volatile/bear markets catch deeper averaging.
+  // Tighter SO steps in calm/bull markets catch more frequent shallow dips.
+  try {
+    const dcaR = await fetch('https://tc-proxy-eu.onrender.com/api/dca-detail');
+    if (dcaR.ok) {
+      const dca = await dcaR.json();
+      const fg = market.fearGreed;
+      const btcChange24h = Math.abs(market.btcChange24h || 0);
+      // Volatility proxy: BTC 24h move. High vol = wider steps.
+      // F&G also informs: extreme fear means continued downside likely
+      const regimeStep = (() => {
+        if (fg == null) return 3.0;          // 3Commas default
+        if (fg < 10) return 4.0;             // Extreme fear: wide steps for deep averaging
+        if (fg < 30) return 3.5;             // Fear: slightly wider
+        if (fg < 66) return 3.0;             // Neutral: default
+        if (fg < 80) return 2.5;             // Greed: tighter — uptrend continuation more likely
+        return 2.0;                          // Extreme greed: tightest — catch every small dip on the way up
+      })();
+      // Volatility nudge: if BTC moving >5% in 24h, add 0.5 to SO step
+      const volAdjust = btcChange24h > 5 ? 0.5 : 0;
+      const targetStep = +(regimeStep + volAdjust).toFixed(1);
+
+      const targetBots = (dca.bots || []).filter(b => 
+        b.enabled && b.safetyOrderStepPct > 0 && /DCA Long/i.test(b.name || '')
+      );
+      for (const b of targetBots) {
+        const current = b.safetyOrderStepPct;
+        const delta = targetStep - current;
+        if (Math.abs(delta) < 0.3) continue;  // Noise floor
+        // Cap change at 0.5% per fire
+        const newStep = +(current + Math.max(-0.5, Math.min(0.5, delta))).toFixed(1);
+        const conf = (fg < 15 || fg > 75 || btcChange24h > 7) ? 75 : 65;
+        suggested.push(makeDecision({
+          actionType:'tune_bot', category:'suggested',
+          text:'Tune SO step on ' + b.name + ': ' + current + '% → ' + newStep + '%',
+          reason:'R32 tuner: F&G ' + fg + ' (regime target ' + regimeStep + '%) + BTC 24h vol ' + btcChange24h.toFixed(1) + '%. Current SO step ' + current + '% is ' + (delta > 0 ? 'too tight' : 'too wide') + '. Capped at 0.5% per change.',
+          amount:0, amountPct:0, targetBotIds:[b.id],
+          urgency:'low', timeframe:'24h',
+          expectedImpact:delta > 0 ? 'Wider steps catch deeper averaging in volatile market' : 'Tighter steps catch smaller dips in calm market',
+          objective:'tune_step', confidence:conf, executable:true,
+          tuneParams: { safetyOrderStepPct: newStep },
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
