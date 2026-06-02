@@ -2784,6 +2784,19 @@ body::after {
       </div>
     </div>
 
+    <!-- SIGNAL FUND — isolated sleeve for signal-driven rules -->
+    <div class="v2-section" id="v2-signal-section">
+      <div class="v2-section-title">🎯 Signal Fund — isolated sleeve</div>
+      <div style="display:flex;gap:24px;padding:8px 12px;background:rgba(167,139,250,.06);border-radius:6px;margin-bottom:8px;font-size:11px;flex-wrap:wrap">
+        <div><span style="color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px">Allocation</span> <span id="v2-sf-allocation" style="color:#fff;font-weight:700;margin-left:6px;font-family:var(--font-mono);font-size:13px">—</span></div>
+        <div><span style="color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px">Today Spent</span> <span id="v2-sf-spent" style="color:#fbbf24;font-weight:700;margin-left:6px;font-family:var(--font-mono);font-size:13px">—</span></div>
+        <div><span style="color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px">Today P&amp;L</span> <span id="v2-sf-today-pnl" style="color:var(--safe);font-weight:700;margin-left:6px;font-family:var(--font-mono);font-size:14px">—</span></div>
+        <div><span style="color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px">Lifetime P&amp;L</span> <span id="v2-sf-lifetime-pnl" style="color:var(--safe);font-weight:900;margin-left:6px;font-family:var(--font-mono);font-size:15px">—</span></div>
+        <div style="margin-left:auto"><span style="color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-size:9px">Win rate</span> <span id="v2-sf-winrate" style="color:#a78bfa;font-weight:700;margin-left:6px;font-family:var(--font-mono);font-size:13px">—</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);padding:0 4px 4px">R16 TradingView · R17 F&amp;G accumulate · R18 funding · R25 momentum scalp · R30 liq cascade</div>
+    </div>
+
     <!-- Hannah chat — prominent -->
     <div class="v2-chat">
       <div class="v2-chat-title">💬 Talk to Hannah</div>
@@ -5331,6 +5344,18 @@ async function refreshDashboardV2() {
           }).join('');
         }
       }
+    }
+
+    // SIGNAL FUND tile
+    if (signalFund) {
+      const setT2 = (id, v, color) => { const el = document.getElementById(id); if (el) { el.textContent = v; if (color) el.style.color = color; } };
+      setT2('v2-sf-allocation', '$' + Math.round(signalFund.allocation || 0).toLocaleString());
+      setT2('v2-sf-spent', '$' + (signalFund.dailySpent || 0).toFixed(2) + ' / $' + (signalFund.dailyCap || 0));
+      const tPnl = signalFund.todayPnL || 0;
+      setT2('v2-sf-today-pnl', (tPnl >= 0 ? '+$' : '-$') + Math.abs(tPnl).toFixed(2) + ' (' + (signalFund.todayTrades || 0) + ' trades)', tPnl >= 0 ? 'var(--safe)' : 'var(--warn)');
+      const lPnl = signalFund.lifetimePnL || 0;
+      setT2('v2-sf-lifetime-pnl', (lPnl >= 0 ? '+$' : '-$') + Math.abs(lPnl).toFixed(2) + ' (' + (signalFund.lifetimeTrades || 0) + ' trades)', lPnl >= 0 ? 'var(--safe)' : 'var(--warn)');
+      setT2('v2-sf-winrate', (signalFund.winRate || 0).toFixed(1) + '% (' + (signalFund.winCount || 0) + 'W/' + (signalFund.lossCount || 0) + 'L)');
     }
 
     // HANNAH GREETING — dynamic
