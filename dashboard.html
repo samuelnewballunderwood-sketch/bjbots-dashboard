@@ -5019,16 +5019,34 @@ async function refreshDashboardV2() {
       // best signal: dec.reconciliation.totalRealised - daily snapshot yesterday
       return null;
     })();
-    if (mp?.currentMonth) {
-      const todayPct = mp.currentMonth.pctOfCapital;
-      setT('v2-today-money', '+$' + (mp.currentMonth.locked / Math.max(1,new Date().getUTCDate())).toFixed(2));
+    // STICKINESS: keep last-known-good currentMonth across refreshes
+    // (different Render instances cache different values; prevent flicker to $0)
+    if (typeof window._lastGoodMonth === 'undefined') window._lastGoodMonth = null;
+    let stickyMonth = mp?.currentMonth;
+    if (stickyMonth && stickyMonth.locked > 0.5 && stickyMonth.dealCount > 0) {
+      // Fresh value is real — accept unless it's a regression
+      if (window._lastGoodMonth && stickyMonth.locked < window._lastGoodMonth.locked * 0.7) {
+        // Suspicious 30%+ drop, keep cached
+        console.warn('Dashboard: rejecting suspicious low MTD', stickyMonth.locked, 'keeping', window._lastGoodMonth.locked);
+        stickyMonth = window._lastGoodMonth;
+      } else {
+        window._lastGoodMonth = stickyMonth;
+      }
+    } else if (window._lastGoodMonth) {
+      // Fresh value is zero/empty — use cached
+      stickyMonth = window._lastGoodMonth;
+    }
+
+    if (stickyMonth) {
+      const todayPct = stickyMonth.pctOfCapital;
+      setT('v2-today-money', '+$' + (stickyMonth.locked / Math.max(1,new Date().getUTCDate())).toFixed(2));
       setT('v2-today-pct', '+' + (todayPct / Math.max(1,new Date().getUTCDate())).toFixed(2) + '%');
-      setT('v2-today-sub', 'avg / day this month · ' + mp.currentMonth.dealCount + ' deals');
+      setT('v2-today-sub', 'avg / day this month · ' + stickyMonth.dealCount + ' deals');
     }
 
     // HERO: MTD
-    if (mp?.currentMonth) {
-      const mtd = mp.currentMonth;
+    if (stickyMonth) {
+      const mtd = stickyMonth;
       const signMoney = mtd.locked >= 0 ? '+$' : '-$';
       const signPct = mtd.pctOfCapital >= 0 ? '+' : '';
       setT('v2-mtd-money', signMoney + Math.abs(mtd.locked).toFixed(2), mtd.locked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
@@ -5546,7 +5564,13 @@ function renderPortfolioFromRecon(r) {
   const rPnl = r.totalRealised || 0;
   const fPnl = r.totalFloating || 0;
   const tPnl = r.totalPnl      || 0;
-  const grandTotal = r.grandTotal || 0;
+  let grandTotal = r.grandTotal || 0;
+
+  // Prefer canonical total-capital ($8,929) over reconciliation futures-only ($3,687)
+  // Use window._lastGoodCapital set by refreshDashboardV2 if available
+  if (typeof window._lastGoodCapital === 'number' && window._lastGoodCapital > grandTotal * 1.5) {
+    grandTotal = window._lastGoodCapital;
+  }
 
   setEl('p-grand-total', fmtUSD(grandTotal));
   setEl('kpi-capital',   fmtUSD(grandTotal));
