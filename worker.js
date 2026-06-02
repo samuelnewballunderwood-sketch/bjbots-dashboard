@@ -1818,9 +1818,21 @@ async function logAction(env, entry) {
 async function getActionLogs(env) {
   try {
     if (!env.ALPHA_LOGS) return [];
-    const list = await env.ALPHA_LOGS.list({ prefix:'log:', limit:100 });
-    const entries = await Promise.all(list.keys.map(k => env.ALPHA_LOGS.get(k.name,'json')));
-    return entries.filter(Boolean).reverse();
+    // KV list returns ascending lexical order. Keys are log:<Date.now()> — ascending = oldest first.
+    // We want NEWEST 200, so walk with cursor to get all keys, then slice from end.
+    let allKeys = [];
+    let cursor = undefined;
+    let safety = 0;
+    do {
+      const page = await env.ALPHA_LOGS.list({ prefix:'log:', limit:1000, cursor });
+      allKeys = allKeys.concat(page.keys);
+      cursor = page.list_complete ? null : page.cursor;
+      safety++;
+    } while (cursor && safety < 10);
+    // Take last 200 (newest by lexical = newest by timestamp)
+    const newest = allKeys.slice(-200);
+    const entries = await Promise.all(newest.map(k => env.ALPHA_LOGS.get(k.name,'json')));
+    return entries.filter(Boolean).reverse();  // reverse so newest first
   } catch(e) { return []; }
 }
 
