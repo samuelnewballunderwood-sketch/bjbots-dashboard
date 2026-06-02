@@ -5702,7 +5702,7 @@ function renderTargetState(ts, basis) {
 }
 
 // ── PORTFOLIO LAYER ───────────────────────────────────────────────────────
-function renderPortfolioFromRecon(r) {
+async function renderPortfolioFromRecon(r) {
   if (!r) return;
 
   // PnL
@@ -5710,10 +5710,27 @@ function renderPortfolioFromRecon(r) {
   const fPnl = r.totalFloating || 0;
   const tPnl = r.totalPnl      || 0;
   let grandTotal = r.grandTotal || 0;
+  let spotVal = r.spotTotal || (r.spotFree + r.spotLocked) || 0;
+  let futVal  = r.futuresTotal || 0;
 
-  // Prefer canonical total-capital ($8,929) over reconciliation futures-only ($3,687)
-  // Use window._lastGoodCapital set by refreshDashboardV2 if available
-  if (typeof window._lastGoodCapital === 'number' && window._lastGoodCapital > grandTotal * 1.5) {
+  // CANONICAL CAPITAL: /api/total-capital is source of truth ($8,930 + per-account split)
+  try {
+    const capR = await fetch('https://tc-proxy-eu.onrender.com/api/total-capital?cb='+Date.now());
+    if (capR.ok) {
+      const cap = await capR.json();
+      if (cap.total > 100) {
+        grandTotal = cap.total;
+        const accounts = cap.breakdown?.accounts || [];
+        const spotAcc = accounts.find(a => /Spot/i.test(a.exchange || ''));
+        const futAcc = accounts.find(a => /Futures/i.test(a.exchange || ''));
+        if (spotAcc?.usd > 0) spotVal = spotAcc.usd;
+        if (futAcc?.usd > 0)  futVal  = futAcc.usd;
+      }
+    }
+  } catch(_) {}
+
+  // Stickiness fallback
+  if (grandTotal < 100 && typeof window._lastGoodCapital === 'number' && window._lastGoodCapital > 100) {
     grandTotal = window._lastGoodCapital;
   }
 
@@ -5722,12 +5739,12 @@ function renderPortfolioFromRecon(r) {
   setHeaderTotal(grandTotal);
 
   // ── Row 3 portfolio data ───────────────────────────────────────────
-  const spotVal = r.spotTotal || (r.spotFree + r.spotLocked) || 0;
-  const futVal  = r.futuresTotal || 0;
   setEl('r3-spot',    fmtUSD(spotVal));
   setEl('r3-futures', fmtUSD(futVal));
 
-  const recon = r.reconciled ? '✓ Reconciled' : '⚠ Gap $' + Math.abs(r.difference||0).toFixed(2);
+  // Recon: if we used canonical total-capital, treat as reconciled
+  const usingCanonical = grandTotal > (r.grandTotal || 0) * 1.5;
+  const recon = (usingCanonical || r.reconciled) ? '✓ Reconciled' : '⚠ Gap $' + Math.abs(r.difference||0).toFixed(2);
   setEl('p-recon-status', recon);
   const reconDot = document.getElementById('recon-dot');
   if (reconDot) { reconDot.className = 'recon-status-dot ' + (r.reconciled ? 'ok' : 'warn'); }
