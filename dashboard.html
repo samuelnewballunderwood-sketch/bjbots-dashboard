@@ -5170,14 +5170,42 @@ async function refreshDashboardV2() {
     }
 
     // STATS row
-    if (deals) {
-      const todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
-      // Approximate today's trades via deals/detail (not perfectly accurate but useful)
-      let todayDealCount = 0;
-      (deals.by_bot || []).forEach(b => {
-        if (b.latest_deal && new Date(b.latest_deal) >= todayUTC) todayDealCount++;
-      });
-      setT('v2-trades-today', String(todayDealCount));
+    // TRADES TODAY — fetch accurate count from new tc-proxy endpoint
+    try {
+      const todayR = await fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now());
+      if (todayR.ok) {
+        const td = await todayR.json();
+        const count = parseInt(td?.count || 0);
+        setT('v2-trades-today', String(count));
+        // sub-line: profit + bot breakdown if available
+        const sub = document.querySelector('#v2-trades-today + .v2-stat-sub');
+        if (sub) {
+          if (count > 0) {
+            const profitStr = td.profit >= 0 ? '+$' + td.profit.toFixed(2) : '-$' + Math.abs(td.profit).toFixed(2);
+            sub.textContent = profitStr + ' · closed deals';
+          } else {
+            sub.textContent = 'closed deals';
+          }
+        }
+      } else if (deals) {
+        // Fallback to deals/detail by-bot count
+        const todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
+        let todayDealCount = 0;
+        (deals.by_bot || []).forEach(b => {
+          if (b.latest_deal && new Date(b.latest_deal) >= todayUTC) todayDealCount++;
+        });
+        setT('v2-trades-today', String(todayDealCount));
+      }
+    } catch(_) {
+      // Fallback as above
+      if (deals) {
+        const todayUTC = new Date(); todayUTC.setUTCHours(0,0,0,0);
+        let todayDealCount = 0;
+        (deals.by_bot || []).forEach(b => {
+          if (b.latest_deal && new Date(b.latest_deal) >= todayUTC) todayDealCount++;
+        });
+        setT('v2-trades-today', String(todayDealCount));
+      }
     }
     // Active bots: prefer all-types (DCA + Grid + Signal), fall back to Hannah-only.
     // Race guard: never overwrite with '0/0' on cold start — keep previous value.
