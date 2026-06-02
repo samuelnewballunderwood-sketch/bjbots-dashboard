@@ -1625,6 +1625,47 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
   } catch(_) {}
 
+  // ─── R31 (NEW): Auto-tune DCA take-profit % based on regime ─────────
+  // Reads tunable params from /api/dca-detail, recommends TP per F&G regime, fires tune_bot decisions.
+  // Safety: max change 0.5% per call, executable=true (autonomy enforces cooldown).
+  try {
+    const dcaR = await fetch('https://tc-proxy-eu.onrender.com/api/dca-detail');
+    if (dcaR.ok) {
+      const dca = await dcaR.json();
+      const fg = market.fearGreed;
+      // Regime → recommended TP
+      const regimeTp = (() => {
+        if (fg == null) return 1.5;
+        if (fg < 10) return 0.8;   // Extreme fear: quick exits on dead-cat bounces
+        if (fg < 30) return 1.0;   // Fear: tighter exits
+        if (fg < 66) return 1.5;   // Neutral: 3Commas default
+        if (fg < 80) return 1.8;   // Greed: let winners breathe
+        return 2.2;                // Extreme greed: wider targets, bigger waves
+      })();
+      const targetBots = (dca.bots || []).filter(b => 
+        b.enabled && b.takeProfitPct > 0 && /DCA Long/i.test(b.name || '')
+      );
+      for (const b of targetBots) {
+        const current = b.takeProfitPct;
+        const delta = regimeTp - current;
+        if (Math.abs(delta) < 0.2) continue;  // Skip tiny adjustments — noise
+        // Cap change at 0.5% per single fire
+        const newTp = +(current + Math.max(-0.5, Math.min(0.5, delta))).toFixed(2);
+        const conf = (fg < 15 || fg > 75) ? 80 : 70;
+        suggested.push(makeDecision({
+          actionType:'tune_bot', category:'suggested',
+          text:'Tune TP on ' + b.name + ': ' + current + '% → ' + newTp + '%',
+          reason:'R31 tuner: F&G ' + fg + ' (regime target TP ' + regimeTp + '%). Current TP ' + current + '% is ' + (delta > 0 ? 'too tight' : 'too wide') + ' for this regime. Capped at 0.5% per change.',
+          amount:0, amountPct:0, targetBotIds:[b.id],
+          urgency:'low', timeframe:'24h',
+          expectedImpact:delta > 0 ? 'Lets winners breathe — captures full upside in calmer market' : 'Quicker exits — captures profits before reversals in volatile market',
+          objective:'tune_tp', confidence:conf, executable:true,
+          tuneParams: { takeProfitPct: newTp },
+        }));
+      }
+    }
+  } catch(_) {}
+
   // Extreme long bias (critical threshold — only flag above 95% as system is intentionally long-biased)
   if (longPct > 95) {
     const hedgeCap = Math.round(totalAllocated * (targets.shortPct/100));
