@@ -22,7 +22,9 @@
 .v2-hero-money { font-family: var(--font-mono); font-size: 36px; font-weight: 900; color: var(--text-primary); letter-spacing: -.02em; line-height: 1; }
 .v2-hero-pct { font-family: var(--font-mono); font-size: 36px; font-weight: 900; color: var(--safe); letter-spacing: -.02em; line-height: 1; }
 .v2-hero-pct.neg { color: var(--warn); }
-.v2-hero-sub { font-size: 10.5px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 8px; }
+.v2-hero-sub { font-size: 10.5px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 4px; }
+.v2-hero-trades { font-size: 12.5px; color: var(--teal); font-family: var(--font-mono); margin-top: 8px; font-weight: 600; letter-spacing: .05em; }
+.v2-hero-trades span { font-size: 16px; font-weight: 900; color: var(--text-primary); }
 
 .v2-stats { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 20px; margin: 0 16px 12px; }
 .v2-stat { padding: 12px 14px; background: rgba(14,16,26,.94); border: 1px solid var(--border-dim); border-radius: 8px; text-align: center; }
@@ -2724,7 +2726,8 @@ body::after {
           <span class="v2-hero-money" id="v2-today-money">—</span>
           <span class="v2-hero-pct" id="v2-today-pct">—</span>
         </div>
-        <div class="v2-hero-sub" id="v2-today-sub">vs yesterday locked</div>
+        <div class="v2-hero-trades"><span id="v2-today-trades">—</span> trades</div>
+        <div class="v2-hero-sub" id="v2-today-sub">closed today</div>
       </div>
       <div class="v2-hero-cell">
         <div class="v2-hero-label">Month to date</div>
@@ -2732,6 +2735,7 @@ body::after {
           <span class="v2-hero-money" id="v2-mtd-money">—</span>
           <span class="v2-hero-pct" id="v2-mtd-pct">—</span>
         </div>
+        <div class="v2-hero-trades"><span id="v2-mtd-trades">—</span> trades</div>
         <div class="v2-hero-sub" id="v2-mtd-sub">target 6% / month</div>
       </div>
       <div class="v2-hero-cell">
@@ -2740,6 +2744,7 @@ body::after {
           <span class="v2-hero-money" id="v2-ytd-money">—</span>
           <span class="v2-hero-pct" id="v2-ytd-pct">—</span>
         </div>
+        <div class="v2-hero-trades"><span id="v2-ytd-trades">—</span> trades</div>
         <div class="v2-hero-sub" id="v2-ytd-sub">target 72% / year</div>
       </div>
     </div>
@@ -5148,7 +5153,8 @@ async function refreshDashboardV2() {
         mtdEl.textContent = signPct + mtd.pctOfCapital.toFixed(2) + '%';
         mtdEl.className = 'v2-hero-pct' + (mtd.pctOfCapital < 0 ? ' neg' : '');
       }
-      setT('v2-mtd-sub', mtd.label + ' · ' + mtd.dealCount + ' deals · need $' + (grandTotal*0.06 - mtd.locked).toFixed(0) + ' more for 6%');
+      setT('v2-mtd-trades', String(mtd.dealCount || 0));
+      setT('v2-mtd-sub', mtd.label + ' · need $' + Math.max(0, (grandTotal*0.06 - mtd.locked)).toFixed(0) + ' more for 6%');
     }
 
     // HERO: YTD — prefer canonical /deals/summary, fall back to ytdTarget
@@ -5166,7 +5172,8 @@ async function refreshDashboardV2() {
       const days = dec?.ytdTarget?.daysIntoYear || 0;
       const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
       const dealCount = dealsSum?.completedDeals || 0;
-      setT('v2-ytd-sub', days + ' days · ' + dealCount + ' deals · target $' + target);
+      setT('v2-ytd-trades', String(dealCount || 0));
+      setT('v2-ytd-sub', days + ' days · target $' + target);
     }
 
     // STATS row
@@ -5177,6 +5184,7 @@ async function refreshDashboardV2() {
         const td = await todayR.json();
         const count = parseInt(td?.count || 0);
         setT('v2-trades-today', String(count));
+        setT('v2-today-trades', String(count));  // hero badge
         // sub-line: profit + bot breakdown if available
         const sub = document.querySelector('#v2-trades-today + .v2-stat-sub');
         if (sub) {
