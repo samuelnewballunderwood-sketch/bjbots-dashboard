@@ -499,7 +499,8 @@ function computeRiskState({ longPct, floatingPnl, totalAllocated, volatility, by
 function makeDecision({ actionType, text, reason, amount, amountPct, targetBotIds, fromBotId, toBotId,
                         urgency, timeframe, expectedImpact, costOfInaction, category, confidence,
                         executable, objective, targetDimension, portfolio, targets,
-                        suggestedPair, suggestedAsset, stale_orders_payload, tv_alert }) {
+                        suggestedPair, suggestedAsset, stale_orders_payload, tv_alert,
+                        tuneParams }) {
   return {
     actionType:      actionType     || 'reduce',
     text:            text           || '',
@@ -519,6 +520,7 @@ function makeDecision({ actionType, text, reason, amount, amountPct, targetBotId
     confidence:      Math.min(100, Math.max(0, confidence || 70)),
     executable:      executable     || false,
     suggestedPair, suggestedAsset,
+    tuneParams:      tuneParams     || undefined,
     payload: stale_orders_payload ? { orders: stale_orders_payload } : tv_alert ? { alert: tv_alert } : undefined,
     generatedAt:     new Date().toISOString(),
   };
