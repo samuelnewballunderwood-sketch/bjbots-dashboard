@@ -4713,11 +4713,21 @@ setTimeout(refreshSystemScore, 5500);
 let _actionsCache = null;
 async function loadActionsCache() {
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200');
-    if (!r.ok) return;
-    const j = await r.json();
-    _actionsCache = (j.actions || []).filter(a =>
-      ['executed','manual_execute','daily_snapshot_written'].includes(a.event));
+    // Fetch BOTH sources: worker KV (persistent, survives Render restarts) + tc-proxy live (real-time)
+    const [kvR, liveR] = await Promise.all([
+      fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    const merged = [...((liveR?.actions) || []), ...((kvR?.actions) || [])];
+    // Dedupe by ts (same event from both sources)
+    const seen = new Set();
+    const unique = merged.filter(a => {
+      const key = a.ts + ':' + (a.event || '') + ':' + (a.decision?.text || '');
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+    _actionsCache = unique.filter(a => ['executed','manual_execute','daily_snapshot_written'].includes(a.event))
+      .sort((a,b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
     renderActionsTaken('24h');
   } catch (_) {}
 }
@@ -4832,10 +4842,19 @@ async function refreshLiveActionBoard() {
     const inc  = document.getElementById('lab-incoming');
     const done = document.getElementById('lab-done24h');
     const cnt  = document.getElementById('d2-action-count');
-    const [dec, acts] = await Promise.all([
+    const [dec, kvActs, liveActs] = await Promise.all([
       fetch('/api/decisions?cb=' + Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
+    // Merge KV (persistent) + live (real-time) action sources, dedupe by ts+event
+    const _allActs = [...((liveActs?.actions) || []), ...((kvActs?.actions) || [])];
+    const _seenActs = new Set();
+    const acts = { actions: _allActs.filter(a => {
+      const key = a.ts + ':' + (a.event || '') + ':' + (a.decision?.text || '');
+      if (_seenActs.has(key)) return false;
+      _seenActs.add(key); return true;
+    }).sort((a,b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()) };
 
     // INCOMING — executable decisions Hannah is about to do
     if (inc && dec) {
