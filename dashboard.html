@@ -4958,17 +4958,38 @@ async function refreshDashboardV2() {
       fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
-    const canonicalLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
+    // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
+    let candidateLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
+    if (candidateLocked != null && window._lastGoodLocked > candidateLocked && (window._lastGoodLocked - candidateLocked) > 50) {
+      console.warn('Dashboard: rejecting suspicious low locked profit', candidateLocked, 'keeping', window._lastGoodLocked);
+      candidateLocked = window._lastGoodLocked;
+    } else if (candidateLocked != null) {
+      window._lastGoodLocked = candidateLocked;
+    } else if (window._lastGoodLocked > 0) {
+      candidateLocked = window._lastGoodLocked;
+    }
+    const canonicalLocked = candidateLocked;
     const setT = (id, v, color) => {
       const el = document.getElementById(id);
       if (el) { el.textContent = v; if (color) el.style.color = color; }
     };
-    // PREFER live total-capital (3Commas canonical, ~$8,942) over stale reconciliation/$3,586
-    const grandTotal = (capRes?.total > 100 ? capRes.total : null) || dec?.reconciliation?.grandTotal || mp?.capital || 0;
-    // Also surface in header TOTAL PORTFOLIO tile
-    if (capRes?.total > 100) {
+    // STICKINESS: keep last-known-good values across refreshes (prevents flicker)
+    // when Render instance returns futures-only fallback (~$3,600) vs real $8,900.
+    if (typeof window._lastGoodCapital === 'undefined') window._lastGoodCapital = 0;
+    if (typeof window._lastGoodLocked === 'undefined') window._lastGoodLocked = 0;
+    let candidateCap = (capRes?.total > 100 ? capRes.total : 0) || dec?.reconciliation?.grandTotal || mp?.capital || 0;
+    // Reject a new value if it's <60% of last-known-good (likely a partial fetch)
+    if (window._lastGoodCapital > 100 && candidateCap > 100 && candidateCap < window._lastGoodCapital * 0.6) {
+      console.warn('Dashboard: rejecting suspicious low capital', candidateCap, 'keeping', window._lastGoodCapital);
+      candidateCap = window._lastGoodCapital;
+    } else if (candidateCap > 100) {
+      window._lastGoodCapital = candidateCap;
+    }
+    const grandTotal = candidateCap || window._lastGoodCapital || 0;
+    // Header tile — only update with a real value (skip if all sources empty)
+    if (grandTotal > 100) {
       const headerTotal = document.getElementById('header-total');
-      if (headerTotal) headerTotal.textContent = '$' + Math.round(capRes.total).toLocaleString();
+      if (headerTotal) headerTotal.textContent = '$' + Math.round(grandTotal).toLocaleString();
     }
 
     // HERO: TODAY
