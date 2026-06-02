@@ -54,14 +54,20 @@
    MOBILE FRIENDLY — < 768px (phones)
    ════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Header: stack price tickers, smaller fonts, tighter padding */
-  .ac-header { padding: 10px 12px !important; flex-wrap: wrap; gap: 8px; }
+  /* Header: clean compact layout — no overlap */
+  .ac-header { padding: 8px 12px !important; flex-wrap: nowrap !important; gap: 8px; min-height: 48px; }
   .ac-header-center { display: none !important; }
-  .ac-header-right { gap: 8px; }
-  .ac-total-label { font-size: 8px; }
-  .ac-total-value { font-size: 16px; }
-  .ac-clock { font-size: 10px; }
-  .ac-mode-badge { font-size: 8px; padding: 3px 8px; }
+  .ac-header-left { flex: 0 0 auto; max-width: 40%; }
+  .ac-header-left img, .ac-logo img { max-height: 28px !important; width: auto; }
+  .ac-header-right { gap: 6px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; }
+  .ac-total-cap { min-width: 0; }
+  .ac-total-label { font-size: 7px; letter-spacing: 1px; }
+  .ac-total-value { font-size: 14px; white-space: nowrap; }
+  .ac-clock { font-size: 9px; white-space: nowrap; }
+  .ac-mode-badge { font-size: 7px; padding: 2px 6px; white-space: nowrap; }
+  .ac-live-dot { width: 6px !important; height: 6px !important; }
+  /* Push body content down so first content doesn't slip under sticky header */
+  .ac-main { padding-top: 4px; }
 
   /* Nav tabs: horizontal scroll instead of overflow */
   .layer-nav { overflow-x: auto; overflow-y: hidden; padding: 0 12px !important; scrollbar-width: none; }
@@ -5092,8 +5098,7 @@ async function refreshDashboardV2() {
     const grandTotal = candidateCap || window._lastGoodCapital || 0;
     // Header tile — only update with a real value (skip if all sources empty)
     if (grandTotal > 100) {
-      const headerTotal = document.getElementById('header-total');
-      if (headerTotal) headerTotal.textContent = '$' + Math.round(grandTotal).toLocaleString();
+      setHeaderTotal(grandTotal);
     }
 
     // HERO: TODAY
@@ -5314,6 +5319,22 @@ async function v2ChatSend() {
 
 
 
+// Sticky header total — single source of truth. Rejects suspicious low values.
+function setHeaderTotal(newTotal) {
+  if (typeof newTotal !== 'number' || !isFinite(newTotal) || newTotal <= 0) return;
+  const cached = typeof window._lastGoodCapital === 'number' ? window._lastGoodCapital : 0;
+  // Reject new value if it's <60% of cached good — likely a partial fetch
+  let final = newTotal;
+  if (cached > 100 && newTotal < cached * 0.6) {
+    final = cached;
+  } else {
+    window._lastGoodCapital = newTotal;
+    try { localStorage.setItem('lg:capital', String(newTotal)); } catch(_) {}
+  }
+  const el = document.getElementById('header-total');
+  if (el) el.textContent = '$' + Math.round(final).toLocaleString();
+}
+
 // Also force-disable the legacy renderControl alerts → dash-alerts (which would otherwise repopulate dca_depth)
 // renderControl will still run but its output went into #dash-alerts which we have replaced.
 
@@ -5521,7 +5542,7 @@ function renderControl(data) {
 
   // Header total
   const total = data.reconciliation?.grandTotal || data.portfolio?.trueTotal || 0;
-  if (total) setEl('header-total', fmtUSD(total));
+  if (total) setHeaderTotal(total);
 
   // Mode badge — do NOT read from decisions data, use /api/status instead
   // Badge is set by refreshStatus() which is called on login
@@ -5662,7 +5683,7 @@ function renderPortfolioFromRecon(r) {
 
   setEl('p-grand-total', fmtUSD(grandTotal));
   setEl('kpi-capital',   fmtUSD(grandTotal));
-  setEl('header-total',  fmtUSD(grandTotal));
+  setHeaderTotal(grandTotal);
 
   // ── Row 3 portfolio data ───────────────────────────────────────────
   const spotVal = r.spotTotal || (r.spotFree + r.spotLocked) || 0;
@@ -7177,7 +7198,7 @@ function _updateCtrlCards(data) {
   cv('cv-progress', (rPnl >= 0 ? '+' : '') + ((rPnl / gt) * 100).toFixed(2) + '%');
   cv('cv-locked',  fmtPnl(rPnl));
   cv('cv-roi',     '+' + (actualDailyPct * 30).toFixed(1) + '%');
-  setEl('header-total', fmtUSD(gt));
+  setHeaderTotal(gt);
 
   // R5 live
   const r5el = document.getElementById('ac2-r5-locked');
