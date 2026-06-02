@@ -5169,11 +5169,13 @@ async function refreshDashboardV2() {
         ytdEl.textContent = signPct + ytdPct.toFixed(2) + '%';
         ytdEl.className = 'v2-hero-pct' + (ytdPct < 0 ? ' neg' : '');
       }
-      const days = dec?.ytdTarget?.daysIntoYear || 0;
+      // Days since actual trading start (Trial 2 launch), not calendar Jan 1
+      const TRADING_START = new Date('2026-04-12').getTime();
+      const days = Math.max(1, Math.floor((Date.now() - TRADING_START) / 86400000) + 1);
       const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
       const dealCount = dealsSum?.completedDeals || 0;
       setT('v2-ytd-trades', String(dealCount || 0));
-      setT('v2-ytd-sub', days + ' days · target $' + target);
+      setT('v2-ytd-sub', days + ' days live · target $' + target);
     }
 
     // STATS row
