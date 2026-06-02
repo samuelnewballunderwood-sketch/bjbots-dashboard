@@ -5185,16 +5185,19 @@ async function refreshDashboardV2() {
       if (todayR.ok) {
         const td = await todayR.json();
         const count = parseInt(td?.count || 0);
+        const live = parseInt(td?.liveCount || 0);
         setT('v2-trades-today', String(count));
-        setT('v2-today-trades', String(count));  // hero badge
+        // Hero badge: show closed count + live count when there are open positions
+        setT('v2-today-trades', count + ' closed · ' + live + ' live');
         // sub-line: profit + bot breakdown if available
         const sub = document.querySelector('#v2-trades-today + .v2-stat-sub');
         if (sub) {
+          const liveLabel = live > 0 ? ' · ' + live + ' live' : '';
           if (count > 0) {
             const profitStr = td.profit >= 0 ? '+$' + td.profit.toFixed(2) : '-$' + Math.abs(td.profit).toFixed(2);
-            sub.textContent = profitStr + ' · closed deals';
+            sub.textContent = profitStr + ' · ' + count + ' closed' + liveLabel;
           } else {
-            sub.textContent = 'closed deals';
+            sub.textContent = (live > 0 ? live + ' live positions' : 'closed deals');
           }
         }
       } else if (deals) {
