@@ -2247,6 +2247,24 @@ export default {
         return json(data);
       }
       // ── PHASE 2: Persistent action log + daily snapshots ─────
+      // ── KV-backed portfolio cache (shared across tc-proxy instances) ──
+      if(path==='/api/cache/portfolio' && request.method==='GET'){
+        if(!env.ALPHA_LOGS) return json({error:'KV not configured'}, 503);
+        const cached = await env.ALPHA_LOGS.get('cache:portfolio', 'json');
+        return json(cached || {empty:true});
+      }
+      if(path==='/api/cache/portfolio' && request.method==='POST'){
+        if(!env.ALPHA_LOGS) return json({error:'KV not configured'}, 503);
+        try {
+          const body = await request.json();
+          // Validate basic shape — reject obviously bad data
+          if (!body || typeof body !== 'object') return json({error:'invalid body'}, 400);
+          if (body.totalCapital != null && body.totalCapital < 100) return json({error:'totalCapital too low'}, 400);
+          body.savedAt = new Date().toISOString();
+          await env.ALPHA_LOGS.put('cache:portfolio', JSON.stringify(body), { expirationTtl: 60*60*24*3 });
+          return json({ok:true, savedAt: body.savedAt});
+        } catch(e) { return json({error: e.message}, 500); }
+      }
       if(path==='/api/log-action' && request.method==='POST'){
         try{
           const body=await request.json();
