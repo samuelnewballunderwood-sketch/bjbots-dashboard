@@ -5123,7 +5123,7 @@ setTimeout(refreshHeaderPrices, 500);
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
-    let [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital] = await Promise.all([
+    let [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital, dcaDetail] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
@@ -5135,6 +5135,7 @@ async function refreshDashboardV2() {
       fetch('https://tc-proxy-eu.onrender.com/api/signal-fund-status?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/insufficient-funds?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/idle-capital?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/dca-detail?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
