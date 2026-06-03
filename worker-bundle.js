@@ -9952,6 +9952,31 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
   } catch(_) {}
 
+  // ─── R33 (NEW): Futures→Spot transfer when spot reserve breached ──────
+  // Capital sits useless in futures-available when spot can't grid. Surface a
+  // clear, actionable recommendation. NOT auto-executed — Binance internal
+  // transfer API requires explicit permission; user actions via Binance UI.
+  try {
+    const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
+    const spotFree = parseFloat(usdtBal?.free || 0);
+    const futAvail = parseFloat((portfolio?.futuresBalances?.availableBalance) || 0);
+    // Conditions: spot below reserve AND futures has meaningful excess
+    if (spotFree < 100 && futAvail > 300) {
+      const transferAmt = Math.min(1000, Math.round(futAvail - 100));  // leave $100 in futures
+      required.push(makeDecision({
+        actionType:'manual_transfer', category:'required',
+        text:'⚡ TRANSFER \$' + transferAmt + ' Futures → Spot to unlock R9 grid deploy',
+        reason:'R33: Spot USDT free \$' + spotFree.toFixed(0) + ' below \$100 reserve. Futures available \$' + futAvail.toFixed(0) + ' sitting idle. Transfer \$' + transferAmt + ' Futures → Spot in Binance UI to give R9 fuel for next ETH/SOL/BNB grid deployment.',
+        amount:transferAmt, amountPct: totalAllocated > 0 ? Math.round((transferAmt/totalAllocated)*100) : 0,
+        targetBotIds:[],
+        urgency:'high', timeframe:'manual',
+        expectedImpact:'Unlocks R9 to deploy 2-3 new defensive grids on un-gridded assets (ETH/SOL/BNB)',
+        costOfInaction:'\$' + (transferAmt*0.001*30).toFixed(0) + '/month missed earnings vs grid yield',
+        objective:'futures_to_spot_transfer', confidence:90, executable:false,
+      }));
+    }
+  } catch(_) {}
+
   // ─── R19 (NEW): Grid Profit-Take ──────────────────────────────────
   // When any Hannah grid's profit > 1.5% of its deployed capital, close + bank.
   // Next R9 tick will create a fresh grid at current price (auto-recycle).
