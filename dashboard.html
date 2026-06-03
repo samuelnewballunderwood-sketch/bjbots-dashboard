@@ -5215,6 +5215,27 @@ async function refreshDashboardV2() {
         mtdEl.className = 'v2-hero-pct' + (mtd.pctOfCapital < 0 ? ' neg' : '');
       }
       setT('v2-mtd-trades', String(mtd.dealCount || 0));
+      // If we have the new breakdown (DCA/Grid/ST per month), show it under the count
+      if (mtd.dcaCount !== undefined || mtd.gridCount !== undefined) {
+        const parts = [];
+        if ((mtd.dcaCount||0) > 0)        parts.push(mtd.dcaCount + ' DCA');
+        if ((mtd.gridCount||0) > 0)       parts.push(mtd.gridCount + ' grid');
+        if ((mtd.smartTradeCount||0) > 0) parts.push(mtd.smartTradeCount + ' ST');
+        if (parts.length) {
+          const tradesEl = document.getElementById('v2-mtd-trades');
+          if (tradesEl && tradesEl.parentElement) {
+            // append breakdown after the 'trades' label
+            let existing = tradesEl.parentElement.querySelector('.v2-mtd-breakdown');
+            if (!existing) {
+              existing = document.createElement('span');
+              existing.className = 'v2-mtd-breakdown';
+              existing.style.cssText = 'color:var(--text-muted);font-size:10px;margin-left:8px';
+              tradesEl.parentElement.appendChild(existing);
+            }
+            existing.textContent = '(' + parts.join(' · ') + ')';
+          }
+        }
+      }
       setT('v2-mtd-sub', mtd.label + ' · need $' + Math.max(0, (grandTotal*0.06 - mtd.locked)).toFixed(0) + ' more for 6%');
     }
 
