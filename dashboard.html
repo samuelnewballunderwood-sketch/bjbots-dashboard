@@ -2827,6 +2827,7 @@ body::after {
       </div>
       <div class="v2-chat-row">
         <input class="v2-chat-input" id="v2-chat-input" placeholder="Ask anything — bots, market, decisions, performance" onkeydown="if(event.key==='Enter')v2ChatSend()" />
+        <button class="v2-chat-send" id="v2-chat-wake" onclick="_hannahWakeToggle()" title="Always-on: say 'Hannah ...' and she replies" style="padding:10px 14px;background:rgba(160,175,220,.10);color:var(--text-muted)">👂</button>
         <button class="v2-chat-send" id="v2-chat-mic" onclick="_hannahMicToggle('v2-chat-input', v2ChatSend)" title="Click to talk to Hannah" style="padding:10px 14px;background:rgba(45,212,191,.18);color:var(--teal)">🎤</button>
         <button class="v2-chat-send" onclick="v2ChatSend()">SEND</button>
       </div>
@@ -7416,6 +7417,91 @@ function _hannahMicToggle(inputId, sendFn) {
   }
 }
 window._hannahMicToggle = _hannahMicToggle;
+
+// ── Hannah WAKE-WORD listener (always-on) ────────────────────────────
+// Toggle on: continuously listens. When you say 'Hannah ...' it captures
+// the rest of the sentence and fires v2ChatSend. Auto-restarts because
+// Chrome's continuous mode ends after ~30-60s.
+let _hannahWake = null;
+let _hannahWakeArmed = false;
+let _hannahWakeBuf = '';
+const HANNAH_WAKES = ['hannah', 'hanna', 'henna', 'hey hannah', 'ok hannah'];
+function _hannahWakeToggle() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Browser does not support voice — use Chrome/Edge.'); return; }
+  const btn = document.getElementById('v2-chat-wake');
+  if (_hannahWakeArmed) {
+    _hannahWakeArmed = false;
+    try { if (_hannahWake) _hannahWake.stop(); } catch(_) {}
+    _hannahWake = null;
+    if (btn) { btn.textContent = '👂'; btn.style.background = 'rgba(160,175,220,.10)'; btn.style.color = 'var(--text-muted)'; }
+    return;
+  }
+  _hannahWakeArmed = true;
+  if (btn) { btn.textContent = '🔴'; btn.style.background = 'rgba(255,80,80,.20)'; btn.style.color = '#ff5050'; }
+  _hannahWakeStart();
+}
+function _hannahWakeStart() {
+  if (!_hannahWakeArmed) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const r = new SR();
+  r.lang = 'en-US';
+  r.continuous = true;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  _hannahWake = r;
+  let buffer = '';
+  r.onresult = (evt) => {
+    let interim = '';
+    let finalChunk = '';
+    for (let i = evt.resultIndex; i < evt.results.length; i++) {
+      const t = evt.results[i][0].transcript;
+      if (evt.results[i].isFinal) finalChunk += ' ' + t;
+      else interim += ' ' + t;
+    }
+    buffer = (buffer + ' ' + finalChunk).toLowerCase().trim();
+    const stream = (buffer + ' ' + interim).toLowerCase();
+    // Look for wake word
+    for (const w of HANNAH_WAKES) {
+      const idx = stream.lastIndexOf(w);
+      if (idx === -1) continue;
+      const after = stream.slice(idx + w.length).trim().replace(/^[,.\-:\s]+/, '');
+      // Need at least 2 words after the wake word to count as a real ask
+      if (after.split(/\s+/).length >= 2) {
+        // Fire — stop this session, send the query, then re-arm
+        try { r.stop(); } catch(_) {}
+        // Stop Hannah's own speech if she's mid-reply (avoid loops)
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(_) {}
+        try { if (typeof _interruptHannah === 'function') _interruptHannah(); } catch(_) {}
+        const input = document.getElementById('v2-chat-input');
+        if (input) {
+          input.value = after;
+          try { v2ChatSend(); } catch(e) { console.warn(e); }
+        }
+        buffer = '';
+        // _hannahWakeStart() will be invoked again from onend (auto-restart)
+        return;
+      }
+    }
+  };
+  r.onerror = (evt) => {
+    console.warn('Wake mic error:', evt.error);
+    // 'no-speech' / 'aborted' are normal — handled by onend restart
+  };
+  r.onend = () => {
+    // Auto-restart while armed
+    if (_hannahWakeArmed) setTimeout(_hannahWakeStart, 400);
+  };
+  try { r.start(); }
+  catch(e) {
+    console.error('Wake start failed:', e);
+    _hannahWakeArmed = false;
+    const btn = document.getElementById('v2-chat-wake');
+    if (btn) { btn.textContent = '👂'; btn.style.background = 'rgba(160,175,220,.10)'; btn.style.color = 'var(--text-muted)'; }
+  }
+}
+window._hannahWakeToggle = _hannahWakeToggle;
+
 
 async function _speakText(text) {
   if (!_hannahConn || !_simliWs || _simliWs.readyState !== WebSocket.OPEN) return;
