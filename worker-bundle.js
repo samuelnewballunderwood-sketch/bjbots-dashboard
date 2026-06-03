@@ -8799,9 +8799,20 @@ function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, pric
   const reservedInBots = spotLocked - idleInBots; // active bot orders
 
   // ── 7. PNL BREAKDOWN ──────────────────────────────────────────
-  // Realised: from completed trades (3Commas profit + Binance grid profit)
-  // Floating: open position PnL (futures unrealized + 3Commas open deals)
-  const tcRealised     = tcBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
+  // Realised: prefer /deals/summary (sums every closed deal's final_profit) over
+  // tcBots aggregation because tcBots.profit only counts trial2-filtered DCA
+  // deals and misses DCA bots whose deals all closed before Trial 2.
+  let tcRealised = tcBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
+  try {
+    const dsR = await fetch('https://tc-proxy-eu.onrender.com/deals/summary');
+    if (dsR.ok) {
+      const ds = await dsR.json();
+      // Use canonical total (DCA + Grid + Smart Trade + Reinvested) when it exceeds
+      // the tcBots aggregate — that's the more complete picture.
+      const canonical = parseFloat(ds.totalProfit || 0);
+      if (canonical > tcRealised) tcRealised = canonical;
+    }
+  } catch(_) {}
   const totalRealised  = Math.round(tcRealised * 100) / 100;
   const tcFloating     = tcBotBreakdown.reduce((s, b) => s + (b.floating || 0), 0);
   const totalFloating  = Math.round((futuresUnrealized + tcFloating) * 100) / 100;
