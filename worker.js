@@ -995,20 +995,20 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   );
   const atRiskBots = [...new Map([...maxSoBots, ...deepDcaBots].map(b => [b.id, b])).values()];
   if (atRiskBots.length > 0) {
-    atRiskBots.forEach(b => {
-      const capAtRisk = b.capital || 0;
-      required.push(makeDecision({
-        actionType: 'monitor', category: 'required',
-        text: b.name + ' at max safety orders — deal open, bot stopped',
-        reason: b.name + ' has consumed all safety orders with an open deal. Bot is stopped. Deal will run to take-profit or manual close. No further averaging possible.',
-        amount: capAtRisk, amountPct: totalAllocated ? Math.round((capAtRisk / totalAllocated) * 100) : 0,
-        targetBotIds: [b.id],
-        urgency: 'critical', timeframe: 'immediate',
-        expectedImpact: 'Monitor until TP hit or consider manual close if loss deepens',
-        costOfInaction: 'Position continues to float — no further downside protection available',
-        objective: 'dca_depth', confidence: 95,
-      }));
-    });
+    // Bundle into ONE info-only summary instead of N noisy 'required' items.
+    // Sam chose 'wait for recovery' on stuck DCAs — don't keep yelling.
+    const totalCapAtRisk = atRiskBots.reduce((s, b) => s + (b.capital || 0), 0);
+    const botNames = atRiskBots.map(b => b.name).join(', ');
+    suggested.push(makeDecision({
+      actionType: 'monitor', category: 'suggested',
+      text: atRiskBots.length + ' DCA bots at max SOs — \$' + totalCapAtRisk.toFixed(0) + ' locked, waiting on bounce',
+      reason: 'R6: ' + botNames + ' all consumed safety orders with deals open. Sam directive: wait for recovery (do not auto-close). Deals exit on TP or manual review only.',
+      amount: totalCapAtRisk, amountPct: totalAllocated ? Math.round((totalCapAtRisk / totalAllocated) * 100) : 0,
+      targetBotIds: atRiskBots.map(b => b.id),
+      urgency: 'low', timeframe: '7d',
+      expectedImpact: 'Capital frozen until prices bounce above bot TP triggers',
+      objective: 'dca_depth', confidence: 95, executable: false,
+    }));
   }
 
   // Idle signal bots
