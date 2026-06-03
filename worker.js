@@ -1354,7 +1354,12 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   try {
     const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
     const spotFree = parseFloat(usdtBal?.free || 0);
-    const futAvail = parseFloat((portfolio?.futuresBalances?.availableBalance) || 0);
+    // Pull futures availability directly — portfolio object doesn't expose it
+    let futAvail = 0;
+    try {
+      const fr = await fetch('https://tc-proxy-eu.onrender.com/futures-wallet');
+      if (fr.ok) { const fj = await fr.json(); futAvail = parseFloat(fj.availableBalance || 0); }
+    } catch(_) {}
     // Conditions: spot below reserve AND futures has meaningful excess
     if (spotFree < 100 && futAvail > 300) {
       const transferAmt = Math.min(1000, Math.round(futAvail - 100));  // leave $100 in futures
@@ -1409,7 +1414,9 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     for (const g of hannahGrids) {
       // Capital deployed but ZERO active deals = grid placed orders but none filling
       // (likely price way outside range). R34 closes so R9 redeploys at current price.
-      if ((g.capital || 0) >= 20 && (g.activeDeals || 0) === 0 && (g.completedDeals || 0) === 0) {
+      // Dead = no active deals filling AND no profit generated this cycle.
+      // (completedDeals counts lifetime grid line fills — irrelevant if all happened ages ago.)
+      if ((g.capital || 0) >= 20 && (g.activeDeals || 0) === 0 && (g.profit || 0) === 0) {
         required.push(makeDecision({
           actionType:'close_grid', category:'required',
           text:'Recycle dead grid: ' + g.name + ' (0 trades since launch)',
@@ -1424,19 +1431,19 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   } catch(_) {}
 
   // ─── R35 (NEW): Force-close DCA bot deals in Error state ──────────
-  // Bot has consumed all SOs, deal in Error, locked capital unable to average.
-  // Auto-close ONLY when floating loss < 3% of bot capital — preserves optionality
-  // on bigger losers (Sam reviews those manually).
+  // Detection: bot was disabled (active=false) BUT has open deals (3Commas auto-disables
+  // on safety-order error, leaving deal stuck). Floating loss not in normalized bots,
+  // so we conservatively only target small-capital bots (≤$300) where worst-case loss
+  // is bounded. Larger stuck deals surface as advisory via R6 (dca_depth).
   const errorBots = tcBots.filter(b => {
-    if (b.strategy !== 'dca' || (b.activeDeals||0) === 0) return false;
-    const floatPct = b.floatingPnl && b.capital ? Math.abs(b.floatingPnl / b.capital) : 0;
-    return (b.status === 'error' || /error/i.test(b.localizedStatus||'')) && floatPct < 0.03;
+    if (b.botType !== 'dca') return false;
+    return b.active === false && (b.activeDeals||0) > 0 && (b.capital||0) <= 300;
   });
   for (const b of errorBots) {
     required.push(makeDecision({
       actionType:'close_deal', category:'required',
-      text:'Close error deal: ' + b.name + ' (-\$' + Math.abs(b.floatingPnl||0).toFixed(2) + ' floating)',
-      reason:'R35: Deal in Error state, floating loss \$' + Math.abs(b.floatingPnl||0).toFixed(2) + ' (<3% of bot capital). Closing to free \$' + (b.capital||0).toFixed(0) + ' locked USDT for redeployment. Larger losses surfaced for manual review.',
+      text:'Close stuck deal: ' + b.name + ' (\$' + (b.capital||0).toFixed(0) + ' locked)',
+      reason:'R35: DCA bot stopped by 3Commas (error/SO depletion) but deal still open with \$' + (b.capital||0).toFixed(0) + ' locked. Small cap (≤\$300) so worst-case loss is bounded. Force-closing to release USDT for R9 redeploy.',
       amount:Math.round(b.capital||0), amountPct:0, targetBotIds:[b.id],
       urgency:'high', timeframe:'1h',
       expectedImpact:'Frees \$' + (b.capital||0).toFixed(0) + ' locked. R9 + R12 redeploy on next tick.',
