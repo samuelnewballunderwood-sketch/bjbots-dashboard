@@ -10005,6 +10005,50 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
   } catch(_) {}
 
+  // ─── R34 (NEW): Auto-close inactive Hannah grids ───────────────────
+  // Grid with 0 active deals (no orders filling) AND active=true means it's idle.
+  // Could be: price out of range, or unfunded. Either way, free the capital.
+  try {
+    const hannahGrids = tcBots.filter(b =>
+      b.botType === 'grid' && b.active && /Hannah/i.test(b.name||''));
+    for (const g of hannahGrids) {
+      // Capital deployed but ZERO active deals = grid placed orders but none filling
+      // (likely price way outside range). R34 closes so R9 redeploys at current price.
+      if ((g.capital || 0) >= 20 && (g.activeDeals || 0) === 0 && (g.completedDeals || 0) === 0) {
+        required.push(makeDecision({
+          actionType:'close_grid', category:'required',
+          text:'Recycle dead grid: ' + g.name + ' (0 trades since launch)',
+          reason:'R34: Grid is active but has executed 0 trades since launch — price likely outside range. Closing to free \$' + (g.capital||0).toFixed(0) + ' for R9 to redeploy at current price.',
+          amount:Math.round(g.capital||0), amountPct:0, targetBotIds:[g.id],
+          urgency:'medium', timeframe:'1h',
+          expectedImpact:'Frees stranded capital. R9 redeploys with fresh price center.',
+          objective:'grid_recycle_dead', confidence:85, executable:true,
+        }));
+      }
+    }
+  } catch(_) {}
+
+  // ─── R35 (NEW): Force-close DCA bot deals in Error state ──────────
+  // Bot has consumed all SOs, deal in Error, locked capital unable to average.
+  // Auto-close ONLY when floating loss < 3% of bot capital — preserves optionality
+  // on bigger losers (Sam reviews those manually).
+  const errorBots = tcBots.filter(b => {
+    if (b.strategy !== 'dca' || (b.activeDeals||0) === 0) return false;
+    const floatPct = b.floatingPnl && b.capital ? Math.abs(b.floatingPnl / b.capital) : 0;
+    return (b.status === 'error' || /error/i.test(b.localizedStatus||'')) && floatPct < 0.03;
+  });
+  for (const b of errorBots) {
+    required.push(makeDecision({
+      actionType:'close_deal', category:'required',
+      text:'Close error deal: ' + b.name + ' (-\$' + Math.abs(b.floatingPnl||0).toFixed(2) + ' floating)',
+      reason:'R35: Deal in Error state, floating loss \$' + Math.abs(b.floatingPnl||0).toFixed(2) + ' (<3% of bot capital). Closing to free \$' + (b.capital||0).toFixed(0) + ' locked USDT for redeployment. Larger losses surfaced for manual review.',
+      amount:Math.round(b.capital||0), amountPct:0, targetBotIds:[b.id],
+      urgency:'high', timeframe:'1h',
+      expectedImpact:'Frees \$' + (b.capital||0).toFixed(0) + ' locked. R9 + R12 redeploy on next tick.',
+      objective:'force_close_error_deal', confidence:80, executable:true,
+    }));
+  }
+
   // ─── R18 (NEW): BTC Funding Rate Contrarian ──────────────────────
   // Funding extremes mean-revert. When longs overpay (>0.05%) → short.
   // When shorts overpay (<-0.03%) → long. \$100 Smart Trade, 1% TP/SL.
