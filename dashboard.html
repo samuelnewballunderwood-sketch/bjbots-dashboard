@@ -4549,16 +4549,15 @@ function setEl(id, val, cls) {
 }
 function pnlClass(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
-// ── Live elapsed counter (replaces wall clock — continuous from May 31) ──
+// ── Live elapsed counter — total hours since 2026-05-31 ──
 function updateClock() {
   const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
   const ms = Math.max(0, Date.now() - HANNAH_LIVE);
-  const days  = Math.floor(ms / 86400000);
-  const hours = Math.floor((ms % 86400000) / 3600000);
-  const mins  = Math.floor((ms % 3600000)  / 60000);
-  const secs  = Math.floor((ms % 60000)    / 1000);
+  const totalHours = Math.floor(ms / 3600000);
+  const mins  = Math.floor((ms % 3600000) / 60000);
+  const secs  = Math.floor((ms % 60000)   / 1000);
   const pad = (n) => String(n).padStart(2,'0');
-  setEl('header-clock', days + 'd ' + pad(hours) + ':' + pad(mins) + ':' + pad(secs));
+  setEl('header-clock', totalHours + ':' + pad(mins) + ':' + pad(secs));
 }
 setInterval(updateClock, 1000); updateClock();
 
@@ -6837,9 +6836,8 @@ async function refreshStatus() {
     if (live) {
       const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
       const ms = Math.max(0, Date.now() - HANNAH_LIVE);
-      const d = Math.floor(ms / 86400000);
-      const h = Math.floor((ms % 86400000) / 3600000);
-      badge.textContent = '⚡ Live · ' + d + 'd ' + h + 'h';
+      const totalHours = Math.floor(ms / 3600000);
+      badge.textContent = '⚡ Live · ' + totalHours + 'h';
     } else {
       badge.textContent = '◉ Advisory Mode';
     }
