@@ -2727,7 +2727,16 @@ body::after {
           <span class="v2-hero-pct" id="v2-today-pct">—</span>
         </div>
         <div class="v2-hero-trades"><span id="v2-today-trades">—</span> trades</div>
-        <div class="v2-hero-sub" id="v2-today-sub">closed today</div>
+        <div class="v2-hero-sub" id="v2-today-sub">closed since UTC midnight</div>
+      </div>
+      <div class="v2-hero-cell">
+        <div class="v2-hero-label">Yesterday</div>
+        <div class="v2-hero-row">
+          <span class="v2-hero-money" id="v2-yesterday-money">—</span>
+          <span class="v2-hero-pct" id="v2-yesterday-pct">—</span>
+        </div>
+        <div class="v2-hero-trades"><span id="v2-yesterday-trades">—</span> trades</div>
+        <div class="v2-hero-sub" id="v2-yesterday-sub">previous UTC day</div>
       </div>
       <div class="v2-hero-cell">
         <div class="v2-hero-label">Month to date</div>
@@ -5139,13 +5148,19 @@ async function refreshDashboardV2() {
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
+    // HWM: reject only EXTREME drops (>30%) — used to reject any drop >$50 which
+    // locked in stale $1,409 when the real reconciled value dropped to $1,016.
+    // v2 of the localStorage key so cached stale values from v1 get discarded once.
+    if (typeof window._lastGoodLocked === 'undefined') {
+      try { window._lastGoodLocked = parseFloat(localStorage.getItem('lg:locked:v2') || '0') || 0; } catch(_) { window._lastGoodLocked = 0; }
+    }
     let candidateLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
-    if (candidateLocked != null && window._lastGoodLocked > candidateLocked && (window._lastGoodLocked - candidateLocked) > 50) {
+    if (candidateLocked != null && window._lastGoodLocked > candidateLocked && candidateLocked < window._lastGoodLocked * 0.7) {
       console.warn('Dashboard: rejecting suspicious low locked profit', candidateLocked, 'keeping', window._lastGoodLocked);
       candidateLocked = window._lastGoodLocked;
     } else if (candidateLocked != null) {
       window._lastGoodLocked = candidateLocked;
-      try { localStorage.setItem('lg:locked', String(candidateLocked)); } catch(_) {}
+      try { localStorage.setItem('lg:locked:v2', String(candidateLocked)); } catch(_) {}
     } else if (window._lastGoodLocked > 0) {
       candidateLocked = window._lastGoodLocked;
     }
@@ -5207,22 +5222,24 @@ async function refreshDashboardV2() {
     }
 
     if (stickyMonth) {
-      // TODAY tile money is set later from /api/today-deals real value.
-      // Sub line stays as MTD avg/day context.
-      const todayPct = stickyMonth.pctOfCapital;
-      setT('v2-today-sub', 'avg / day this month · ' + stickyMonth.dealCount + ' deals');
+      // TODAY tile money is set later from /api/today-deals (real today profit).
+      // Yesterday tile gets MTD-avg as a contextual baseline below.
     }
 
     // HERO: MTD
     if (stickyMonth) {
       const mtd = stickyMonth;
       const signMoney = mtd.locked >= 0 ? '+$' : '-$';
-      const signPct = mtd.pctOfCapital >= 0 ? '+' : '';
+      // Compute % from grandTotal if mtd.pctOfCapital is null/0 (server returns null when capital unknown)
+      const mtdPct = (mtd.pctOfCapital && mtd.pctOfCapital !== 0)
+        ? mtd.pctOfCapital
+        : (grandTotal > 0 ? (mtd.locked / grandTotal) * 100 : 0);
+      const signPct = mtdPct >= 0 ? '+' : '';
       setT('v2-mtd-money', signMoney + Math.abs(mtd.locked).toFixed(2), mtd.locked >= 0 ? 'var(--text-primary)' : 'var(--warn)');
       const mtdEl = document.getElementById('v2-mtd-pct');
       if (mtdEl) {
-        mtdEl.textContent = signPct + mtd.pctOfCapital.toFixed(2) + '%';
-        mtdEl.className = 'v2-hero-pct' + (mtd.pctOfCapital < 0 ? ' neg' : '');
+        mtdEl.textContent = signPct + mtdPct.toFixed(2) + '%';
+        mtdEl.className = 'v2-hero-pct' + (mtdPct < 0 ? ' neg' : '');
       }
       setT('v2-mtd-trades', String(mtd.dealCount || 0));
       // If we have the new breakdown (DCA/Grid/ST per month), show it under the count
@@ -5328,6 +5345,27 @@ async function refreshDashboardV2() {
         if (tMoneyEl) tMoneyEl.style.color = tProfit > 0 ? 'var(--safe)' : tProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
         const tPctEl = document.getElementById('v2-today-pct');
         if (tPctEl) tPctEl.className = 'v2-hero-pct' + (tPct < 0 ? ' neg' : '');
+        // YESTERDAY tile — fetch prev-day data from new /api/yesterday-deals endpoint
+        try {
+          const yR = await fetch('https://tc-proxy-eu.onrender.com/api/yesterday-deals?cb='+Date.now());
+          if (yR.ok) {
+            const y = await yR.json();
+            const yProfit = parseFloat(y?.profit || 0);
+            const yCount = parseInt(y?.count || 0);
+            const yStr = yProfit >= 0 ? '+$' + yProfit.toFixed(2) : '-$' + Math.abs(yProfit).toFixed(2);
+            setT('v2-yesterday-money', yStr);
+            const yCap = (typeof grandTotal !== 'undefined' && grandTotal > 0) ? grandTotal : (window._lastCapital || 10000);
+            const yPct = yCap > 0 ? (yProfit / yCap * 100) : 0;
+            const yPctSign = yPct >= 0 ? '+' : '';
+            setT('v2-yesterday-pct', yPctSign + yPct.toFixed(2) + '%');
+            setT('v2-yesterday-trades', String(yCount));
+            const yMoneyEl = document.getElementById('v2-yesterday-money');
+            if (yMoneyEl) yMoneyEl.style.color = yProfit > 0 ? 'var(--safe)' : yProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
+            const yPctEl = document.getElementById('v2-yesterday-pct');
+            if (yPctEl) yPctEl.className = 'v2-hero-pct' + (yPct < 0 ? ' neg' : '');
+            if (y?.date) setT('v2-yesterday-sub', y.date + ' UTC');
+          }
+        } catch(_) {}
         // sub-line: profit + bot breakdown if available
         const sub = document.querySelector('#v2-trades-today + .v2-stat-sub');
         if (sub) {
