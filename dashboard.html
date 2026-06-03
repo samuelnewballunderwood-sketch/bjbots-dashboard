@@ -5582,7 +5582,10 @@ async function v2ChatSend() {
     });
     const j = await r.json();
     thinking.style.opacity = '1';
-    thinking.textContent = j.answer || j.response || j.message || j.text || 'No response — Hannah may be cold-starting (~30s on first ask).';
+    const answer = j.answer || j.response || j.message || j.text || 'No response — Hannah may be cold-starting (~30s on first ask).';
+    thinking.textContent = answer;
+    // Speak her reply (browser TTS by default, ElevenLabs+Simli if activated)
+    try { _hannahSpeak(answer); } catch(_) {}
   } catch (e) {
     thinking.textContent = 'Chat error: ' + e.message;
     thinking.style.color = 'var(--warn)';
@@ -7305,6 +7308,42 @@ function hannahDisconnect() {
 
 // ── SPEAK — pipe PCM16 to Simli ───────────────────────────────────
 
+// ── Hannah VOICE OUTPUT (browser TTS — works without Simli/ElevenLabs activate) ──
+// Tries Simli/ElevenLabs first if connected; falls back to browser speechSynthesis
+// so Hannah talks even before you click ACTIVATE VOICE + AVATAR.
+function _hannahSpeak(text) {
+  if (!text) return;
+  // Try the ElevenLabs+Simli path first if WS is open
+  try {
+    if (typeof _simliWs !== 'undefined' && _simliWs && _simliWs.readyState === WebSocket.OPEN) {
+      if (typeof _speakText === 'function') return _speakText(text).catch(() => _hannahBrowserTTS(text));
+    }
+  } catch(_) {}
+  // Fallback: browser-native speech synthesis
+  _hannahBrowserTTS(text);
+}
+function _hannahBrowserTTS(text) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    // Strip markdown / emoji to clean speech
+    const clean = text.replace(/[\*_`#>\-]/g,' ').replace(/\s+/g,' ').trim().slice(0, 800);
+    if (!clean) return;
+    window.speechSynthesis.cancel(); // interrupt any in-flight utterance
+    const u = new SpeechSynthesisUtterance(clean);
+    u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
+    // Prefer a female English voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const fav = voices.find(v => /samantha|jenny|aria|natural|google.*female|en-?gb.*female/i.test(v.name)) ||
+                voices.find(v => /female/i.test(v.name)) ||
+                voices.find(v => /en-?US|en-?GB/i.test(v.lang)) ||
+                voices[0];
+    if (fav) u.voice = fav;
+    window._lastHannahUtterance = u;
+    window.speechSynthesis.speak(u);
+  } catch(e) { console.warn('browser TTS failed:', e); }
+}
+window._hannahSpeak = _hannahSpeak;
+
 // ── Hannah VOICE INPUT (Web Speech API) ─────────────────────────────
 // Click mic → start listening → speak → auto-fills input → auto-sends to Hannah.
 // Click again while listening → stop.
@@ -7342,6 +7381,7 @@ function _hannahMicToggle(inputId, sendFn) {
   const btn = document.getElementById(btnId);
   // Stop Hannah's speech if she's talking — barge-in
   try { if (typeof _interruptHannah === 'function') _interruptHannah(); } catch(_) {}
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(_) {}
   r.onstart = () => {
     if (btn) { btn.textContent = '🔴'; btn.style.background = 'rgba(255,80,80,.25)'; }
     if (input) input.placeholder = 'Listening — speak now…';
