@@ -5288,12 +5288,31 @@ async function refreshDashboardV2() {
         // unless midnight UTC has rolled over. Stored in window._lastGoodTodayDisplay.
         const todayKey = new Date().toISOString().slice(0,10);
         if (!window._lastGoodTodayDisplay || window._lastGoodTodayDisplay.day !== todayKey) {
-          window._lastGoodTodayDisplay = { day: todayKey, count: 0, live: 0 };
+          window._lastGoodTodayDisplay = { day: todayKey, count: 0, live: 0, profit: 0 };
+          try { localStorage.setItem('lg:today', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
+        } else {
+          // Hydrate from localStorage on page load if window state is fresh
+          try {
+            const saved = JSON.parse(localStorage.getItem('lg:today') || 'null');
+            if (saved && saved.day === todayKey) {
+              if (saved.count  > window._lastGoodTodayDisplay.count)  window._lastGoodTodayDisplay.count  = saved.count;
+              if (saved.live   > window._lastGoodTodayDisplay.live)   window._lastGoodTodayDisplay.live   = saved.live;
+              if (saved.profit > (window._lastGoodTodayDisplay.profit||0)) window._lastGoodTodayDisplay.profit = saved.profit;
+            }
+          } catch(_) {}
         }
         if (count >= window._lastGoodTodayDisplay.count) window._lastGoodTodayDisplay.count = count;
         else count = window._lastGoodTodayDisplay.count;
         if (live >= window._lastGoodTodayDisplay.live) window._lastGoodTodayDisplay.live = live;
         else live = window._lastGoodTodayDisplay.live;
+        // Profit HWM — keep peak today's $ figure within UTC day
+        const freshProfit = parseFloat(td?.profit || 0);
+        if (freshProfit >= (window._lastGoodTodayDisplay.profit||0)) {
+          window._lastGoodTodayDisplay.profit = freshProfit;
+        }
+        // Inject the HWM profit back into td so downstream tile uses it
+        td.profit = window._lastGoodTodayDisplay.profit;
+        try { localStorage.setItem('lg:today', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
         setT('v2-trades-today', String(count));
         // Hero badge: show closed count + live count when there are open positions
         setT('v2-today-trades', count + ' closed · ' + live + ' live');
