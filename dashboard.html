@@ -5197,9 +5197,9 @@ async function refreshDashboardV2() {
     }
 
     if (stickyMonth) {
+      // TODAY tile money is set later from /api/today-deals real value.
+      // Sub line stays as MTD avg/day context.
       const todayPct = stickyMonth.pctOfCapital;
-      setT('v2-today-money', '+$' + (stickyMonth.locked / Math.max(1,new Date().getUTCDate())).toFixed(2));
-      setT('v2-today-pct', '+' + (todayPct / Math.max(1,new Date().getUTCDate())).toFixed(2) + '%');
       setT('v2-today-sub', 'avg / day this month · ' + stickyMonth.dealCount + ' deals');
     }
 
@@ -5260,6 +5260,18 @@ async function refreshDashboardV2() {
         setT('v2-trades-today', String(count));
         // Hero badge: show closed count + live count when there are open positions
         setT('v2-today-trades', count + ' closed · ' + live + ' live');
+        // TODAY hero money + pct — use real today profit from this endpoint, not MTD avg
+        const tProfit = parseFloat(td?.profit || 0);
+        const tProfitStr = tProfit >= 0 ? '+$' + tProfit.toFixed(2) : '-$' + Math.abs(tProfit).toFixed(2);
+        setT('v2-today-money', tProfitStr);
+        const tCap = (typeof grandTotal !== 'undefined' && grandTotal > 0) ? grandTotal : (window._lastCapital || 10000);
+        const tPct = tCap > 0 ? (tProfit / tCap * 100) : 0;
+        const tPctSign = tPct >= 0 ? '+' : '';
+        setT('v2-today-pct', tPctSign + tPct.toFixed(2) + '%');
+        const tMoneyEl = document.getElementById('v2-today-money');
+        if (tMoneyEl) tMoneyEl.style.color = tProfit > 0 ? 'var(--safe)' : tProfit < 0 ? 'var(--warn)' : 'var(--text-muted)';
+        const tPctEl = document.getElementById('v2-today-pct');
+        if (tPctEl) tPctEl.className = 'v2-hero-pct' + (tPct < 0 ? ' neg' : '');
         // sub-line: profit + bot breakdown if available
         const sub = document.querySelector('#v2-trades-today + .v2-stat-sub');
         if (sub) {
