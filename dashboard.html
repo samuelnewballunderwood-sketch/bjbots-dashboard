@@ -5318,7 +5318,18 @@ async function refreshDashboardV2() {
       const tl = canonicalLocked != null ? canonicalLocked : (dec?.reconciliation?.totalRealised || 0);
       if (tl > 0) {
         setT('v2-total-locked', '+$' + tl.toFixed(2));
-        setT('v2-total-locked-pct', '+' + (grandTotal > 0 ? (tl/grandTotal*100).toFixed(2) : '0') + '% of capital');
+        // Subtitle now shows breakdown when /deals/summary provides it (DCA + Grid + ST + Reinv)
+        const bd = dealsSum?.breakdown;
+        let subText = '+' + (grandTotal > 0 ? (tl/grandTotal*100).toFixed(2) : '0') + '% of capital';
+        if (bd) {
+          const parts = [];
+          if (bd.dca?.profit > 0)        parts.push('DCA $' + bd.dca.profit.toFixed(0));
+          if (bd.grid?.profit > 0)       parts.push('Grid $' + bd.grid.profit.toFixed(0));
+          if (bd.smartTrade?.profit > 0) parts.push('ST $' + bd.smartTrade.profit.toFixed(0));
+          if (bd.reinvested > 0)         parts.push('Reinv $' + bd.reinvested.toFixed(0));
+          if (parts.length) subText = parts.join(' · ') + ' · ' + subText;
+        }
+        setT('v2-total-locked-pct', subText);
       }
     }
     if (mkt) {
