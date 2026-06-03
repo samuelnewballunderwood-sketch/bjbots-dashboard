@@ -1060,7 +1060,19 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   try {
     // FREE USDT only — usdtBalance includes locked (orders/Earn) which can't be deployed
     const usdtBal = (spotData?.balances || []).find(b => b.asset === 'USDT');
-    const usdt = parseFloat(usdtBal?.free || 0);
+    let usdt = parseFloat(usdtBal?.free || 0);
+    // FALLBACK: spotData empty means Binance ban/rate-limit. Use idle-capital endpoint
+    // which has its own cache + 3Commas-based totals. This keeps R9 firing during bans.
+    if (usdt === 0 && spotData?.error) {
+      try {
+        const idleR = await fetch('https://tc-proxy-eu.onrender.com/api/idle-capital');
+        if (idleR.ok) {
+          const idle = await idleR.json();
+          // Prefer spot estimate; fall back to futures-available so capital still gets surfaced
+          usdt = parseFloat(idle.idleSpotUsdEstimate || 0) || parseFloat(idle.futuresAvailable || 0);
+        }
+      } catch(_) {}
+    }
     const RESERVE = 100; // R8 reserve floor (was 150 — lowered to 100 for aggressive deployment)
     const idleExcess = Math.max(0, usdt - RESERVE);
     if (idleExcess >= 300) {
