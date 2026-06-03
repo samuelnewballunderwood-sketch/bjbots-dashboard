@@ -5123,7 +5123,7 @@ setTimeout(refreshHeaderPrices, 500);
 // ── DASHBOARD V2 — hero + stats + bot perf + chat ──────────────────────
 async function refreshDashboardV2() {
   try {
-    const [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital] = await Promise.all([
+    let [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
@@ -5132,9 +5132,9 @@ async function refreshDashboardV2() {
       fetch('https://tc-proxy-eu.onrender.com/api/total-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/signal-fund-status').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/insufficient-funds').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/idle-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/signal-fund-status?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/insufficient-funds?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc-proxy-eu.onrender.com/api/idle-capital?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
@@ -5439,7 +5439,9 @@ async function refreshDashboardV2() {
       }
     }
 
-    // SIGNAL FUND tile
+    // SIGNAL FUND tile — use last-good if fresh is null (3Commas hiccups)
+    if (!signalFund && window._lastGoodSignalFund) signalFund = window._lastGoodSignalFund;
+    if (signalFund && signalFund.allocation != null) window._lastGoodSignalFund = signalFund;
     if (signalFund) {
       const setT2 = (id, v, color) => { const el = document.getElementById(id); if (el) { el.textContent = v; if (color) el.style.color = color; } };
       setT2('v2-sf-allocation', '$' + Math.round(signalFund.allocation || 0).toLocaleString());
@@ -5451,7 +5453,9 @@ async function refreshDashboardV2() {
       setT2('v2-sf-winrate', (signalFund.winRate || 0).toFixed(1) + '% (' + (signalFund.winCount || 0) + 'W/' + (signalFund.lossCount || 0) + 'L)');
     }
 
-    // IDLE CAPITAL tile
+    // IDLE CAPITAL tile — use last-good if fresh is null
+    if (!idleCapital && window._lastGoodIdleCap) idleCapital = window._lastGoodIdleCap;
+    if (idleCapital && (idleCapital.idleTotalUsd != null || idleCapital.totalCapital != null)) window._lastGoodIdleCap = idleCapital;
     if (idleCapital) {
       const setT3 = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
       setT3('v2-idle-total', '$' + (idleCapital.idleTotalUsd || 0).toFixed(2));
@@ -5468,7 +5472,9 @@ async function refreshDashboardV2() {
       }
     }
 
-    // INSUFFICIENT FUNDS / TOP-UP tile
+    // INSUFFICIENT FUNDS / TOP-UP tile — use last-good if fresh is null
+    if (!insufficientFunds && window._lastGoodInsFunds) insufficientFunds = window._lastGoodInsFunds;
+    if (insufficientFunds) window._lastGoodInsFunds = insufficientFunds;
     if (insufficientFunds) {
       const setT4 = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
       setT4('v2-topup-total', '$' + (insufficientFunds.totalSuggestedUsd || 0).toFixed(2));
