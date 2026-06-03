@@ -10277,10 +10277,13 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Binance /fapi/v1/klines free. Compare last 5m vol to 20-period average.
   // 2x+ spike means activity surge — combined with direction = scalp opportunity.
   try {
-    const kr = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=21');
+    // Fetch 22 candles so we have 21 COMPLETED + the current incomplete one we throw out.
+    const kr = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=22');
     if (kr.ok) {
       const klines = await kr.json();
-      if (Array.isArray(klines) && klines.length >= 21) {
+      if (Array.isArray(klines) && klines.length >= 22) {
+        // klines[21] is the IN-PROGRESS current candle — throw it out.
+        // klines[20] = last COMPLETED candle. klines[0..19] = 20 earlier complete candles.
         const lastVol = parseFloat(klines[20][7] || 0); // quote volume USDT
         const avgVol = klines.slice(0,20).reduce((s,k) => s + parseFloat(k[7]||0), 0) / 20;
         const ratio = avgVol > 0 ? lastVol / avgVol : 0;
@@ -10310,10 +10313,13 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     if (env.ALPHA_LOGS) {
       const now = Date.now();
       const oiPrev = await env.ALPHA_LOGS.get('btcOI:h_' + (Math.floor(now/(60*60*1000)) - 1), 'json');
-      const kr2 = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=1');
+      // Limit 2 — get last complete + current in-progress; use the completed one [0].
+      const kr2 = await fetch('https://fapi.binance.com/fapi/v1/klines?symbol=BTCUSDT&interval=5m&limit=2');
       const oiR = await fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT');
       if (kr2.ok && oiR.ok && oiPrev?.oi) {
-        const candle = (await kr2.json())[0];
+        const klines = await kr2.json();
+        // klines[1] is current in-progress; klines[0] is last COMPLETED 5min candle.
+        const candle = klines[0];
         const oiCur = parseFloat((await oiR.json()).openInterest || 0);
         const open = parseFloat(candle[1]);
         const close = parseFloat(candle[4]);
