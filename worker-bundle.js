@@ -9932,15 +9932,18 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   } catch(_) {}
 
   // ─── R17 (NEW): F&G Extreme Accumulation ──────────────────────
-  // When F&G < 15 (Extreme Fear), accumulate \$50 BTC spot daily.
-  // Autonomy enforces 1/day cap. Historical: mean-reversion ~85% from extremes.
+  // F&G < 15 → accumulate $30 BTC per fire, up to 10 fires/day in deep fear.
+  // (Was $50 × 5/day = $250. Now $30 × 10/day = $300 with finer averaging.)
+  // Autonomy enforces daily cap. Historical: mean-reversion ~85% from extremes.
   try {
     if (fg != null && fg < 15) {
+      // Smaller bites, more shots — averages across more price points in volatile fear
+      const buyAmt = fg < 10 ? 35 : 30;
       required.push(makeDecision({
         actionType:'spot_buy', category:'required',
-        text:'F&G ' + fg + ' Extreme Fear — accumulate \$50 BTC',
-        reason:'R17: F&G ' + fg + ' < 15. Historical buying opportunity. Accumulating \$50 BTC spot via market Smart Trade.',
-        amount:50, amountPct:0, targetBotIds:[],
+        text:'F&G ' + fg + ' Extreme Fear — accumulate \$' + buyAmt + ' BTC',
+        reason:'R17: F&G ' + fg + ' < 15. Historical buying opportunity. Accumulating \$' + buyAmt + ' BTC spot via market Smart Trade. Small bite — multiple shots per day across price points.',
+        amount:buyAmt, amountPct:0, targetBotIds:[],
         urgency:'medium', timeframe:'24h',
         expectedImpact:'DCA into BTC at extreme fear — locked when sold above entry',
         objective:'fear_accumulate', confidence:80, executable:true,
