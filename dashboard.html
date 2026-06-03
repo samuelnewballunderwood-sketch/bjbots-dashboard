@@ -2827,6 +2827,7 @@ body::after {
       </div>
       <div class="v2-chat-row">
         <input class="v2-chat-input" id="v2-chat-input" placeholder="Ask anything — bots, market, decisions, performance" onkeydown="if(event.key==='Enter')v2ChatSend()" />
+        <button class="v2-chat-send" id="v2-chat-mic" onclick="_hannahMicToggle('v2-chat-input', v2ChatSend)" title="Click to talk to Hannah" style="padding:10px 14px;background:rgba(45,212,191,.18);color:var(--teal)">🎤</button>
         <button class="v2-chat-send" onclick="v2ChatSend()">SEND</button>
       </div>
     </div>
