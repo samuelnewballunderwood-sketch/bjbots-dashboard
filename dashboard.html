@@ -5243,6 +5243,19 @@ async function refreshDashboardV2() {
       setT('v2-mtd-sub', mtd.label + ' · need $' + Math.max(0, (grandTotal*0.06 - mtd.locked)).toFixed(0) + ' more for 6%');
     }
 
+    // LIVE mode counter — runs ALWAYS, independent of YTD data state.
+    // Continuous since Hannah autonomous go-live (2026-05-31T00:00Z).
+    {
+      const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
+      const _liveMs = Math.max(0, Date.now() - HANNAH_LIVE);
+      const _liveDays  = Math.floor(_liveMs / 86400000);
+      const _liveHours = Math.floor((_liveMs % 86400000) / 3600000);
+      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h live';
+      const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
+      const dealCount = dealsSum?.completedDeals || 0;
+      setT('v2-ytd-trades', String(dealCount || 0));
+      setT('v2-ytd-sub', liveLabel + ' · target $' + target);
+    }
     // HERO: YTD — prefer canonical /deals/summary, fall back to ytdTarget
     if (canonicalLocked != null || dec?.ytdTarget) {
       const ytdLocked = canonicalLocked != null ? canonicalLocked : (dec?.ytdTarget?.ytdLocked || 0);
@@ -5255,16 +5268,6 @@ async function refreshDashboardV2() {
         ytdEl.textContent = signPct + ytdPct.toFixed(2) + '%';
         ytdEl.className = 'v2-hero-pct' + (ytdPct < 0 ? ' neg' : '');
       }
-      // LIVE mode — continuous since Hannah autonomous go-live (2026-05-31)
-      const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
-      const _liveMs = Math.max(0, Date.now() - HANNAH_LIVE);
-      const _liveDays  = Math.floor(_liveMs / 86400000);
-      const _liveHours = Math.floor((_liveMs % 86400000) / 3600000);
-      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h live';
-      const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
-      const dealCount = dealsSum?.completedDeals || 0;
-      setT('v2-ytd-trades', String(dealCount || 0));
-      setT('v2-ytd-sub', liveLabel + ' · target $' + target);
     }
 
     // STATS row
