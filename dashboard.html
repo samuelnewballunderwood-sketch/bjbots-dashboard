@@ -4549,10 +4549,16 @@ function setEl(id, val, cls) {
 }
 function pnlClass(v) { return v > 0 ? 'pos' : v < 0 ? 'neg' : ''; }
 
-// ── Clock ────────────────────────────────────────────────────────────────
+// ── Live elapsed counter (replaces wall clock — continuous from May 31) ──
 function updateClock() {
-  const n = new Date();
-  setEl('header-clock', n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'Asia/Dubai'}));
+  const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
+  const ms = Math.max(0, Date.now() - HANNAH_LIVE);
+  const days  = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  const mins  = Math.floor((ms % 3600000)  / 60000);
+  const secs  = Math.floor((ms % 60000)    / 1000);
+  const pad = (n) => String(n).padStart(2,'0');
+  setEl('header-clock', days + 'd ' + pad(hours) + ':' + pad(mins) + ':' + pad(secs));
 }
 setInterval(updateClock, 1000); updateClock();
 
