@@ -2980,6 +2980,7 @@ body::after {
         </div>
         <div class="d2-chat-input-row" id="d2-input-row">
           <input class="d2-input" id="d2-input" placeholder="Ask Hannah anything…" onkeydown="if(event.key==='Enter')d2Send()" />
+          <button class="d2-send-btn" id="d2-mic" onclick="_hannahMicToggle('d2-input', d2Send)" title="Click to talk to Hannah" style="margin-right:4px">🎤</button>
           <button class="d2-send-btn" onclick="d2Send()">▶</button>
         </div>
         <div class="d2-activate-state" id="d2-activate-state" style="margin-top:6px;">
@@ -3947,6 +3948,7 @@ body::after {
         <input class="cv16-chat-input" id="cv16-input"
                placeholder="Ask Hannah about your portfolio…"
                onkeydown="if(event.key==='Enter')hannahSend()" />
+        <button class="cv16-chat-send" id="cv16-mic" onclick="_hannahMicToggle('cv16-input', hannahSend)" title="Hold to talk (or click to start/stop)" style="margin-right:4px">🎤</button>
         <button class="cv16-chat-send" onclick="hannahSend()">▶</button>
       </div>
       <div class="cv16-status-line" id="cv16-status">Not connected · click Activate to start</div>
@@ -7301,6 +7303,79 @@ function hannahDisconnect() {
 }
 
 // ── SPEAK — pipe PCM16 to Simli ───────────────────────────────────
+
+// ── Hannah VOICE INPUT (Web Speech API) ─────────────────────────────
+// Click mic → start listening → speak → auto-fills input → auto-sends to Hannah.
+// Click again while listening → stop.
+let _hannahMic = null;
+let _hannahMicTarget = null;
+function _hannahMicToggle(inputId, sendFn) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Your browser does not support voice input. Use Chrome or Edge.');
+    return;
+  }
+  // Toggle off if already listening
+  if (_hannahMic && _hannahMicTarget === inputId) {
+    try { _hannahMic.stop(); } catch(_) {}
+    _hannahMic = null;
+    _hannahMicTarget = null;
+    const btn = document.getElementById(inputId === 'cv16-input' ? 'cv16-mic' : 'd2-mic');
+    if (btn) { btn.textContent = '🎤'; btn.style.background = ''; }
+    return;
+  }
+  // Stop any existing session before starting a new one
+  if (_hannahMic) {
+    try { _hannahMic.stop(); } catch(_) {}
+    _hannahMic = null;
+  }
+  const r = new SR();
+  r.lang = 'en-US';
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  _hannahMic = r;
+  _hannahMicTarget = inputId;
+  const input = document.getElementById(inputId);
+  const btnId = inputId === 'cv16-input' ? 'cv16-mic' : 'd2-mic';
+  const btn = document.getElementById(btnId);
+  // Stop Hannah's speech if she's talking — barge-in
+  try { if (typeof _interruptHannah === 'function') _interruptHannah(); } catch(_) {}
+  r.onstart = () => {
+    if (btn) { btn.textContent = '🔴'; btn.style.background = 'rgba(255,80,80,.25)'; }
+    if (input) input.placeholder = 'Listening — speak now…';
+  };
+  r.onresult = (evt) => {
+    let txt = '';
+    for (let i = evt.resultIndex; i < evt.results.length; i++) {
+      txt += evt.results[i][0].transcript;
+    }
+    if (input) input.value = txt;
+  };
+  r.onerror = (evt) => {
+    console.warn('Speech recognition error:', evt.error);
+    if (btn) { btn.textContent = '🎤'; btn.style.background = ''; }
+    if (input) input.placeholder = inputId === 'cv16-input' ? 'Ask Hannah about your portfolio…' : 'Ask Hannah anything…';
+    _hannahMic = null; _hannahMicTarget = null;
+  };
+  r.onend = () => {
+    if (btn) { btn.textContent = '🎤'; btn.style.background = ''; }
+    if (input) input.placeholder = inputId === 'cv16-input' ? 'Ask Hannah about your portfolio…' : 'Ask Hannah anything…';
+    _hannahMic = null; _hannahMicTarget = null;
+    // Auto-send if we captured anything
+    if (input && input.value.trim().length > 1) {
+      try { sendFn(); } catch(e) { console.warn('send failed:', e); }
+    }
+  };
+  try { r.start(); }
+  catch(e) {
+    console.error('Mic start failed:', e);
+    alert('Could not start mic — check Chrome microphone permission.');
+    _hannahMic = null; _hannahMicTarget = null;
+  }
+}
+window._hannahMicToggle = _hannahMicToggle;
+
 async function _speakText(text) {
   if (!_hannahConn || !_simliWs || _simliWs.readyState !== WebSocket.OPEN) return;
   const cfg = await _loadHannahCfg();
