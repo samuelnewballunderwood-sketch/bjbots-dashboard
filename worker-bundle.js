@@ -9659,13 +9659,33 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     const RESERVE = 100; // R8 reserve floor (was 150 — lowered to 100 for aggressive deployment)
     const idleExcess = Math.max(0, usdt - RESERVE);
     if (idleExcess >= 300) {
+      // Multi-asset rotation: deploy into next un-gridded asset so we spread capital
+      // across BTC/ETH/SOL/XRP/BNB instead of stacking duplicate BTC grids (was hitting
+      // dedupe and skipping every R9 fire).
+      const PRIORITY = ['BTC','ETH','SOL','XRP','BNB'];
+      const griddedAssets = new Set(
+        (tcBots || [])
+          .filter(b => b.botType === 'grid' && /Hannah/i.test(b.name || '') && b.active)
+          .map(b => {
+            const pair = (b.pair || '').toUpperCase().replace(/[_/]/g,'');
+            for (const sym of PRIORITY) if (pair.includes(sym)) return sym;
+            return null;
+          })
+          .filter(Boolean)
+      );
+      const nextAsset = PRIORITY.find(a => !griddedAssets.has(a)) || 'BTC';
       const proposedSize = Math.min(2000, Math.round(idleExcess * 0.7));
       required.push(makeDecision({
         actionType:'deploy_grid', category:'required',
-        text:'Deploy $' + proposedSize + ' idle USDT to defensive grid',
-        reason:'R9: $' + usdt.toFixed(0) + ' USDT sitting idle. Capital must be working. Propose BTC/USDT defensive grid (±10%, ' + proposedSize + ', 30 grids).',
+        text:'Deploy $' + proposedSize + ' idle USDT to ' + nextAsset + '/USDT defensive grid',
+        reason:'R9: $' + usdt.toFixed(0) + ' USDT sitting idle. Capital must be working. ' +
+               'Next un-gridded asset: ' + nextAsset + '. Existing Hannah grids: ' +
+               (griddedAssets.size ? [...griddedAssets].join(', ') : 'none') + '. ' +
+               'Propose ' + nextAsset + '/USDT defensive grid (±10%, $' + proposedSize + ', 30 grids).',
         amount:proposedSize, amountPct: totalAllocated > 0 ? Math.round((proposedSize/totalAllocated)*100) : 0,
         targetBotIds:[],
+        suggestedPair:'USDT_' + nextAsset,
+        suggestedAsset: nextAsset,
         urgency:'high', timeframe:'24h',
         expectedImpact:'Adds ~$' + (proposedSize*0.001).toFixed(2) + '/day at 0.1% grid yield',
         costOfInaction:'$' + (proposedSize*0.001*30).toFixed(0) + ' missed earnings/month',
