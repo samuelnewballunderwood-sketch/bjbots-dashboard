@@ -2505,6 +2505,29 @@ export default {
           return json({success:true});
         }catch(e){return json({error:e.message},500);}
       }
+      // Generic KV get/set — used by /api/reinvested-truth and other manual override entries
+      if(path==='/api/kv-get' && request.method==='GET'){
+        if(!env.ALPHA_LOGS) return json({error:'KV not configured'},503);
+        const url2 = new URL(request.url);
+        const key = url2.searchParams.get('key');
+        if(!key) return json({error:'key required'},400);
+        const raw = await env.ALPHA_LOGS.get(key);
+        if(!raw) return json({value:null});
+        try { return json({value: JSON.parse(raw)}); }
+        catch(_) { return json({value: raw}); }
+      }
+      if(path==='/api/kv-set' && request.method==='POST'){
+        if(!env.ALPHA_LOGS) return json({error:'KV not configured'},503);
+        try {
+          const body = await request.json();
+          if (!body.key || body.value === undefined) return json({error:'key + value required'},400);
+          // Light allow-list for keys
+          if (!/^[a-z][a-z0-9_:-]{0,80}$/i.test(body.key)) return json({error:'invalid key format'},400);
+          const valueToStore = typeof body.value === 'string' ? body.value : JSON.stringify(body.value);
+          await env.ALPHA_LOGS.put(body.key, valueToStore, { expirationTtl: 60*60*24*30 });
+          return json({success:true, key:body.key});
+        } catch(e){ return json({error:e.message},500); }
+      }
       if(path==='/api/hannah-actions'){
         // Persistent actions from worker KV (survives Render restarts)
         const list=await getActionLogs(env);
