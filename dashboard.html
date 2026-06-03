@@ -5501,17 +5501,39 @@ async function refreshDashboardV2() {
       setT4('v2-funds-failed-count', String(insufficientFunds.total || 0));
       const topupEl = document.getElementById('v2-topup-assets');
       if (topupEl) {
-        const entries = Object.entries(insufficientFunds.suggestedTopUpByAsset || {});
-        if (entries.length === 0) {
-          topupEl.innerHTML = '<div style="color:var(--text-muted)">No fund failures in last 24h ✓</div>';
+        const assetEntries = Object.entries(insufficientFunds.suggestedTopUpByAsset || {});
+        const botEntries = Object.entries(insufficientFunds.byBotName || {});
+        const reasonEntries = Object.entries(insufficientFunds.byReason || {});
+        const srcSplit = insufficientFunds.sourceBreakdown || {};
+        let html = '';
+        if (assetEntries.length === 0 && botEntries.length === 0) {
+          html = '<div style="color:var(--text-muted)">No fund failures in last 24h ✓</div>';
         } else {
-          const rows = entries
-            .sort(([,a],[,b]) => b - a)
-            .slice(0, 6)
-            .map(([asset, amt]) => '<div>' + asset + ': add ~$' + amt.toFixed(2) + '</div>')
-            .join('');
-          topupEl.innerHTML = rows;
+          // Bot names — which specific bots are failing
+          if (botEntries.length > 0) {
+            html += '<div style="font-size:9px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px">FAILING BOTS</div>';
+            html += botEntries.sort(([,a],[,b]) => b - a).slice(0, 5)
+              .map(([bot, n]) => '<div>' + bot.slice(0,28) + ' <span style=color:var(--text-muted)>×' + n + '</span></div>')
+              .join('');
+          }
+          // Asset top-up amounts
+          if (assetEntries.length > 0) {
+            html += '<div style="font-size:9px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin:8px 0 3px">TOP-UP NEEDED</div>';
+            html += assetEntries.sort(([,a],[,b]) => b - a).slice(0, 6)
+              .map(([asset, amt]) => '<div>' + asset + ': add ~$' + amt.toFixed(2) + '</div>')
+              .join('');
+          }
+          // Top reason — what the actual error message is
+          if (reasonEntries.length > 0) {
+            const topReason = reasonEntries.sort(([,a],[,b]) => b - a)[0];
+            html += '<div style="font-size:9px;color:var(--text-dim);margin-top:6px">Top reason: ' + topReason[0].slice(0,60) + '</div>';
+          }
+          // Source breakdown (autonomy log vs 3Commas deal errors)
+          if (srcSplit.three_commas_deals != null || srcSplit.autonomy_log != null) {
+            html += '<div style="font-size:9px;color:var(--text-dim);margin-top:2px">Source: ' + (srcSplit.autonomy_log||0) + ' rule, ' + (srcSplit.three_commas_deals||0) + ' bot</div>';
+          }
         }
+        topupEl.innerHTML = html;
       }
     }
 
