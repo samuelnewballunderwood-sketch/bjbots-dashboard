@@ -6828,7 +6828,15 @@ async function refreshStatus() {
     const badge = document.getElementById('h-mode');
     if (!badge) return;
     const live = d.executionEnabled === true;
-    badge.textContent = live ? '⚡ Live Mode' : '◉ Advisory Mode';
+    if (live) {
+      const HANNAH_LIVE = new Date('2026-05-31T00:00:00Z').getTime();
+      const ms = Math.max(0, Date.now() - HANNAH_LIVE);
+      const d = Math.floor(ms / 86400000);
+      const h = Math.floor((ms % 86400000) / 3600000);
+      badge.textContent = '⚡ Live · ' + d + 'd ' + h + 'h';
+    } else {
+      badge.textContent = '◉ Advisory Mode';
+    }
     badge.className   = 'ac-mode-badge ' + (live ? 'mode-live' : 'mode-advisory');
   } catch(e) { /* silent fail — badge stays at default */ }
 }
