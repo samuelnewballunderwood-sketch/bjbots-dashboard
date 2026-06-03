@@ -9986,9 +9986,12 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     for (const g of hannahGrids) {
       const cap = parseFloat(g.capital || 0);
       const profit = parseFloat(g.profit || 0);
-      if (cap < 100) continue;
+      if (cap < 20) continue;  // tiny test grids — skip (was 100, but blocked all XRP grids)
       const returnPct = (profit / cap) * 100;
-      if (returnPct >= 1.5) {
+      // Threshold scales with cap: small grids need higher % return to be worth closing
+      // (fees + slippage eat smaller profits proportionally more)
+      const threshold = cap < 100 ? 2.5 : 1.5;
+      if (returnPct >= threshold) {
         required.push(makeDecision({
           actionType:'close_grid', category:'required',
           text:'Profit-take: ' + g.name + ' at +' + returnPct.toFixed(2) + '% (\$' + profit.toFixed(2) + ')',
