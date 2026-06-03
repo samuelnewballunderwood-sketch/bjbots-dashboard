@@ -7616,6 +7616,13 @@ function _updateCtrlCards(data) {
   // ── Real daily rate: locked profit / days elapsed ──────────────────────
   const trialStart = new Date('2026-04-12');
   const trialDay   = Math.max(1, Math.floor((Date.now() - trialStart.getTime()) / 86400000) + 1);
+  // Hannah went LIVE (autonomous execution) on May 31 2026 — DAYS LIVE counter
+  // runs continuously from that moment (no daily reset), shown as 'Xd Yh'.
+  const HANNAH_LIVE_START = new Date('2026-05-31T00:00:00Z').getTime();
+  const _hLiveMs = Math.max(0, Date.now() - HANNAH_LIVE_START);
+  const hannahLiveDays  = Math.floor(_hLiveMs / 86400000);
+  const hannahLiveHours = Math.floor((_hLiveMs % 86400000) / 3600000);
+  const hannahLiveLabel = hannahLiveDays + 'd ' + hannahLiveHours + 'h';
   const daysElapsed = Math.max(1, trialDay - 1); // days of actual trading
   const actualDailyUsd = rPnl > 0 ? rPnl / daysElapsed : 0;
   const actualDailyPct = gt > 0 ? (actualDailyUsd / gt) * 100 : 0;
@@ -7694,7 +7701,7 @@ function _updateCtrlCards(data) {
   // 6 orbital metric cards
   setD('dm-daily-profit', actualDailyUsd > 0 ? '+' + fmtUSD(actualDailyUsd) : '—');
   setD('dm-capital',  fmtUSD(gt));
-  setD('dm-trial-day', String(trialDay));
+  setD('dm-trial-day', hannahLiveLabel);  // DAYS LIVE — continuous since May 31 2026
   setD('dm-target',   '$' + trialTarget);
   setD('dm-stretch',  '$' + trialStretch);
   setD('dm-locked',   fmtPnl(rPnl));
@@ -7714,7 +7721,7 @@ function _updateCtrlCards(data) {
   setD('dbk-goal',  '$' + trialTarget);
 
   // Header extras
-  setD('header-trial-day', String(trialDay));
+  setD('header-trial-day', hannahLiveLabel);  // continuous since Hannah live (May 31)
   setD('header-target',    '$' + trialTarget);
   setD('header-stretch',   '$' + trialStretch);
 
