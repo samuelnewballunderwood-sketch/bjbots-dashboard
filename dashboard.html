@@ -2837,7 +2837,7 @@ body::after {
       </div>
       <div class="v2-chat-row">
         <input class="v2-chat-input" id="v2-chat-input" placeholder="Ask anything — bots, market, decisions, performance" onkeydown="if(event.key==='Enter')v2ChatSend()" />
-        <button class="v2-chat-send" id="v2-chat-wake" onclick="_hannahWakeToggle()" title="Always-on: say 'Hannah ...' and she replies" style="padding:10px 14px;background:rgba(160,175,220,.10);color:var(--text-muted)">👂</button>
+        <button class="v2-chat-send" id="v2-chat-wake" ontouchstart="event.preventDefault(); _hannahWakeToggle();" onclick="_hannahWakeToggle()" title="Always-on: say 'Hannah ...' and she replies" style="padding:12px 18px;background:rgba(160,175,220,.10);color:var(--text-muted);font-size:18px;touch-action:manipulation;-webkit-user-select:none;user-select:none">👂</button>
         <button class="v2-chat-send" id="v2-chat-mic" onclick="_hannahMicToggle('v2-chat-input', v2ChatSend)" title="Click to talk to Hannah" style="padding:10px 14px;background:rgba(45,212,191,.18);color:var(--teal)">🎤</button>
         <button class="v2-chat-send" onclick="v2ChatSend()">SEND</button>
       </div>
@@ -7624,9 +7624,11 @@ function _hannahWakeToggle() {
 function _hannahWakeStart() {
   if (!_hannahWakeArmed) return;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // Mobile fallback: iOS Safari can't reliably do continuous. Use single-shot + auto-restart instead.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const r = new SR();
   r.lang = 'en-US';
-  r.continuous = true;
+  r.continuous = !isMobile;  // single-shot on mobile, continuous on desktop
   r.interimResults = true;
   r.maxAlternatives = 1;
   _hannahWake = r;
@@ -7650,10 +7652,16 @@ function _hannahWakeStart() {
       if (after.split(/\s+/).length >= 2) {
         // Fire — stop this session, send the query, then re-arm
         try { r.stop(); } catch(_) {}
-        // Stop Hannah's own speech if she's mid-reply (avoid loops)
         try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(_) {}
         try { if (typeof _interruptHannah === 'function') _interruptHannah(); } catch(_) {}
         const input = document.getElementById('v2-chat-input');
+        const btn = document.getElementById('v2-chat-wake');
+        // Flash button green when wake word caught (mobile feedback)
+        if (btn) {
+          btn.style.background = 'rgba(74,222,128,.35)';
+          btn.style.color = '#fff';
+          setTimeout(() => { if (btn && _hannahWakeArmed) { btn.style.background = 'rgba(255,80,80,.20)'; btn.style.color = '#ff5050'; }}, 600);
+        }
         if (input) {
           input.value = after;
           try { v2ChatSend(); } catch(e) { console.warn(e); }
@@ -7669,8 +7677,11 @@ function _hannahWakeStart() {
     // 'no-speech' / 'aborted' are normal — handled by onend restart
   };
   r.onend = () => {
-    // Auto-restart while armed
-    if (_hannahWakeArmed) setTimeout(_hannahWakeStart, 400);
+    // Auto-restart while armed — shorter delay on mobile so we don't miss "Hannah" between sessions
+    if (_hannahWakeArmed) {
+      const restartDelay = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 200 : 400;
+      setTimeout(_hannahWakeStart, restartDelay);
+    }
   };
   try { r.start(); }
   catch(e) {
