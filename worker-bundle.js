@@ -8730,7 +8730,8 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 </body>
-</html>`;
+</html>// deploy bump Thu Jun  4 04:03:00 UTC 2026
+`;
 
 // AlphaControl - Cloudflare Worker v4
 // Capital allocation and risk management engine
