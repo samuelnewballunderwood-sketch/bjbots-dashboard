@@ -5653,8 +5653,13 @@ async function v2ChatSend() {
       fetch('/api/decisions?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
     ]);
 
-    const fg = market?.fearGreed ?? '?';
-    const regime = fg < 30 ? 'Bear' : fg >= 66 ? 'Bull' : 'Neutral';
+    // F&G can be a number OR an object like {value: 12, label: 'Extreme Fear'} — unwrap safely
+    const fgVal = (typeof market?.fearGreed === 'object' && market?.fearGreed !== null)
+      ? market.fearGreed.value
+      : market?.fearGreed;
+    const fg = (typeof fgVal === 'number') ? fgVal : '?';
+    const fgLabel = market?.fearGreed?.label || ((typeof fg === 'number') ? (fg < 25 ? 'Extreme Fear' : fg < 45 ? 'Fear' : fg < 55 ? 'Neutral' : fg < 75 ? 'Greed' : 'Extreme Greed') : 'Unknown');
+    const regime = (typeof fg === 'number') ? (fg < 30 ? 'Bear' : fg >= 66 ? 'Bull' : 'Neutral') : 'Unknown';
     const totalCap = cap?.total ? '$' + Math.round(cap.total).toLocaleString() : '?';
     const dcaP = ds?.dcaProfit ?? 0, gridP = ds?.gridProfit ?? 0, totalLocked = ds?.totalProfit ?? 0;
     const dcaDeals = ds?.dcaDeals ?? 0, gridDeals = ds?.gridDeals ?? 0, totalDeals = ds?.completedDeals ?? 0;
@@ -5671,7 +5676,7 @@ async function v2ChatSend() {
       'Day ' + dayNum + ' of trading (since 2026-04-12)',
       '',
       '=== MARKET ===',
-      'F&G: ' + fg + ' (' + regime + ' regime)',
+      'F&G: ' + fg + ' — ' + fgLabel + ' (' + regime + ' regime)',
       '',
       '=== CAPITAL ===',
       'Total: ' + totalCap + ' (canonical from 3Commas)',
@@ -5686,16 +5691,16 @@ async function v2ChatSend() {
       'Live (open right now): ' + todayLive + ' deals (' + liveDca + ' DCA + ' + liveGrid + ' grid)',
       '',
       '=== ACTIVE BOTS ===',
-      'DCA: ' + (stats?.dca?.active || 0) + '/' + (stats?.dca?.count || 0) + ' enabled',
-      'Grid: ' + (stats?.grid?.active || 0) + '/' + (stats?.grid?.count || 0) + ' enabled',
-      'Signal: 4 (manual count — REST API does not expose)',
+      'DCA total: ' + dcaBots.length + ' (filtered to DCA Long), of which ' + dcaBots.filter(b=>b.enabled).length + ' enabled, ' + dcaBots.filter(b=>b.activeDeals>0).length + ' with open deals',
+      'Grid: ' + (stats?.grid?.active ?? 'n/a') + '/' + (stats?.grid?.count ?? 'n/a') + ' enabled',
+      'Signal Fund: isolated, $1000 allocation, $0 spent today',
       '',
       '=== DCA BOT DETAIL (R31 tuned today) ===',
       dcaSummary || '  (no DCA data)',
       '',
       '=== RULES ===',
       'R31 Tuner: tuned 5 DCAs to TP 1.0% today (F&G ' + fg + ' regime)',
-      'R17 Fear-Accumulate: cap 5/day, currently spent ?',
+      'R17 Fear-Accumulate: cap 10/day at $30/bite. Today fires: ' + ((window._hannahHealth?.stats?.successful_actions_1h) ? '~' + window._hannahHealth.stats.successful_actions_1h + ' actions/h (R17 + R32 mostly)' : 'check action log'),
       'R25 Momentum Scalp: $50 BTC shorts',
       'R30 Liq Cascade Hunter: active',
       tunes > 0 ? 'R31 currently has ' + tunes + ' tune decisions queued' : 'R31 cooldown active (6h per bot)',
