@@ -5627,6 +5627,19 @@ async function v2ChatSend() {
   if (!input || !msgs) return;
   const text = input.value.trim();
   if (!text) return;
+  // Mobile TTS gesture-priming: speak a tiny audible-but-quiet utterance NOW (inside the
+  // user click) so iOS Safari + Android Chrome leave the speech engine unlocked when the
+  // async response speak() arrives. Without this, mobile silently blocks the reply.
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+      const primer = new SpeechSynthesisUtterance('.');
+      primer.volume = 0.01; primer.rate = 2; primer.pitch = 1;
+      window.speechSynthesis.speak(primer);
+      _ttsUnlocked = true;
+    }
+  } catch(_) {}
   input.value = '';
   const userDiv = document.createElement('div');
   userDiv.className = 'v2-chat-msg user';
@@ -7489,21 +7502,25 @@ function _hannahBrowserTTS(text) {
   if (!('speechSynthesis' in window)) return;
   try {
     _unlockMobileTTS();
-    // Strip markdown / emoji to clean speech
     const clean = text.replace(/[\*_`#>\-]/g,' ').replace(/\s+/g,' ').trim().slice(0, 800);
     if (!clean) return;
-    window.speechSynthesis.cancel(); // interrupt any in-flight utterance
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();  // mobile: engine sometimes pauses itself
     const u = new SpeechSynthesisUtterance(clean);
     u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
-    // Prefer a female English voice if available
+    u.lang = 'en-US';
     const voices = window.speechSynthesis.getVoices();
+    // Mobile-safe voice pick — only set if found, else let browser default
     const fav = voices.find(v => /samantha|jenny|aria|natural|google.*female|en-?gb.*female/i.test(v.name)) ||
                 voices.find(v => /female/i.test(v.name)) ||
-                voices.find(v => /en-?US|en-?GB/i.test(v.lang)) ||
-                voices[0];
+                voices.find(v => /^en[-_]/i.test(v.lang));
     if (fav) u.voice = fav;
     window._lastHannahUtterance = u;
     window.speechSynthesis.speak(u);
+    // iOS Safari workaround: if engine doesn't actually start in 100ms, kick it
+    setTimeout(() => {
+      if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+    }, 150);
   } catch(e) { console.warn('browser TTS failed:', e); }
 }
 window._hannahSpeak = _hannahSpeak;
