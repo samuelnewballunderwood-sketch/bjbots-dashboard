@@ -2618,6 +2618,7 @@ body::after {
     <div class="ac-live-dot" id="live-dot"></div>
     <span class="ac-clock" id="header-clock">—</span>
     <span class="ac-mode-badge mode-live" id="h-mode" title="AlphaControl is reading live data">⚡ Live Mode</span>
+    <span id="h-health-dot" title="System health" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#666;margin-left:8px;cursor:pointer;vertical-align:middle"></span>
   </div>
 </header>
 
@@ -4569,6 +4570,36 @@ function updateClock() {
   setEl('header-clock', totalHours + ':' + pad(mins) + ':' + pad(secs));
 }
 setInterval(updateClock, 1000); updateClock();
+
+// ── System health dot ──────────────────────────────────────────
+async function refreshHealthDot() {
+  try {
+    const r = await fetch('https://tc-proxy-eu.onrender.com/api/system-health?cb='+Date.now());
+    if (!r.ok) return;
+    const h = await r.json();
+    const dot = document.getElementById('h-health-dot');
+    if (!dot) return;
+    const color = h.status === 'critical' ? '#ff4040' : h.status === 'degraded' ? '#fbbf24' : '#22c55e';
+    dot.style.background = color;
+    dot.style.boxShadow = h.status === 'critical' ? '0 0 8px #ff4040' : 'none';
+    // Build hover/click tooltip
+    const lines = [h.status.toUpperCase()];
+    if (h.stats) {
+      lines.push('Executions/h: ' + (h.stats.successful_actions_1h ?? 0));
+      lines.push('Tick errors/h: ' + (h.stats.tick_errors_1h ?? 0));
+      lines.push('Last action: ' + (h.stats.mins_since_last_exec != null ? h.stats.mins_since_last_exec + 'm ago' : 'none'));
+    }
+    if ((h.issues || []).length) {
+      lines.push('— Issues —');
+      h.issues.forEach(i => lines.push((i.severity === 'critical' ? '🔴' : '🟡') + ' ' + i.code + ': ' + i.detail));
+    }
+    dot.title = lines.join('\n');
+    dot.onclick = () => alert(lines.join('\n'));
+    window._hannahHealth = h;
+  } catch(_) {}
+}
+setInterval(refreshHealthDot, 30000);
+setTimeout(refreshHealthDot, 2000);
 
 // ── API fetch ────────────────────────────────────────────────────────────
 async function apiFetch(path) {
@@ -7427,9 +7458,32 @@ function _hannahSpeak(text) {
   // Fallback: browser-native speech synthesis
   _hannahBrowserTTS(text);
 }
+// Mobile browsers block speechSynthesis until a user gesture initializes it.
+// We arm a one-time unlock on first click/touch to enable Hannah's voice on iPhone + Android.
+let _ttsUnlocked = false;
+function _unlockMobileTTS() {
+  if (_ttsUnlocked || !('speechSynthesis' in window)) return;
+  try {
+    // Speak an empty/silent utterance to wake the engine inside the user gesture
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0; u.rate = 1;
+    window.speechSynthesis.speak(u);
+    _ttsUnlocked = true;
+  } catch(_) {}
+}
+// Arm on first user interaction anywhere
+['click','touchstart','keydown'].forEach(ev => {
+  window.addEventListener(ev, _unlockMobileTTS, { once: false, capture: true, passive: true });
+});
+// Voices on mobile load async — wait for them
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = () => { /* triggers voice list refresh on next speak */ };
+}
+
 function _hannahBrowserTTS(text) {
   if (!('speechSynthesis' in window)) return;
   try {
+    _unlockMobileTTS();
     // Strip markdown / emoji to clean speech
     const clean = text.replace(/[\*_`#>\-]/g,' ').replace(/\s+/g,' ').trim().slice(0, 800);
     if (!clean) return;
