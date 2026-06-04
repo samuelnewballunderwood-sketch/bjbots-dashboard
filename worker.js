@@ -118,7 +118,7 @@ function priceAssets(balances, prices) {
 
 // Build the full capital reconciliation object
 // Called with live data from all sources
-function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, prices }) {
+async function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots, prices }) {
   // ── 1. SPOT WALLET ──────────────────────────────────────────
   const spot = priceAssets(spotBalances, prices);
   const spotFree   = spot.breakdown.reduce((s, a) => s + a.freeUsd,   0);
