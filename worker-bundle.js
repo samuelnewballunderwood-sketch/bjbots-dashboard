@@ -8731,6 +8731,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>// deploy bump Thu Jun  4 04:03:00 UTC 2026
+// force-deploy 1780546840
 `;
 
 // AlphaControl - Cloudflare Worker v4
