@@ -7511,9 +7511,13 @@ function _hannahBrowserTTS(text) {
     u.lang = 'en-US';
     const voices = window.speechSynthesis.getVoices();
     // Mobile-safe voice pick — only set if found, else let browser default
-    const fav = voices.find(v => /samantha|jenny|aria|natural|google.*female|en-?gb.*female/i.test(v.name)) ||
-                voices.find(v => /female/i.test(v.name)) ||
-                voices.find(v => /^en[-_]/i.test(v.lang));
+    // STRICT English-only — previous fallback matched any 'female' voice including non-EN
+    const enVoices = voices.filter(v => /^en[-_]/i.test(v.lang || ''));
+    const fav = enVoices.find(v => /samantha|jenny|aria|natural|google.*female|en-?gb.*female/i.test(v.name)) ||
+                enVoices.find(v => /female/i.test(v.name)) ||
+                enVoices.find(v => /en[-_]US/i.test(v.lang)) ||
+                enVoices.find(v => /en[-_]GB/i.test(v.lang)) ||
+                enVoices[0];
     if (fav) u.voice = fav;
     window._lastHannahUtterance = u;
     window.speechSynthesis.speak(u);
