@@ -7305,7 +7305,7 @@ function hannahToggle() {
 function hannahUpdateSignals() {
   const s = window._marketSignals;
   if (!s) return;
-  setEl('h-sig-fg', s.fearGreed?.value ? s.fearGreed.value + ' · ' + s.fearGreed.classification : '—');
+  setEl('h-sig-fg', s.fearGreed?.value ? s.fearGreed.value + ' · ' + (s.fearGreed.label || s.fearGreed.classification || 'Unknown') : '—');
   setEl('h-sig-regime', s.regime || '—');
   setEl('h-sig-dom', s.btcDominance ? s.btcDominance + '%' : '—');
 }
