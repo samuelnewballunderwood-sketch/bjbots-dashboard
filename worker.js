@@ -199,7 +199,7 @@ async function buildReconciliation({ spotBalances, futuresWallet, tcBots, bnBots
   // deals and misses DCA bots whose deals all closed before Trial 2.
   let tcRealised = tcBotBreakdown.reduce((s, b) => s + (b.realised || 0), 0);
   try {
-    const dsR = await fetch('https://tc-proxy-eu.onrender.com/deals/summary');
+    const dsR = await fetch('https://tc.alphacontrol.ai/deals/summary');
     if (dsR.ok) {
       const ds = await dsR.json();
       // Use canonical total (DCA + Grid + Smart Trade + Reinvested) when it exceeds
@@ -1076,7 +1076,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     // which has its own cache + 3Commas-based totals. This keeps R9 firing during bans.
     if (usdt === 0 && spotData?.error) {
       try {
-        const idleR = await fetch('https://tc-proxy-eu.onrender.com/api/idle-capital');
+        const idleR = await fetch('https://tc.alphacontrol.ai/api/idle-capital');
         if (idleR.ok) {
           const idle = await idleR.json();
           // Prefer spot estimate; fall back to futures-available so capital still gets surfaced
@@ -1281,7 +1281,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Frees capital trapped in long-dead orders from paused/legacy bots.
   // Executes via tc-proxy /api/binance-cancel-order. Cap of 3 per tick.
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/binance-open-orders');
+    const r = await fetch('https://tc.alphacontrol.ai/api/binance-open-orders');
     if (r.ok) {
       const j = await r.json();
       const stale = [];
@@ -1312,7 +1312,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Reads recent TV alerts (<30 min old) and emits executable tv_signal decision.
   // Autonomy handles the actual Smart Trade creation + daily cap.
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/tv-alerts');
+    const r = await fetch('https://tc.alphacontrol.ai/api/tv-alerts');
     if (r.ok) {
       const j = await r.json();
       const cutoff = Date.now() - 30*60*1000; // 30 min window
@@ -1368,7 +1368,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     // Pull futures availability directly — portfolio object doesn't expose it
     let futAvail = 0;
     try {
-      const fr = await fetch('https://tc-proxy-eu.onrender.com/futures-wallet');
+      const fr = await fetch('https://tc.alphacontrol.ai/futures-wallet');
       if (fr.ok) { const fj = await fr.json(); futAvail = parseFloat(fj.availableBalance || 0); }
     } catch(_) {}
     // Conditions: spot below reserve AND futures has meaningful excess
@@ -1466,7 +1466,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Funding extremes mean-revert. When longs overpay (>0.05%) → short.
   // When shorts overpay (<-0.03%) → long. \$100 Smart Trade, 1% TP/SL.
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/funding-rate');
+    const r = await fetch('https://tc.alphacontrol.ai/api/funding-rate');
     if (r.ok) {
       const j = await r.json();
       const rate = parseFloat(j?.lastFundingRate || 0); // already a decimal
@@ -1740,7 +1740,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Reads /api/rule-performance, marks rules with negative ROI after 7+ days for disable.
   // Currently dormant — needs accumulated R23 attribution data first. Surfaces as advisory.
   try {
-    const rp = await fetch('https://tc-proxy-eu.onrender.com/api/rule-performance');
+    const rp = await fetch('https://tc.alphacontrol.ai/api/rule-performance');
     if (rp.ok) {
       const j = await rp.json();
       const losers = (j.rules || []).filter(r => r.profit < -10 && r.botCount >= 3);
@@ -1762,7 +1762,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Reads tunable params from /api/dca-detail, recommends TP per F&G regime, fires tune_bot decisions.
   // Safety: max change 0.5% per call, executable=true (autonomy enforces cooldown).
   try {
-    const dcaR = await fetch('https://tc-proxy-eu.onrender.com/api/dca-detail');
+    const dcaR = await fetch('https://tc.alphacontrol.ai/api/dca-detail');
     if (dcaR.ok) {
       const dca = await dcaR.json();
       const fg = market.fearGreed;
@@ -1803,7 +1803,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
   // Wider SO steps in volatile/bear markets catch deeper averaging.
   // Tighter SO steps in calm/bull markets catch more frequent shallow dips.
   try {
-    const dcaR = await fetch('https://tc-proxy-eu.onrender.com/api/dca-detail');
+    const dcaR = await fetch('https://tc.alphacontrol.ai/api/dca-detail');
     if (dcaR.ok) {
       const dca = await dcaR.json();
       const fg = market.fearGreed;
@@ -2077,14 +2077,14 @@ function getBotMeta(botId) { return BOT_META[botId]||BOT_META[String(botId)]||nu
 function executionAllowed(env) { return env.EXECUTION_ENABLED==='true'; }
 
 async function getPrices() {
-  const r = await fetch('https://tc-proxy-eu.onrender.com/prices');
+  const r = await fetch('https://tc.alphacontrol.ai/prices');
   if (!r.ok) throw new Error('prices HTTP ' + r.status);
   const d = await r.json();
   return json(d);
 }
 
 async function getSpotWalletData(env) {
-  const r = await fetch('https://tc-proxy-eu.onrender.com/spot-wallet');
+  const r = await fetch('https://tc.alphacontrol.ai/spot-wallet');
   if (!r.ok) throw new Error('spot-wallet HTTP ' + r.status);
   return r.json();
 }
@@ -2093,27 +2093,27 @@ async function getSpotWallet(env) {
 }
 
 async function getFuturesWallet(env) {
-  const r = await fetch('https://tc-proxy-eu.onrender.com/futures-wallet');
+  const r = await fetch('https://tc.alphacontrol.ai/futures-wallet');
   if (!r.ok) throw new Error('futures-wallet HTTP ' + r.status);
   const d = await r.json();
   return json(d);
 }
 
 async function getCommasBots() {
-  const res=await fetch('https://tc-proxy-eu.onrender.com/bots');
+  const res=await fetch('https://tc.alphacontrol.ai/bots');
   const raw=await res.text(); let data;
   try{data=JSON.parse(raw);}catch(e){throw new Error('Parse error: '+raw.slice(0,200));}
   if(data.error) throw new Error(data.error); return json(data);
 }
 
 async function getBinanceBots(env) {
-  const r = await fetch('https://tc-proxy-eu.onrender.com/binance-bots');
+  const r = await fetch('https://tc.alphacontrol.ai/binance-bots');
   if (!r.ok) throw new Error('binance-bots HTTP ' + r.status);
   return json(await r.json());
 }
 
-async function getBinanceBotsData(env){ const r=await fetch("https://tc-proxy-eu.onrender.com/binance-bots"); if(!r.ok) throw new Error("binance-bots HTTP "+r.status); return r.json(); }
-async function getFuturesWalletData(env){ const r=await fetch("https://tc-proxy-eu.onrender.com/futures-wallet"); if(!r.ok) throw new Error("futures-wallet HTTP "+r.status); return r.json(); }
+async function getBinanceBotsData(env){ const r=await fetch("https://tc.alphacontrol.ai/binance-bots"); if(!r.ok) throw new Error("binance-bots HTTP "+r.status); return r.json(); }
+async function getFuturesWalletData(env){ const r=await fetch("https://tc.alphacontrol.ai/futures-wallet"); if(!r.ok) throw new Error("futures-wallet HTTP "+r.status); return r.json(); }
 
 function buildLivePortfolio(tcBots, bnBots, recon) {
   // If reconciliation data is available, use live capital values
@@ -2191,7 +2191,7 @@ async function getTradeHistory(env) {
     }
 
     // ── 3Commas: full deal history ──────────────────────────────────────
-    const tcSummary = await fetch('https://tc-proxy-eu.onrender.com/deals/summary')
+    const tcSummary = await fetch('https://tc.alphacontrol.ai/deals/summary')
       .then(r => r.json())
       .catch(() => ({ completedDeals: 0, activeDeals: 0, totalOrders: 0, totalProfit: 0 }));
 
@@ -2213,7 +2213,7 @@ async function getTradeHistory(env) {
             ? `symbol=${sym}&limit=1000&fromId=${fromId}&timestamp=${ts}&recvWindow=10000`
             : `symbol=${sym}&limit=1000&timestamp=${ts}&recvWindow=10000`;
           const sig = await hmacSign(env.BINANCE_SECRET, q);
-          const res = await fetch('https://tc-proxy-eu.onrender.com/binance-proxy/spot-trades?'+q+'&signature='+sig, { headers: { 'X-MBX-APIKEY': 'proxy' } });
+          const res = await fetch('https://tc.alphacontrol.ai/binance-proxy/spot-trades?'+q+'&signature='+sig, { headers: { 'X-MBX-APIKEY': 'proxy' } });
           const trades = await res.json();
           if (!Array.isArray(trades) || trades.length === 0) { keepGoing = false; break; }
           pairTotal += trades.length;
@@ -2232,7 +2232,7 @@ async function getTradeHistory(env) {
       const q   = `symbol=ETHUSDT&limit=1000&timestamp=${ts}&recvWindow=10000`;
       const sig = await hmacSign(env.BINANCE_SECRET, q);
       const res = await fetch(
-        'https://tc-proxy-eu.onrender.com/binance-proxy/futures-trades?'+q+'&signature='+sig,
+        'https://tc.alphacontrol.ai/binance-proxy/futures-trades?'+q+'&signature='+sig,
         { headers: { 'X-MBX-APIKEY': 'proxy' } }
       );
       const trades = await res.json();
@@ -2270,7 +2270,7 @@ async function getAlgoSpotBots(env) {
     const q   = `timestamp=${ts}&recvWindow=10000`;
     const sig = await hmacSign(env.BINANCE_SECRET, q);
     const res = await fetch(
-      `https://tc-proxy-eu.onrender.com/binance-proxy/sapi/v1/algo/spot/openOrders?${q}&signature=${sig}`,
+      `https://tc.alphacontrol.ai/binance-proxy/sapi/v1/algo/spot/openOrders?${q}&signature=${sig}`,
       { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
     );
     const data = await res.json();
@@ -2286,7 +2286,7 @@ async function getAlgoFutureBots(env) {
     const q   = `timestamp=${ts}&recvWindow=10000`;
     const sig = await hmacSign(env.BINANCE_SECRET, q);
     const res = await fetch(
-      `https://tc-proxy-eu.onrender.com/binance-proxy/sapi/v1/algo/futures/openOrders?${q}&signature=${sig}`,
+      `https://tc.alphacontrol.ai/binance-proxy/sapi/v1/algo/futures/openOrders?${q}&signature=${sig}`,
       { headers: { 'X-MBX-APIKEY': env.BINANCE_API_KEY } }
     );
     const data = await res.json();
@@ -2301,9 +2301,9 @@ async function getReconciliation(env) {
     const [spotData, futData, tcData, bnData, pricesData] = await Promise.all([
       getSpotWalletData(env).catch(()=>({usdtBalance:0,balances:[],error:'spot-wallet failed'})),
       getFuturesWalletData(env).catch(()=>({walletBalance:0,marginBalance:0,unrealizedPnl:0,availableBalance:0})),
-      fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
+      fetch('https://tc.alphacontrol.ai/bots').then(r=>r.json()).catch(()=>({bots:[]})),
       getBinanceBotsData(env).catch(()=>({bots:[],market:{},error:'binance-bots failed'})),
-      fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
+      fetch('https://tc.alphacontrol.ai/prices').then(r=>r.json()).catch(()=>({})),
     ]);
     const recon = buildReconciliation({
       spotBalances: spotData.balances || [],
@@ -2321,11 +2321,11 @@ async function getReconciliation(env) {
 async function getDecisions(env){
   try{
     const [tcData,bnData,futData,spotData,pricesData,sigData]=await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/bots').then(r=>r.json()).catch(()=>({bots:[]})),
+      fetch('https://tc.alphacontrol.ai/bots').then(r=>r.json()).catch(()=>({bots:[]})),
       getBinanceBotsData(env).catch(()=>({bots:[],market:{}})),getFuturesWalletData(env).catch(()=>({walletBalance:0,marginBalance:0,unrealizedPnl:0,availableBalance:0})),
       getSpotWalletData(env).catch(()=>({usdtBalance:0,balances:[],error:'spot-wallet failed'})),
-      fetch('https://tc-proxy-eu.onrender.com/prices').then(r=>r.json()).catch(()=>({})),
-      fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r=>r.json()).catch(()=>({})),
+      fetch('https://tc.alphacontrol.ai/prices').then(r=>r.json()).catch(()=>({})),
+      fetch('https://tc.alphacontrol.ai/market-signals').then(r=>r.json()).catch(()=>({})),
     ]);
     // Build reconciliation first — this gives us true capital numbers
     const recon = buildReconciliation({
@@ -2417,7 +2417,7 @@ async function getDecisions(env){
 }
 
 async function botAction(env,botId,action){
-  const url=`https://tc-proxy-eu.onrender.com/bot/${botId}/${action}`;
+  const url=`https://tc.alphacontrol.ai/bot/${botId}/${action}`;
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'}});
   const raw=await res.text();let data;
   try{data=JSON.parse(raw);}catch(e){throw new Error('Parse error: '+raw.slice(0,200));}
@@ -2435,6 +2435,7 @@ export default {
     const url=new URL(request.url),path=url.pathname;
     if(request.method==='OPTIONS') return new Response(null,{headers:CORS});
     try{
+      if(path==='/version') return json({version: typeof BUILD_VERSION!=='undefined'?BUILD_VERSION:'unknown', builtAt: typeof BUILD_TIME!=='undefined'?BUILD_TIME:'unknown', hasHealthDot:true});
       if(path==='/api/reconciliation')  return await getReconciliation(env);
       if(path==='/api/trade-history')   return await getTradeHistory(env);
       if(path==='/api/my-ip') {
@@ -2447,7 +2448,7 @@ export default {
       if(path==='/api/render-ip') {
         try {
           // Ask the Render proxy to fetch its own outbound IP
-          const r = await fetch('https://tc-proxy-eu.onrender.com/my-ip');
+          const r = await fetch('https://tc.alphacontrol.ai/my-ip');
           const d = await r.json();
           return json({ renderIp: d.ip, note: 'This is the Render proxy outbound IPv4' });
         } catch(e) { return json({ error: e.message, note: 'Render proxy may not have /my-ip endpoint yet' }); }
@@ -2474,7 +2475,7 @@ export default {
       if(path.startsWith('/api/grid-bot/')&&request.method==='POST'){
         const parts=path.split('/'),botId=parts[3],action=parts[4];
         if(!botId||!['enable','disable'].includes(action)) return json({error:'Usage: POST /api/grid-bot/:id/enable|disable'},400);
-        const url=`https://tc-proxy-eu.onrender.com/grid-bot/${botId}/${action}`;
+        const url=`https://tc.alphacontrol.ai/grid-bot/${botId}/${action}`;
         const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'}});
         const data=await res.json();
         return json(data);
