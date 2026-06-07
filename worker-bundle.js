@@ -2721,6 +2721,18 @@ body::after {
   <!-- ══ ROW 1: context | Hannah | trial ══ -->
   <!-- ════════ DASHBOARD V2 — clean redesign ════════ -->
   <div id="v2-dashboard" style="margin-top:8px">
+    <!-- HANNAH SELF-HEALTH BANNER — shows red/amber when /api/system-health flags issues -->
+    <div id="v2-health-banner" style="display:none;margin:0 0 12px;padding:14px 18px;border-radius:10px;border:1px solid;font-size:13px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="v2-health-icon" style="font-size:22px">🚨</span>
+        <div style="flex:1">
+          <div id="v2-health-headline" style="font-weight:700;font-size:14px;margin-bottom:4px"></div>
+          <div id="v2-health-detail" style="font-size:12px;opacity:.85"></div>
+        </div>
+        <button onclick="document.getElementById('v2-health-banner').style.display='none'" style="background:transparent;color:inherit;border:1px solid currentColor;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;opacity:.7">Dismiss</button>
+      </div>
+    </div>
+
     <!-- HERO: TODAY · MTD · YTD with big bold same-size $ and % -->
     <div class="v2-hero">
       <div class="v2-hero-cell">
@@ -2829,6 +2841,15 @@ body::after {
         </div>
       </div>
       <div style="font-size:10px;color:var(--text-muted);padding:8px 4px 0">Failures excluded: daily caps, cooldowns, dedupe (those aren't fund problems). Only matches: balance/MIN_NOTIONAL/-2010/-2019.</div>
+    </div>
+
+    <!-- R23 — PER-RULE P&L ATTRIBUTION -->
+    <div class="v2-section" id="v2-r23-section">
+      <div class="v2-section-title">⚖️ R23 — Rule Attribution</div>
+      <div style="font-size:10px;color:var(--text-muted);padding:0 4px 8px">P&amp;L per Quantum Rule. Hannah names new grids <code style="color:var(--teal)">Hannah-R9-*</code>, <code style="color:var(--teal)">Hannah-R12-*</code> etc — attribution accumulates from there. Pre-R23 grids show as a single legacy bucket.</div>
+      <div id="v2-r23-body" style="font-size:11.5px">
+        <div style="color:var(--text-muted);padding:10px 12px">Loading rule attribution…</div>
+      </div>
     </div>
 
     <!-- Hannah chat — prominent -->
@@ -2960,6 +2981,133 @@ body::after {
     </div>
   </div>
 </div>
+
+        <!-- ── R17 $30 BTC ACCUMULATOR ──────────────────────────────────────── -->
+        <div id="r17-panel" style="margin:12px 16px 8px;padding:14px 18px;background:linear-gradient(180deg, rgba(247,147,26,.06), rgba(14,16,26,.94));border:1px solid rgba(247,147,26,.25);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+            <div style="font-family:var(--font-display);font-size:11px;letter-spacing:.18em;color:#f7931a;text-transform:uppercase">₿ R17 · $30 BTC ACCUMULATOR</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim)" id="r17-meta">F&amp;G &lt;15 fear-buy · cap 10/day · $300 budget</div>
+          </div>
+          <!-- Top row: today progress bar + counters -->
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-dim);font-family:var(--font-mono);margin-bottom:4px">
+              <span>TODAY: <span id="r17-today-count" style="color:#f7931a;font-weight:700">0</span>/<span id="r17-cap">10</span> bites</span>
+              <span><span id="r17-today-spent" style="color:#f7931a;font-weight:700">$0</span> of <span id="r17-today-budget">$300</span> · <span id="r17-today-pct">0%</span></span>
+            </div>
+            <div style="background:rgba(247,147,26,.08);height:10px;border-radius:5px;overflow:hidden;border:1px solid rgba(247,147,26,.18)">
+              <div id="r17-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f7931a,#ffb84d);transition:width .4s ease"></div>
+            </div>
+          </div>
+          <!-- Stats grid: today + lifetime -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:10px">
+            <div>
+              <div style="font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase">Today BTC bought</div>
+              <div id="r17-today-btc" style="font-family:var(--font-mono);font-size:18px;font-weight:900;color:#f7931a">0.00000000</div>
+              <div id="r17-today-avg" style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono)">avg —</div>
+            </div>
+            <div>
+              <div style="font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase">Lifetime BTC stack</div>
+              <div id="r17-life-btc" style="font-family:var(--font-mono);font-size:18px;font-weight:900;color:var(--text-primary)">0.00000000</div>
+              <div id="r17-life-avg" style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono)">avg cost —</div>
+            </div>
+            <div>
+              <div style="font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase">Lifetime spent</div>
+              <div id="r17-life-spent" style="font-family:var(--font-mono);font-size:18px;font-weight:900;color:var(--text-primary)">$0</div>
+              <div id="r17-life-bites" style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono)">0 bites</div>
+            </div>
+            <div>
+              <div style="font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase">Floating P&amp;L</div>
+              <div id="r17-float-pnl" style="font-family:var(--font-mono);font-size:18px;font-weight:900;color:var(--safe)">—</div>
+              <div id="r17-float-pct" style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono)">vs avg cost</div>
+            </div>
+            <div>
+              <div style="font-size:8.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase">Realized (sold)</div>
+              <div id="r17-realized" style="font-family:var(--font-mono);font-size:18px;font-weight:900;color:var(--safe)">$0</div>
+              <div id="r17-open-cnt" style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono)">0 still open</div>
+            </div>
+          </div>
+          <!-- Recent buys table -->
+          <details style="margin-top:10px">
+            <summary style="cursor:pointer;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);font-family:var(--font-display);outline:none">recent bites ↓</summary>
+            <div id="r17-recent" style="margin-top:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-secondary);max-height:240px;overflow-y:auto">
+              <div style="color:var(--text-dim)">loading…</div>
+            </div>
+          </details>
+        </div>
+        <script>
+          // R17 progress refresher
+          async function refreshR17Panel() {
+            try {
+              const r = await fetch('https://tc.alphacontrol.ai/api/r17-progress?cb=' + Date.now());
+              if (!r.ok) return;
+              const d = await r.json();
+              const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+              const setH = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+              if (d.config) {
+                setT('r17-cap', d.config.dailyCap);
+                setT('r17-today-budget', '$' + d.config.dailyBudgetUsd);
+              }
+              if (d.today) {
+                setT('r17-today-count', d.today.count);
+                setT('r17-today-spent', '$' + d.today.spentUsd.toFixed(2));
+                setT('r17-today-pct', d.today.budgetUsedPct.toFixed(1) + '%');
+                const bar = document.getElementById('r17-progress-bar');
+                if (bar) bar.style.width = Math.min(100, d.today.budgetUsedPct) + '%';
+                setT('r17-today-btc', '₿ ' + d.today.btcAccumulated.toFixed(8));
+                setT('r17-today-avg', d.today.avgBuyPrice > 0 ? 'avg $' + d.today.avgBuyPrice.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0}) : 'no buys today');
+              }
+              if (d.lifetime) {
+                setT('r17-life-btc', '₿ ' + d.lifetime.btcAccumulated.toFixed(8));
+                setT('r17-life-avg', d.lifetime.avgBuyPrice > 0 ? 'avg cost $' + d.lifetime.avgBuyPrice.toLocaleString(undefined,{maximumFractionDigits:0}) : '—');
+                setT('r17-life-spent', '$' + d.lifetime.spentUsd.toLocaleString(undefined,{maximumFractionDigits:2}));
+                setT('r17-life-bites', d.lifetime.biteCount + ' bites all-time');
+                const realized = d.lifetime.realizedPnl;
+                const realEl = document.getElementById('r17-realized');
+                if (realEl) {
+                  realEl.textContent = (realized >= 0 ? '+$' : '-$') + Math.abs(realized).toFixed(2);
+                  realEl.style.color = realized >= 0 ? 'var(--safe)' : 'var(--warn)';
+                }
+                setT('r17-open-cnt', d.lifetime.openBites + ' still open · unrealized ' + (d.lifetime.openUnrealizedPnl >= 0 ? '+$' : '-$') + Math.abs(d.lifetime.openUnrealizedPnl).toFixed(2));
+              }
+              if (d.marketNow && d.marketNow.floatingPnl !== null) {
+                const fpEl = document.getElementById('r17-float-pnl');
+                const fp = d.marketNow.floatingPnl;
+                if (fpEl) {
+                  fpEl.textContent = (fp >= 0 ? '+$' : '-$') + Math.abs(fp).toFixed(2);
+                  fpEl.style.color = fp >= 0 ? 'var(--safe)' : 'var(--warn)';
+                }
+                setT('r17-float-pct', 'vs avg cost ' + (d.marketNow.floatingPnlPct >= 0 ? '+' : '') + d.marketNow.floatingPnlPct.toFixed(2) + '% · BTC now $' + Math.round(d.marketNow.btcPrice).toLocaleString());
+              }
+              // Recent bites list
+              if (Array.isArray(d.recent) && d.recent.length) {
+                const rows = d.recent.map(b => {
+                  const dt = new Date(b.createdAt);
+                  const when = isNaN(dt.getTime()) ? '?' : dt.toISOString().slice(5,16).replace('T',' ');
+                  const status = b.status === 'finished' ? '<span style="color:var(--safe)">closed</span>' :
+                                 /active|waiting/i.test(b.status||'') ? '<span style="color:#f7931a">open</span>' :
+                                 '<span style="color:var(--text-dim)">' + (b.status||'?') + '</span>';
+                  const pnl = b.currentPnl;
+                  const pnlStr = pnl === 0 ? '' : ' · ' + (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+                  return '<div style="padding:4px 0;border-bottom:1px solid rgba(247,147,26,.08);display:grid;grid-template-columns:90px 1fr 80px 80px 70px;gap:8px;align-items:center">' +
+                    '<span style="color:var(--text-dim)">' + when + '</span>' +
+                    '<span>$' + b.usdSpent.toFixed(2) + ' @ $' + b.buyPrice.toLocaleString(undefined,{maximumFractionDigits:0}) + '</span>' +
+                    '<span style="color:#f7931a">₿' + b.btcQty.toFixed(6) + '</span>' +
+                    '<span>' + status + pnlStr + '</span>' +
+                    '<span style="color:var(--text-dim);font-size:9px">' + (b.note||'').slice(0,30) + '</span>' +
+                  '</div>';
+                }).join('');
+                setH('r17-recent',
+                  '<div style="display:grid;grid-template-columns:90px 1fr 80px 80px 70px;gap:8px;padding-bottom:4px;border-bottom:1px solid rgba(247,147,26,.2);font-size:9px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase">' +
+                    '<span>When (UTC)</span><span>Buy</span><span>BTC</span><span>Status / P&amp;L</span><span>Note</span>' +
+                  '</div>' + rows);
+              } else {
+                setH('r17-recent', '<div style="color:var(--text-dim)">No R17 bites yet — fires when F&amp;G &lt; 15</div>');
+              }
+            } catch(_) {}
+          }
+          setInterval(refreshR17Panel, 60000);
+          setTimeout(refreshR17Panel, 4000);
+        </script>
 
         <div id="hannah-changes-panel" style="margin:12px 16px 8px;padding:14px 18px;background:rgba(14,16,26,.94);border:1px solid var(--border-dim);border-radius:8px">
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
@@ -4576,7 +4724,7 @@ setInterval(updateClock, 1000); updateClock();
 // ── System health dot ──────────────────────────────────────────
 async function refreshHealthDot() {
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/system-health?cb='+Date.now());
+    const r = await fetch('https://tc.alphacontrol.ai/api/system-health?cb='+Date.now());
     if (!r.ok) return;
     const h = await r.json();
     const dot = document.getElementById('h-health-dot');
@@ -4674,7 +4822,7 @@ async function refreshCompletedActions() {
   const list = document.getElementById('ac-completed-list');
   if (!list) return;
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=20');
+    const r = await fetch('https://tc.alphacontrol.ai/api/actions?limit=20');
     if (!r.ok) return;
     const { actions = [] } = await r.json();
     // Keep only user-visible action events (skip pure status pings)
@@ -4717,7 +4865,7 @@ async function refreshHannahTiles() {
   if (!todayEl && !pendEl) return;
   try {
     const [actR, decR] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200'),
+      fetch('https://tc.alphacontrol.ai/api/actions?limit=200'),
       fetch('/api/decisions'),
     ]);
     let actionsToday = 0, lastTag = '';
@@ -4761,7 +4909,7 @@ async function refreshTodayProfit() {
     const [snap, dec, d] = await Promise.all([
       fetch('/api/daily-snapshot').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     const currentLocked = dec?.reconciliation?.totalRealised
                        ?? parseFloat((d?.trial2_total_profit ?? 0));
@@ -4808,9 +4956,9 @@ setTimeout(refreshMonthlyTarget, 6000);
 async function refreshHannahStatus() {
   try {
     const [perf, dec, sw] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/spot-wallet').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/spot-wallet').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Replace Hannah's first greeting bubble with live status
     const msgs = document.querySelectorAll('.cv-msg, .ac-chat-msg, [class*="hannah"][class*="msg"]');
@@ -4848,8 +4996,8 @@ setTimeout(refreshHannahStatus, 7000);
 async function refreshHannahPerfBar() {
   try {
     const [perf, learn] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/learning').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/learning').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     if (perf) {
       const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -4870,7 +5018,7 @@ setTimeout(refreshHannahPerfBar, 8000);
 // ── SYSTEM SCORE tile ─────────────────────────────────────────────────
 async function refreshSystemScore() {
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/system-score');
+    const r = await fetch('https://tc.alphacontrol.ai/api/system-score');
     if (!r.ok) return;
     const j = await r.json();
     const el = document.getElementById('dm-system-score');
@@ -4892,7 +5040,7 @@ async function loadActionsCache() {
     // Fetch BOTH sources: worker KV (persistent, survives Render restarts) + tc-proxy live (real-time)
     const [kvR, liveR] = await Promise.all([
       fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('https://tc.alphacontrol.ai/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
     const merged = [...((liveR?.actions) || []), ...((kvR?.actions) || [])];
     // Dedupe by ts (same event from both sources)
@@ -5021,7 +5169,7 @@ async function refreshLiveActionBoard() {
     const [dec, kvActs, liveActs] = await Promise.all([
       fetch('/api/decisions?cb=' + Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
       fetch('/api/hannah-actions').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/actions?limit=200').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Merge KV (persistent) + live (real-time) action sources, dedupe by ts+event
     const _allActs = [...((liveActs?.actions) || []), ...((kvActs?.actions) || [])];
@@ -5089,7 +5237,7 @@ setTimeout(refreshLiveActionBoard, 5000);
 // HANNAH'S TRADES panel
 async function refreshHannahTrades() {
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/smart-trades');
+    const r = await fetch('https://tc.alphacontrol.ai/api/smart-trades');
     if (!r.ok) return;
     const j = await r.json();
     const openEl   = document.getElementById('ht-open');
@@ -5167,17 +5315,17 @@ async function refreshDashboardV2() {
   try {
     let [dec, mp, perf, deals, mkt, capRes, dealsSum, botStats, signalFund, insufficientFunds, idleCapital, dcaDetail] = await Promise.all([
       fetch('/api/decisions?_=' + Math.random()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/market-signals').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/total-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/signal-fund-status?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/insufficient-funds?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/idle-capital?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/dca-detail?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/hannah-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/deals/detail').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/market-signals').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/total-capital').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/deals/summary?account_id=33438577').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/all-bot-stats').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/signal-fund-status?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/insufficient-funds?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/idle-capital?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/dca-detail?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     // Canonical locked profit from 3Commas /deals/summary (sums all 74 closed deals = ~$445.61)
     // Apply same stickiness: don't overwrite a higher last-known-good with a dropped value.
@@ -5185,7 +5333,7 @@ async function refreshDashboardV2() {
     // locked in stale $1,409 when the real reconciled value dropped to $1,016.
     // v2 of the localStorage key so cached stale values from v1 get discarded once.
     if (typeof window._lastGoodLocked === 'undefined') {
-      try { window._lastGoodLocked = parseFloat(localStorage.getItem('lg:locked:v2') || '0') || 0; } catch(_) { window._lastGoodLocked = 0; }
+      try { window._lastGoodLocked = parseFloat(localStorage.getItem('lg:locked:v3') || '0') || 0; } catch(_) { window._lastGoodLocked = 0; }
     }
     let candidateLocked = (typeof dealsSum?.totalProfit === 'number' && dealsSum.totalProfit > 50) ? dealsSum.totalProfit : null;
     if (candidateLocked != null && window._lastGoodLocked > candidateLocked && candidateLocked < window._lastGoodLocked * 0.7) {
@@ -5193,7 +5341,7 @@ async function refreshDashboardV2() {
       candidateLocked = window._lastGoodLocked;
     } else if (candidateLocked != null) {
       window._lastGoodLocked = candidateLocked;
-      try { localStorage.setItem('lg:locked:v2', String(candidateLocked)); } catch(_) {}
+      try { localStorage.setItem('lg:locked:v3', String(candidateLocked)); } catch(_) {}
     } else if (window._lastGoodLocked > 0) {
       candidateLocked = window._lastGoodLocked;
     }
@@ -5329,7 +5477,7 @@ async function refreshDashboardV2() {
     // STATS row
     // TRADES TODAY — fetch accurate count from new tc-proxy endpoint
     try {
-      const todayR = await fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now());
+      const todayR = await fetch('https://tc.alphacontrol.ai/api/today-deals?cb='+Date.now());
       if (todayR.ok) {
         const td = await todayR.json();
         let count = parseInt(td?.count || 0);
@@ -5339,11 +5487,11 @@ async function refreshDashboardV2() {
         const todayKey = new Date().toISOString().slice(0,10);
         if (!window._lastGoodTodayDisplay || window._lastGoodTodayDisplay.day !== todayKey) {
           window._lastGoodTodayDisplay = { day: todayKey, count: 0, live: 0, profit: 0 };
-          try { localStorage.setItem('lg:today', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
+          try { localStorage.setItem('lg:today:v2', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
         } else {
           // Hydrate from localStorage on page load if window state is fresh
           try {
-            const saved = JSON.parse(localStorage.getItem('lg:today') || 'null');
+            const saved = JSON.parse(localStorage.getItem('lg:today:v2') || 'null');
             if (saved && saved.day === todayKey) {
               if (saved.count  > window._lastGoodTodayDisplay.count)  window._lastGoodTodayDisplay.count  = saved.count;
               if (saved.live   > window._lastGoodTodayDisplay.live)   window._lastGoodTodayDisplay.live   = saved.live;
@@ -5351,18 +5499,30 @@ async function refreshDashboardV2() {
             }
           } catch(_) {}
         }
-        if (count >= window._lastGoodTodayDisplay.count) window._lastGoodTodayDisplay.count = count;
-        else count = window._lastGoodTodayDisplay.count;
-        if (live >= window._lastGoodTodayDisplay.live) window._lastGoodTodayDisplay.live = live;
-        else live = window._lastGoodTodayDisplay.live;
-        // Profit HWM — keep peak today's $ figure within UTC day
-        const freshProfit = parseFloat(td?.profit || 0);
-        if (freshProfit >= (window._lastGoodTodayDisplay.profit||0)) {
-          window._lastGoodTodayDisplay.profit = freshProfit;
+        // Sanity-guarded HWM on count + live. If fresh value is hugely out of band
+        // vs HWM (e.g. HWM stuck at 84 but fresh shows 13 closing in 5 min), trust fresh.
+        const HWM_SANITY_DROP_PCT = 0.30; // if HWM > 3× fresh, suspect stale HWM and reset
+        if (count >= window._lastGoodTodayDisplay.count) {
+          window._lastGoodTodayDisplay.count = count;
+        } else if (count > 0 && count < window._lastGoodTodayDisplay.count * HWM_SANITY_DROP_PCT) {
+          // Fresh is positive but absurdly lower than HWM — HWM is stale, trust fresh
+          window._lastGoodTodayDisplay.count = count;
+        } else {
+          count = window._lastGoodTodayDisplay.count;
         }
-        // Inject the HWM profit back into td so downstream tile uses it
-        td.profit = window._lastGoodTodayDisplay.profit;
-        try { localStorage.setItem('lg:today', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
+        if (live >= window._lastGoodTodayDisplay.live) {
+          window._lastGoodTodayDisplay.live = live;
+        } else if (live > 0 && live < window._lastGoodTodayDisplay.live * HWM_SANITY_DROP_PCT) {
+          window._lastGoodTodayDisplay.live = live;
+        } else {
+          live = window._lastGoodTodayDisplay.live;
+        }
+        // Profit: NEVER HWM — losses are legitimate. Use fresh value directly.
+        // (Removed the HWM that was caching $727 from a transient earlier bug.)
+        const freshProfit = parseFloat(td?.profit || 0);
+        window._lastGoodTodayDisplay.profit = freshProfit;
+        td.profit = freshProfit;
+        try { localStorage.setItem('lg:today:v2', JSON.stringify(window._lastGoodTodayDisplay)); } catch(_) {}
         setT('v2-trades-today', String(count));
         // Hero badge: show closed count + live count when there are open positions
         setT('v2-today-trades', count + ' closed · ' + live + ' live');
@@ -5380,7 +5540,7 @@ async function refreshDashboardV2() {
         if (tPctEl) tPctEl.className = 'v2-hero-pct' + (tPct < 0 ? ' neg' : '');
         // YESTERDAY tile — fetch prev-day data from new /api/yesterday-deals endpoint
         try {
-          const yR = await fetch('https://tc-proxy-eu.onrender.com/api/yesterday-deals?cb='+Date.now());
+          const yR = await fetch('https://tc.alphacontrol.ai/api/yesterday-deals?cb='+Date.now());
           if (yR.ok) {
             const y = await yR.json();
             const yProfit = parseFloat(y?.profit || 0);
@@ -5659,12 +5819,12 @@ async function v2ChatSend() {
   let portfolioContext = '';
   try {
     const [cap, ds, td, dca, stats, market, dec] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/api/total-capital?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/deals/summary?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/dca-detail?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/all-bot-stats?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/market-signals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/total-capital?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/deals/summary?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/today-deals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/dca-detail?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/all-bot-stats?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/market-signals?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
       fetch('/api/decisions?cb='+Date.now()).then(r=>r.json()).catch(()=>null),
     ]);
 
@@ -5725,7 +5885,7 @@ async function v2ChatSend() {
   }
 
   try {
-    const r = await fetch('https://tc-proxy-eu.onrender.com/api/chat-dual', {
+    const r = await fetch('https://tc.alphacontrol.ai/api/chat-dual', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, history: [], portfolioContext }),
     });
@@ -5769,7 +5929,7 @@ async function refreshMtdYtd() {
   try {
     const [dec, mp] = await Promise.all([
       fetch('/api/decisions').then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/monthly-performance').then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     const setT = (id, v, c) => {
       const el = document.getElementById(id);
@@ -5781,7 +5941,10 @@ async function refreshMtdYtd() {
       const pct = cm.pctOfCapital;
       const onPace = pct >= 6 * (new Date().getUTCDate() / 30);
       setT('dm-mtd-pct', (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', onPace ? 'var(--safe)' : 'var(--warn)');
-      setT('dm-mtd-sub', '$' + cm.locked.toFixed(0) + ' · ' + cm.dealCount + ' deals · ' + cm.label);
+      // Show breakdown: DCA + Grid + Smart Trade (not just total)
+      const dca = cm.dcaCount || 0, grid = cm.gridCount || 0, st = cm.smartTradeCount || 0;
+      const breakdown = dca + ' DCA · ' + grid + ' grid · ' + st + ' ST';
+      setT('dm-mtd-sub', '$' + cm.locked.toFixed(0) + ' · ' + breakdown + ' · ' + cm.label);
     }
     // YTD — still from worker (year-to-date totalRealised is fine)
     const yt = dec?.ytdTarget;
@@ -5795,7 +5958,8 @@ async function refreshMtdYtd() {
       setT('dm-prev-month-label', pm.label.toUpperCase());
       const v = (pm.locked >= 0 ? '+$' : '-$') + Math.abs(pm.locked).toFixed(2);
       setT('dm-prev-month-val', v, pm.locked > 0 ? 'var(--safe)' : 'var(--text-muted)');
-      setT('dm-prev-month-sub', (pm.pctOfCapital >= 0 ? '+' : '') + pm.pctOfCapital.toFixed(2) + '% · ' + pm.dealCount + ' deals');
+      const pmDca = pm.dcaCount || 0, pmGrid = pm.gridCount || 0, pmSt = pm.smartTradeCount || 0;
+      setT('dm-prev-month-sub', (pm.pctOfCapital >= 0 ? '+' : '') + pm.pctOfCapital.toFixed(2) + '% · ' + pmDca + ' DCA · ' + pmGrid + ' grid · ' + pmSt + ' ST');
     }
   } catch(_) {}
 }
@@ -6104,7 +6268,7 @@ async function renderPortfolioFromRecon(r) {
 
   // CANONICAL CAPITAL: /api/total-capital is source of truth ($8,930 + per-account split)
   try {
-    const capR = await fetch('https://tc-proxy-eu.onrender.com/api/total-capital?cb='+Date.now());
+    const capR = await fetch('https://tc.alphacontrol.ai/api/total-capital?cb='+Date.now());
     if (capR.ok) {
       const cap = await capR.json();
       if (cap.total > 100) {
@@ -6244,8 +6408,8 @@ async function _renderNewPortfolio(r, grandTotal, rPnl, fPnl) {
   let todayLocked = null;
   try {
     const [dsR, tdR] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/deals/summary?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
-      fetch('https://tc-proxy-eu.onrender.com/api/today-deals?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/deals/summary?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
+      fetch('https://tc.alphacontrol.ai/api/today-deals?cb='+Date.now()).then(r => r.ok ? r.json() : null).catch(()=>null),
     ]);
     if (dsR?.totalProfit > 0) tcLocked = dsR.totalProfit;
     if (tdR?.profit != null) todayLocked = tdR.profit;
@@ -6305,7 +6469,7 @@ async function _renderAssetList(grandTotal) {
 
   if (!balances.length) {
     try {
-      const auditR = await fetch('https://tc-proxy-eu.onrender.com/api/capital-audit?cb='+Date.now());
+      const auditR = await fetch('https://tc.alphacontrol.ai/api/capital-audit?cb='+Date.now());
       if (auditR.ok) {
         const audit = (await auditR.json()).audit || {};
         // Convert audit per-asset to balance-shape rows
@@ -6705,7 +6869,7 @@ async function refreshBots() {
   try {
     // Pull from tc-proxy (3Commas + Binance) directly — worker doesn't expose /api/reconciliation
     const [tcR, bnR] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/bots').then(r => r.ok ? r.json() : { bots: [] }),
+      fetch('https://tc.alphacontrol.ai/bots').then(r => r.ok ? r.json() : { bots: [] }),
       apiFetch('binance-bots').catch(() => ({ bots: [] })),
     ]);
     const tcBots = tcR.bots || [];
@@ -6740,7 +6904,7 @@ async function refreshBots() {
 // ── Market Signals — Fear & Greed, BTC Dominance, Funding ─────────────────
 async function loadMarketSignals() {
   try {
-    const res = await fetch('https://tc-proxy-eu.onrender.com/market-signals');
+    const res = await fetch('https://tc.alphacontrol.ai/market-signals');
     if (!res.ok) return;
     const s = await res.json();
     // Update old Context layer elements (kept for compatibility)
@@ -6827,8 +6991,8 @@ async function loadMarketSignals() {
 async function loadMarketPairs() {
   try {
     const [botsRes, pricesRes, decisionsData] = await Promise.all([
-      fetch('https://tc-proxy-eu.onrender.com/binance-bots').then(r => r.ok ? r.json() : null),
-      fetch('https://tc-proxy-eu.onrender.com/prices').then(r => r.ok ? r.json() : {}),
+      fetch('https://tc.alphacontrol.ai/binance-bots').then(r => r.ok ? r.json() : null),
+      fetch('https://tc.alphacontrol.ai/prices').then(r => r.ok ? r.json() : {}),
       apiFetch('decisions').catch(() => null),
     ]);
     if (!botsRes) return;
@@ -7027,7 +7191,7 @@ async function toggleTcBot(botId, enable, name) {
     async () => {
       try {
         const endpoint = enable ? 'enable' : 'disable';
-        const r = await fetch('https://tc-proxy-eu.onrender.com/bot/' + botId + '/' + endpoint, {method:'POST'});
+        const r = await fetch('https://tc.alphacontrol.ai/bot/' + botId + '/' + endpoint, {method:'POST'});
         const d = await r.json();
         if (d.success) {
           showToast((enable?'Enabled':'Paused') + ' ' + name, 'success');
@@ -7106,6 +7270,8 @@ function checkPw() {
     checkRegime();
     setInterval(checkRegime, 30 * 60 * 1000);
     setInterval(loadMarketSignals, 60000); // F&G live every 60s
+    loadR23Performance();
+    setInterval(loadR23Performance, 60000);
     renderHistory();
     // Mirror Hannah photo after login
     requestAnimationFrame(() => { setTimeout(_mirrorHannahPhoto, 200); });
@@ -7115,11 +7281,83 @@ function checkPw() {
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 8000);
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 20000);
     // Pre-warm hannah proxy
-    fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
+    fetch('https://tc.alphacontrol.ai/health').catch(() => {});
   } else {
     const errEl = document.getElementById('pw-error');
     if (errEl) { errEl.style.display = 'block'; setTimeout(() => errEl.style.display='none', 2000); }
   }
+}
+
+// ── Hannah self-health banner ────────────────────────────────────────────
+async function refreshHealthBanner() {
+  try {
+    const r = await fetch('https://tc.alphacontrol.ai/api/system-health?cb=' + Date.now());
+    if (!r.ok) return;
+    const h = await r.json();
+    const banner = document.getElementById('v2-health-banner');
+    if (!banner) return;
+    if (h.status === 'ok') { banner.style.display = 'none'; return; }
+    const isCritical = h.status === 'critical';
+    const issues = h.issues || [];
+    const top = issues[0] || { code: 'unknown', detail: '' };
+    const otherCount = Math.max(0, issues.length - 1);
+    document.getElementById('v2-health-icon').textContent = isCritical ? '🚨' : '⚠️';
+    document.getElementById('v2-health-headline').textContent =
+      (isCritical ? 'CRITICAL: ' : 'Heads up: ') + top.code.replace(/_/g, ' ').toUpperCase() +
+      (otherCount > 0 ? ' (+' + otherCount + ' more)' : '');
+    document.getElementById('v2-health-detail').textContent = top.detail + (top.fix ? ' — ' + top.fix : '');
+    banner.style.display = 'block';
+    banner.style.background = isCritical ? 'rgba(248,113,113,.12)' : 'rgba(251,191,36,.10)';
+    banner.style.borderColor = isCritical ? '#f87171' : '#fbbf24';
+    banner.style.color = isCritical ? '#f87171' : '#fbbf24';
+  } catch(e) { /* fail silently */ }
+}
+refreshHealthBanner();
+setInterval(refreshHealthBanner, 30000);
+
+// ── R23 — per-rule P&L attribution ────────────────────────────────────────
+async function loadR23Performance() {
+  try {
+    const r = await fetch('https://tc.alphacontrol.ai/api/rule-performance?cb=' + Date.now());
+    if (!r.ok) return;
+    const j = await r.json();
+    const body = document.getElementById('v2-r23-body');
+    if (!body) return;
+    const rules = Array.isArray(j.rules) ? j.rules : [];
+    const legacy = j.legacy;
+    if (rules.length === 0 && !legacy) {
+      body.innerHTML = '<div style="color:var(--text-muted);padding:10px 12px">No rule-tagged bots yet. New grids Hannah creates will appear here.</div>';
+      return;
+    }
+    let html = '<div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 100px;gap:6px;padding:6px 10px;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);border-bottom:1px solid var(--border)"><div>Rule</div><div>Bots</div><div>Active</div><div>Capital</div><div>Profit</div><div style="text-align:right">Verdict</div></div>';
+    const colorFor = (p) => p > 0 ? 'var(--green, #4ade80)' : p < 0 ? 'var(--red, #f87171)' : 'var(--text-bright, #fff)';
+    for (const r of rules) {
+      const cap = (r.capital || 0).toFixed(0);
+      const profit = (r.profit || 0).toFixed(2);
+      const verdict = r.verdict || (r.profit > 0 ? 'profitable' : r.profit < 0 ? 'losing' : 'flat');
+      html += \`<div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 100px;gap:6px;padding:8px 10px;font-family:var(--font-mono);font-size:12px;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="color:var(--teal);font-weight:700">\${r.rule}</div>
+        <div>\${r.botCount}</div>
+        <div style="color:\${r.activeBots > 0 ? 'var(--green, #4ade80)' : 'var(--text-muted)'}">\${r.activeBots}</div>
+        <div>$\${cap}</div>
+        <div style="color:\${colorFor(r.profit)};font-weight:700">$\${profit} <span style="opacity:.7;font-size:10px">(\${r.roi || 0}%)</span></div>
+        <div style="text-align:right;font-size:10px;color:\${colorFor(r.profit)};text-transform:uppercase;letter-spacing:.06em">\${verdict}</div>
+      </div>\`;
+    }
+    if (legacy) {
+      const cap = (legacy.capital || 0).toFixed(0);
+      const profit = (legacy.profit || 0).toFixed(2);
+      html += \`<div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 100px;gap:6px;padding:8px 10px;font-family:var(--font-mono);font-size:12px;opacity:.7;border-top:1px solid var(--border)">
+        <div style="color:var(--text-muted);font-weight:700">\${legacy.rule}</div>
+        <div>\${legacy.botCount}</div>
+        <div>\${legacy.activeBots}</div>
+        <div>$\${cap}</div>
+        <div style="color:\${colorFor(legacy.profit)};font-weight:700">$\${profit}</div>
+        <div style="text-align:right;font-size:9.5px;color:var(--text-muted)">legacy</div>
+      </div>\`;
+    }
+    body.innerHTML = html;
+  } catch(e) { console.warn('[R23] load fail', e); }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
@@ -7166,6 +7404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     checkRegime();
     setInterval(checkRegime, 30 * 60 * 1000);
     setInterval(loadMarketSignals, 60000); // F&G live every 60s
+    loadR23Performance();
+    setInterval(loadR23Performance, 60000);
     renderHistory();
     // Auto-activate Hannah on session restore — cadence matches fresh-login path
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) d2Activate(); }, 1500);
@@ -7173,7 +7413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 8000);
     setTimeout(() => { if (!_hannahConn && !_hannahBusy) hannahActivate().catch(()=>{}); }, 20000);
     // Pre-warm hannah proxy
-    fetch('https://tc-proxy-eu.onrender.com/health').catch(() => {});
+    fetch('https://tc.alphacontrol.ai/health').catch(() => {});
   }
 
   // Keyboard
@@ -7236,7 +7476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Flow: user types → AI responds via hannah-proxy → ElevenLabs
 //       converts AI response to PCM16 → Simli speaks it
 // ══════════════════════════════════════════════════════════════════
-const HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com';
+const HANNAH_PROXY = 'https://tc.alphacontrol.ai';
 // Hannah keys (Simli + ElevenLabs) are fetched from the Frankfurt proxy's
 // /api/config endpoint on first use and held in memory only — never in page
 // source. Cached after first successful fetch; cleared on page refresh.
@@ -7481,23 +7721,37 @@ function _hannahSpeak(text) {
 // Mobile browsers block speechSynthesis until a user gesture initializes it.
 // We arm a one-time unlock on first click/touch to enable Hannah's voice on iPhone + Android.
 let _ttsUnlocked = false;
+let _ttsVoicesReady = false;
 function _unlockMobileTTS() {
-  if (_ttsUnlocked || !('speechSynthesis' in window)) return;
+  if (!('speechSynthesis' in window)) return;
   try {
-    // Speak an empty/silent utterance to wake the engine inside the user gesture
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0; u.rate = 1;
-    window.speechSynthesis.speak(u);
-    _ttsUnlocked = true;
+    // iOS Safari requires AUDIBLE volume during gesture — volume=0 is silently rejected.
+    // 0.01 is inaudible to humans but counts as "real audio" to the engine.
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    if (!_ttsUnlocked) {
+      const u = new SpeechSynthesisUtterance('.');
+      u.volume = 0.01; u.rate = 2; u.pitch = 1; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+      _ttsUnlocked = true;
+    }
+    // Force voice list load (mobile loads async)
+    const v = window.speechSynthesis.getVoices();
+    if (v && v.length) _ttsVoicesReady = true;
   } catch(_) {}
 }
-// Arm on first user interaction anywhere
-['click','touchstart','keydown'].forEach(ev => {
-  window.addEventListener(ev, _unlockMobileTTS, { once: false, capture: true, passive: true });
+// Arm on EVERY user interaction (not just first) — mobile re-locks between gestures sometimes
+['click','touchstart','touchend','keydown','pointerdown'].forEach(ev => {
+  window.addEventListener(ev, _unlockMobileTTS, { capture: true, passive: true });
 });
-// Voices on mobile load async — wait for them
+// Voices on mobile load async — flip flag when they arrive
 if ('speechSynthesis' in window) {
-  window.speechSynthesis.onvoiceschanged = () => { /* triggers voice list refresh on next speak */ };
+  window.speechSynthesis.onvoiceschanged = () => {
+    const v = window.speechSynthesis.getVoices();
+    if (v && v.length) _ttsVoicesReady = true;
+  };
+  // Trigger initial load
+  try { window.speechSynthesis.getVoices(); } catch(_) {}
 }
 
 function _hannahBrowserTTS(text) {
@@ -7506,12 +7760,18 @@ function _hannahBrowserTTS(text) {
     _unlockMobileTTS();
     const clean = text.replace(/[\\*_\`#>\\-]/g,' ').replace(/\\s+/g,' ').trim().slice(0, 800);
     if (!clean) return;
+    // Mobile: if voices haven't loaded yet, wait briefly then retry
+    let voices = window.speechSynthesis.getVoices();
+    if ((!voices || !voices.length) && !_ttsVoicesReady) {
+      setTimeout(() => _hannahBrowserTTS(text), 250);
+      return;
+    }
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();  // mobile: engine sometimes pauses itself
     const u = new SpeechSynthesisUtterance(clean);
     u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
     u.lang = 'en-US';
-    const voices = window.speechSynthesis.getVoices();
+    voices = window.speechSynthesis.getVoices();
     // Mobile-safe voice pick — only set if found, else let browser default
     // STRICT English-only — previous fallback matched any 'female' voice including non-EN
     const enVoices = voices.filter(v => /^en[-_]/i.test(v.lang || ''));
@@ -8198,7 +8458,7 @@ function _updateCtrlCards(data) {
 // regime change alert card in the Required Actions zone with one-tap approval.
 // On user approval → calls proxy to disable/enable bots → sends email alert.
 
-const PROXY = 'https://tc-proxy-eu.onrender.com';
+const PROXY = 'https://tc.alphacontrol.ai';
 let _lastFg = null;
 let _regimeDismissed = false;
 
