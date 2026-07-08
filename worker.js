@@ -2305,7 +2305,7 @@ async function getReconciliation(env) {
       getBinanceBotsData(env).catch(()=>({bots:[],market:{},error:'binance-bots failed'})),
       fetch('https://tc.alphacontrol.ai/prices').then(r=>r.json()).catch(()=>({})),
     ]);
-    const recon = buildReconciliation({
+    const recon = await buildReconciliation({
       spotBalances: spotData.balances || [],
       futuresWallet: futData,
       tcBots:  tcData.bots  || [],
@@ -2328,7 +2328,7 @@ async function getDecisions(env){
       fetch('https://tc.alphacontrol.ai/market-signals').then(r=>r.json()).catch(()=>({})),
     ]);
     // Build reconciliation first — this gives us true capital numbers
-    const recon = buildReconciliation({
+    const recon = await buildReconciliation({
       spotBalances: spotData.balances || [],
       futuresWallet: futData,
       tcBots:  tcData.bots  || [],
