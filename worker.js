@@ -2358,8 +2358,13 @@ async function getDecisions(env){
       const meta=getBotMeta(b.id);if(!meta)return;
       botScores[b.id]=scoreBot({roi:meta.roi||0,trades:b.trades,drawdownPct:meta.roi<0?Math.abs(meta.roi||0):0,change24h:b.change24h||0,type:meta.scoreType||'spot-grid',capital:meta.capital});
     });
-    Object.entries(BOT_META).forEach(([id,meta])=>{
-      if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
+    ;(tcData.bots||[]).forEach(b=>{
+      const meta=getBotMeta(b.id),cap=b.capital||meta?.capital||0;
+      if(cap>0)botEff[b.id]=capitalEfficiency(((b.profit||0)/cap)*100,cap);
+    });
+    ;(bnData.bots||[]).forEach(b=>{
+      const meta=getBotMeta(b.id),cap=meta?.capital||b.capital||0;
+      if(cap>0){const profit=b.profit||(meta?.roi!==undefined?(meta.roi/100)*cap:0);botEff[b.id]=capitalEfficiency((profit/cap)*100,cap);}
     });
     const result=await decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,pricesData,dataReliable,dataIntegrity});
     // R11 (NEW): Monthly performance tracker
