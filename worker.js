@@ -1086,7 +1086,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
     const RESERVE = 100; // R8 reserve floor (was 150 — lowered to 100 for aggressive deployment)
     const idleExcess = Math.max(0, usdt - RESERVE);
-    if (idleExcess >= 300) {
+    if (idleExcess >= 50) {
       // Multi-asset rotation: deploy into next un-gridded asset so we spread capital
       // across BTC/ETH/SOL/XRP/BNB instead of stacking duplicate BTC grids (was hitting
       // dedupe and skipping every R9 fire).
