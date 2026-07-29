@@ -2583,7 +2583,7 @@ body::after {
     <!-- Status row -->
     <div class="pw-status">
       <div class="pw-s-item"><div class="pw-s-dot"></div><span class="pw-s-val">CRYPTO</span><span class="pw-s-lbl">Live Now</span></div>
-      <div class="pw-s-item"><div class="pw-s-dot b"></div><span class="pw-s-val">ADVISORY</span><span class="pw-s-lbl">You Approve All</span></div>
+      <div class="pw-s-item"><div class="pw-s-dot b"></div><span class="pw-s-val">AUTONOMOUS</span><span class="pw-s-lbl">Limits You Set</span></div>
       <div class="pw-s-item"><div class="pw-s-dot c"></div><span class="pw-s-val">AI</span><span class="pw-s-lbl">Decision Engine</span></div>
     </div>
   </div>
@@ -4604,7 +4604,7 @@ body::after {
 </main>
 
 <footer class="ac-footer">
-  AlphaControl · AI Capital Management · alphacontrol.ai · Advisory Mode — All actions require your approval
+  AlphaControl · AI Capital Management · alphacontrol.ai · Autonomous execution within limits you set
 </footer>
 
 </div><!-- /app-shell -->
@@ -8595,7 +8595,7 @@ async function _sendRegimeEmail(d) {
       </div>
       <p style="color:#9ba3c0;font-size:12px">Log in to AlphaControl to approve the action.<br>
       <a href="https://alphacontrol.ai" style="color:#14d9c4">Open dashboard →</a></p>
-      <p style="color:#4a5568;font-size:11px;margin-top:24px">AlphaControl · Advisory Mode · All actions require your approval</p>
+      <p style="color:#4a5568;font-size:11px;margin-top:24px">AlphaControl · Autonomous execution within limits you set</p>
     </div>`;
   try {
     await fetch(PROXY + '/send-alert', {
@@ -8616,7 +8616,7 @@ async function _sendExecutionEmail(type, succeeded, failed) {
       <h2 style="color:#fff;margin:0 0 16px">${type === 'bull' ? '🟢' : '🔴'} Regime action executed</h2>
       <table style="width:100%;border-collapse:collapse;background:#12161e;border-radius:8px;overflow:hidden">${rows}</table>
       <p style="color:#9ba3c0;font-size:12px;margin-top:20px">Executed by AlphaControl with your approval at ${new Date().toUTCString()}</p>
-      <p style="color:#4a5568;font-size:11px;margin-top:12px">AlphaControl · Advisory Mode · All actions require your approval</p>
+      <p style="color:#4a5568;font-size:11px;margin-top:12px">AlphaControl · Autonomous execution within limits you set</p>
     </div>`;
   try {
     await fetch(PROXY + '/send-alert', {

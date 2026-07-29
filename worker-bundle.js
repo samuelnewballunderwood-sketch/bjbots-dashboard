@@ -1,5 +1,5 @@
-const BUILD_VERSION = "a97a161";
-const BUILD_TIME = "2026-06-06T10:19:42.672Z";
+const BUILD_VERSION = "a12090f";
+const BUILD_TIME = "2026-07-29T11:06:10.659Z";
 const DASHBOARD_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2585,7 +2585,7 @@ body::after {
     <!-- Status row -->
     <div class="pw-status">
       <div class="pw-s-item"><div class="pw-s-dot"></div><span class="pw-s-val">CRYPTO</span><span class="pw-s-lbl">Live Now</span></div>
-      <div class="pw-s-item"><div class="pw-s-dot b"></div><span class="pw-s-val">ADVISORY</span><span class="pw-s-lbl">You Approve All</span></div>
+      <div class="pw-s-item"><div class="pw-s-dot b"></div><span class="pw-s-val">AUTONOMOUS</span><span class="pw-s-lbl">Limits You Set</span></div>
       <div class="pw-s-item"><div class="pw-s-dot c"></div><span class="pw-s-val">AI</span><span class="pw-s-lbl">Decision Engine</span></div>
     </div>
   </div>
@@ -4606,7 +4606,7 @@ body::after {
 </main>
 
 <footer class="ac-footer">
-  AlphaControl · AI Capital Management · alphacontrol.ai · Advisory Mode — All actions require your approval
+  AlphaControl · AI Capital Management · alphacontrol.ai · Autonomous execution within limits you set
 </footer>
 
 </div><!-- /app-shell -->
@@ -8597,7 +8597,7 @@ async function _sendRegimeEmail(d) {
       </div>
       <p style="color:#9ba3c0;font-size:12px">Log in to AlphaControl to approve the action.<br>
       <a href="https://alphacontrol.ai" style="color:#14d9c4">Open dashboard →</a></p>
-      <p style="color:#4a5568;font-size:11px;margin-top:24px">AlphaControl · Advisory Mode · All actions require your approval</p>
+      <p style="color:#4a5568;font-size:11px;margin-top:24px">AlphaControl · Autonomous execution within limits you set</p>
     </div>\`;
   try {
     await fetch(PROXY + '/send-alert', {
@@ -8618,7 +8618,7 @@ async function _sendExecutionEmail(type, succeeded, failed) {
       <h2 style="color:#fff;margin:0 0 16px">\${type === 'bull' ? '🟢' : '🔴'} Regime action executed</h2>
       <table style="width:100%;border-collapse:collapse;background:#12161e;border-radius:8px;overflow:hidden">\${rows}</table>
       <p style="color:#9ba3c0;font-size:12px;margin-top:20px">Executed by AlphaControl with your approval at \${new Date().toUTCString()}</p>
-      <p style="color:#4a5568;font-size:11px;margin-top:12px">AlphaControl · Advisory Mode · All actions require your approval</p>
+      <p style="color:#4a5568;font-size:11px;margin-top:12px">AlphaControl · Autonomous execution within limits you set</p>
     </div>\`;
   try {
     await fetch(PROXY + '/send-alert', {
@@ -10084,7 +10084,7 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     }
     const RESERVE = 100; // R8 reserve floor (was 150 — lowered to 100 for aggressive deployment)
     const idleExcess = Math.max(0, usdt - RESERVE);
-    if (idleExcess >= 300) {
+    if (idleExcess >= 50) {
       // Multi-asset rotation: deploy into next un-gridded asset so we spread capital
       // across BTC/ETH/SOL/XRP/BNB instead of stacking duplicate BTC grids (was hitting
       // dedupe and skipping every R9 fire).
@@ -11303,7 +11303,7 @@ async function getReconciliation(env) {
       getBinanceBotsData(env).catch(()=>({bots:[],market:{},error:'binance-bots failed'})),
       fetch('https://tc.alphacontrol.ai/prices').then(r=>r.json()).catch(()=>({})),
     ]);
-    const recon = buildReconciliation({
+    const recon = await buildReconciliation({
       spotBalances: spotData.balances || [],
       futuresWallet: futData,
       tcBots:  tcData.bots  || [],
@@ -11326,7 +11326,7 @@ async function getDecisions(env){
       fetch('https://tc.alphacontrol.ai/market-signals').then(r=>r.json()).catch(()=>({})),
     ]);
     // Build reconciliation first — this gives us true capital numbers
-    const recon = buildReconciliation({
+    const recon = await buildReconciliation({
       spotBalances: spotData.balances || [],
       futuresWallet: futData,
       tcBots:  tcData.bots  || [],
@@ -11356,8 +11356,13 @@ async function getDecisions(env){
       const meta=getBotMeta(b.id);if(!meta)return;
       botScores[b.id]=scoreBot({roi:meta.roi||0,trades:b.trades,drawdownPct:meta.roi<0?Math.abs(meta.roi||0):0,change24h:b.change24h||0,type:meta.scoreType||'spot-grid',capital:meta.capital});
     });
-    Object.entries(BOT_META).forEach(([id,meta])=>{
-      if(meta.roi!==undefined)botEff[id]=capitalEfficiency(meta.roi,meta.capital);
+    ;(tcData.bots||[]).forEach(b=>{
+      const meta=getBotMeta(b.id),cap=b.capital||meta?.capital||0;
+      if(cap>0)botEff[b.id]=capitalEfficiency(((b.profit||0)/cap)*100,cap);
+    });
+    ;(bnData.bots||[]).forEach(b=>{
+      const meta=getBotMeta(b.id),cap=meta?.capital||b.capital||0;
+      if(cap>0){const profit=b.profit||(meta?.roi!==undefined?(meta.roi/100)*cap:0);botEff[b.id]=capitalEfficiency((profit/cap)*100,cap);}
     });
     const result=await decisionEngine({bots:bnData.bots||[],tcBots:tcData.bots||[],floatingPnl:futData.unrealizedPnl||0,portfolio,market,botScores,spotData,pricesData,dataReliable,dataIntegrity});
     // R11 (NEW): Monthly performance tracker
