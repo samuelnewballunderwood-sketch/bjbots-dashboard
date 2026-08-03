@@ -19,11 +19,16 @@ AlphaControl is a live crypto capital management dashboard built by Strix Labs.
 - Built by `build.js` which bundles `worker.js` + `dashboard.html` together
 - Deploy: push to GitHub → Actions triggers → live in 30s
 
-### 2. `server.js` → Render (Frankfurt, `tc-proxy-eu.onrender.com`)
+### 2. `server.js` → Hetzner VPS `tbs-pricing` (Frankfurt), via Cloudflare Tunnel
+- Public URL `https://tc.alphacontrol.ai`, tunnel `alphacontrol-tc`
+- Runs under pm2 as `alphacontrol-tc-proxy`, user `jp`, at `/home/jp/alphacontrol/tc-proxy`
+- **Deploy: edit ON THE SERVER, then `pm2 restart alphacontrol-tc-proxy`.** Pushing to
+  GitHub records the change, it does NOT deploy. This is the opposite of the Worker above.
+- NOT on Render. `render.yaml` in tc-proxy is vestigial and read by nothing.
 - Node.js HTTP server, no framework
 - Handles ALL external API calls (Binance, 3Commas, OpenAI, market data)
 - Hannah AI chat endpoint (`/api/chat-dual`) — Claude Sonnet + GPT-4o-mini validator
-- IP: `74.220.51.20` (Render Frankfurt) — this IP is whitelisted in Binance API key
+- The Binance API key IP allowlist must contain THIS box's IP. Check with `/my-ip` on the proxy.
 - Free tier: spins down after inactivity — allow 15-30s warmup
 - Deploy: push to `samuelnewballunderwood-sketch/tc-proxy` repo, `main` branch
 
@@ -256,10 +261,18 @@ Service: tc-proxy-eu (Frankfurt) on Render
 ## Common Debugging Patterns
 
 ### Dashboard showing all dashes (—)
-→ Frankfurt proxy is cold-starting. Hit `https://tc-proxy-eu.onrender.com/health` to wake it, wait 30s.
+→ The proxy does not cold-start — pm2 keeps it running. Check `pm2 list` on tbs-pricing,
+  then `curl https://tc.alphacontrol.ai/api/total-capital`. If the API returns data but
+  tiles stay empty, suspect a silently swallowed fetch — see below.
+
+### Something looks broken but nothing errors
+→ Grep server.js for `.catch(()=>null)` and `.catch(()=>({}))`. A failed fetch wrapped in
+  one of those becomes a silent wrong answer rather than an error. In Aug 2026 ten calls to
+  the decommissioned Render host had been failing this way for weeks; the only visible
+  symptom was an unrelated-looking 500 from `/api/create-smart-trade`.
 
 ### Binance wallet returning 500
-→ Render IP changed. Hit `/my-ip` on proxy, check current IP, add to Binance API key whitelist.
+→ IP allowlist mismatch. Hit `/my-ip` on the proxy and add that IP to the Binance API key allowlist. Unlike Render, this box's IP is stable.
 
 ### 3Commas returning 403/empty
 → Check header is `Apikey` (capital K). Check URL prefix is `/public/api/`. Check account IDs are both being queried.
@@ -271,7 +284,7 @@ Service: tc-proxy-eu (Frankfurt) on Render
 → Check worker.js: `bnBotBreakdown` should be `[]`, `bnRealised` should be `0`.
 
 ### Hannah not responding in dashboard chat
-→ Check `HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com'` in dashboard.html. Check proxy `/api/chat-dual` endpoint is reachable.
+→ Check `HANNAH_PROXY = 'https://tc.alphacontrol.ai'` in dashboard.html. Note `/api/chat-dual` is POST-only; a GET returns 404 and that is not a fault.
 
 ### Hannah lips moving but no audio
 → Browser autoplay blocked. Ensure `window._simliAudio.play()` is called inside a user gesture (send button click).
