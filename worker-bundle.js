@@ -1,5 +1,5 @@
-const BUILD_VERSION = "a12090f";
-const BUILD_TIME = "2026-07-29T11:06:10.659Z";
+const BUILD_VERSION = "eccbf7d";
+const BUILD_TIME = "2026-08-03T13:41:39.796Z";
 const DASHBOARD_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5387,19 +5387,30 @@ async function refreshDashboardV2() {
     }
     let stickyMonth = mp?.currentMonth;
     const isRealMonth = stickyMonth && stickyMonth.locked > 0.5 && stickyMonth.dealCount > 0;
+    // Only ever reuse a cached value from the SAME calendar month. Without this
+    // the regression guard below latches onto the previous month at every month
+    // boundary and never lets go: August's $5 looks like a "suspicious drop"
+    // from July's $96, so July is displayed — label and all — for the whole month.
+    const cacheIsSameMonth = !!(window._lastGoodMonth && stickyMonth
+                                && window._lastGoodMonth.month === stickyMonth.month);
     if (isRealMonth) {
-      // Fresh value is real — accept unless it's a regression
-      if (window._lastGoodMonth && stickyMonth.locked < window._lastGoodMonth.locked * 0.7) {
+      // Fresh value is real — accept unless it's a regression WITHIN the same month
+      if (cacheIsSameMonth && stickyMonth.locked < window._lastGoodMonth.locked * 0.7) {
         console.warn('Dashboard: rejecting suspicious low MTD', stickyMonth.locked, 'keeping', window._lastGoodMonth.locked);
         stickyMonth = window._lastGoodMonth;
       } else {
         window._lastGoodMonth = stickyMonth;
         try { localStorage.setItem('lg:month', JSON.stringify(stickyMonth)); } catch(_) {}
       }
-    } else if (window._lastGoodMonth) {
+    } else if (cacheIsSameMonth) {
       stickyMonth = window._lastGoodMonth;
+    } else if (mp?.currentMonth) {
+      // New month, or cache belongs to a different one. Show what the API
+      // actually reports even if it is near zero — a true zero beats last
+      // month's number wearing this month's label.
+      stickyMonth = mp.currentMonth;
     } else {
-      stickyMonth = null;  // No good data anywhere — skip DOM writes (leaves prior value)
+      stickyMonth = null;  // No data at all — skip DOM writes (leaves prior value)
     }
 
     if (stickyMonth) {
