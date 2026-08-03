@@ -5463,7 +5463,7 @@ async function refreshDashboardV2() {
       const _liveMs = Math.max(0, Date.now() - HANNAH_LIVE);
       const _liveDays  = Math.floor(_liveMs / 86400000);
       const _liveHours = Math.floor((_liveMs % 86400000) / 3600000);
-      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h live';
+      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h autonomous';
       const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
       const dealCount = dealsSum?.completedDeals || 0;
       setT('v2-ytd-trades', String(dealCount || 0));

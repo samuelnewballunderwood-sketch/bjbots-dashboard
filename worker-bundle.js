@@ -1,5 +1,5 @@
-const BUILD_VERSION = "eccbf7d";
-const BUILD_TIME = "2026-08-03T13:41:39.796Z";
+const BUILD_VERSION = "d73a65e";
+const BUILD_TIME = "2026-08-03T13:47:50.339Z";
 const DASHBOARD_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5465,7 +5465,7 @@ async function refreshDashboardV2() {
       const _liveMs = Math.max(0, Date.now() - HANNAH_LIVE);
       const _liveDays  = Math.floor(_liveMs / 86400000);
       const _liveHours = Math.floor((_liveMs % 86400000) / 3600000);
-      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h live';
+      const liveLabel  = _liveDays + 'd ' + _liveHours + 'h autonomous';
       const target = dec?.ytdTarget?.annualTarget || Math.round(grandTotal * 0.72);
       const dealCount = dealsSum?.completedDeals || 0;
       setT('v2-ytd-trades', String(dealCount || 0));
