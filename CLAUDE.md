@@ -190,7 +190,7 @@ Old Binance native bots (ETH/BTC/BNB/SOL/XRP grids) were migrated to 3Commas mon
 
 ### Key Variables in dashboard.html
 ```js
-const HANNAH_PROXY = 'https://tc-proxy-eu.onrender.com';
+const HANNAH_PROXY = 'https://tc.alphacontrol.ai';
 const _EL_KEY      = '...';  // ElevenLabs key
 const _SIMLI_KEY   = '...';  // Simli key
 const _SIMLI_FACE  = '...';  // Simli face ID
