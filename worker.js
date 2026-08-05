@@ -1375,15 +1375,15 @@ async function decisionEngine({ bots, tcBots, floatingPnl, portfolio, market, bo
     if (spotFree < 100 && futAvail > 300) {
       const transferAmt = Math.min(1000, Math.round(futAvail - 100));  // leave $100 in futures
       required.push(makeDecision({
-        actionType:'manual_transfer', category:'required',
+        actionType:'auto_transfer', category:'required',
         text:'⚡ TRANSFER \$' + transferAmt + ' Futures → Spot to unlock R9 grid deploy',
-        reason:'R33: Spot USDT free \$' + spotFree.toFixed(0) + ' below \$100 reserve. Futures available \$' + futAvail.toFixed(0) + ' sitting idle. Transfer \$' + transferAmt + ' Futures → Spot in Binance UI to give R9 fuel for next ETH/SOL/BNB grid deployment.',
+        reason:'R33: Spot USDT free \$' + spotFree.toFixed(0) + ' below \$100 reserve. Futures available \$' + futAvail.toFixed(0) + ' sitting idle. Transfer \$' + transferAmt + ' Futures → Spot to give R9 fuel for next ETH/SOL/BNB grid deployment.',
         amount:transferAmt, amountPct: totalAllocated > 0 ? Math.round((transferAmt/totalAllocated)*100) : 0,
         targetBotIds:[],
         urgency:'high', timeframe:'manual',
         expectedImpact:'Unlocks R9 to deploy 2-3 new defensive grids on un-gridded assets (ETH/SOL/BNB)',
         costOfInaction:'\$' + (transferAmt*0.001*30).toFixed(0) + '/month missed earnings vs grid yield',
-        objective:'futures_to_spot_transfer', confidence:90, executable:false,
+        objective:'futures_to_spot', confidence:90, executable:true,
       }));
     }
   } catch(_) {}
